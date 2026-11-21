@@ -34,6 +34,8 @@ import {
   reverseGeocode,
   GeocodingResult,
   checkDeliveryServiceability,
+  AMBAJOGAI_LANDMARKS,
+  LandmarkPreset,
 } from '@/utils/geoService';
 import { DeliveryAddress } from '@/types/ecommerce';
 
@@ -61,9 +63,12 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
 
   // Map & Pin State
   const [selectedCoords, setSelectedCoords] = useState<GeoCoordinates>(AMBAJOGAI_CENTER);
+  const [deviceCoords, setDeviceCoords] = useState<GeoCoordinates | null>(null);
+  const [liveAddressSummary, setLiveAddressSummary] = useState<string>('Mandi Bazar, Mangalwar Peth, Ambajogai - 431517');
   const [isPinConfirmed, setIsPinConfirmed] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const reverseTimeoutRef = React.useRef<any>(null);
 
   // Search Autocomplete State
   const [searchQuery, setSearchQuery] = useState('');
@@ -168,6 +173,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     try {
       const { coords } = await getUserLocation();
       setSelectedCoords(coords);
+      setDeviceCoords(coords);
       triggerHaptic('success');
 
       // Reverse geocode to autofill address parts
@@ -178,12 +184,57 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
       if (details.area) setArea(details.area);
       if (details.pincode) setPincode(details.pincode);
       if (details.city) setCity(details.city);
+
+      const summary = [details.street, details.area, details.city, details.pincode]
+        .filter(Boolean)
+        .join(', ');
+      setLiveAddressSummary(summary || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
     } catch (err: any) {
       setGpsError(err.message || 'Location permission denied. Please select on map or enter manually.');
       triggerHaptic('warning');
     } finally {
       setIsLocating(false);
     }
+  };
+
+  // Debounced map center movement handler
+  const handleMapLocationChange = (newCoords: GeoCoordinates) => {
+    setSelectedCoords(newCoords);
+    if (reverseTimeoutRef.current) {
+      clearTimeout(reverseTimeoutRef.current);
+    }
+    reverseTimeoutRef.current = setTimeout(async () => {
+      try {
+        const details = await reverseGeocode(newCoords.lat, newCoords.lng);
+        if (details.street) setStreet(details.street);
+        if (details.area) setArea(details.area);
+        if (details.pincode) setPincode(details.pincode);
+        if (details.city) setCity(details.city);
+        if (details.houseNumber && !houseNo) setHouseNo(details.houseNumber);
+        if (details.building && !building) setBuilding(details.building);
+
+        const summary = [details.street, details.area, details.city, details.pincode]
+          .filter(Boolean)
+          .join(', ');
+        setLiveAddressSummary(summary || `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`);
+      } catch (e) {
+        // Non-blocking fallback
+      }
+    }, 350);
+  };
+
+  // Instant Ambajogai Landmark Selection
+  const handleSelectLandmarkPreset = (landmarkPreset: LandmarkPreset) => {
+    triggerHaptic('light');
+    const coords = { lat: landmarkPreset.lat, lng: landmarkPreset.lng };
+    setSelectedCoords(coords);
+    setStreet(landmarkPreset.landmark);
+    setArea(landmarkPreset.area);
+    setLandmark(`Near ${landmarkPreset.name}`);
+    setCity('Ambajogai');
+    setState('Maharashtra');
+    setPincode(landmarkPreset.pincode);
+    setLiveAddressSummary(`${landmarkPreset.name}, ${landmarkPreset.area}, Ambajogai - ${landmarkPreset.pincode}`);
   };
 
   // Perform search query with Nominatim
@@ -211,6 +262,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     if (result.area) setArea(result.area);
     if (result.pincode) setPincode(result.pincode);
     if (result.city) setCity(result.city);
+    setLiveAddressSummary(result.displayName);
   };
 
   // Confirm selected pin on map -> proceed to address form
@@ -484,21 +536,21 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
 
         {/* VIEW MODE 2: INTERACTIVE LEAFLET MAP PICKER */}
         {viewMode === 'map-picker' && (
-          <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pb-2">
+          <div className="space-y-2.5 overflow-y-auto no-scrollbar flex-1 pb-2">
             {/* Search Input for OpenStreetMap Nominatim */}
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search area, landmark or street in Ambajogai..."
-                className="w-full text-xs pl-8 pr-16 py-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
+                placeholder="Search area, street or landmark in Ambajogai..."
+                className="w-full text-xs pl-8 pr-16 py-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px] bg-slate-50/50"
               />
               <Search className="w-4 h-4 text-brand-text-muted absolute left-2.5 top-3" />
               <button
                 type="submit"
                 disabled={isSearching}
-                className="absolute right-1.5 top-1.5 px-2.5 py-1.5 rounded-lg bg-[#0C831F] text-white text-[11px] font-bold disabled:opacity-50 cursor-pointer"
+                className="absolute right-1.5 top-1.5 px-3 py-1.5 rounded-lg bg-[#0C831F] text-white text-[11px] font-bold disabled:opacity-50 cursor-pointer shadow-xs"
               >
                 {isSearching ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Search'}
               </button>
@@ -521,29 +573,52 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               </div>
             )}
 
+            {/* Quick 1-Tap Ambajogai Landmark Chips */}
+            <div>
+              <div className="flex items-center justify-between mb-1 px-0.5">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Ambajogai Quick Landmarks
+                </span>
+                <span className="text-[9px] text-slate-400">1-Tap Pin</span>
+              </div>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                {AMBAJOGAI_LANDMARKS.map((lm) => (
+                  <button
+                    key={lm.id}
+                    type="button"
+                    onClick={() => handleSelectLandmarkPreset(lm)}
+                    className="shrink-0 px-2.5 py-1 rounded-xl bg-slate-100/90 hover:bg-emerald-50 hover:text-emerald-800 text-[11px] font-semibold text-slate-700 border border-slate-200 transition-colors flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                  >
+                    <span>{lm.icon}</span>
+                    <span>{lm.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Use GPS Button */}
             <button
               type="button"
               disabled={isLocating}
               onClick={handleUseCurrentLocation}
-              className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors min-h-[42px] cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors min-h-[40px] cursor-pointer"
             >
               {isLocating ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                  <span>Locating device via GPS...</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  <span>Locking onto Live GPS Satellite Signal...</span>
                 </>
               ) : (
                 <>
-                  <Navigation className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Use My Current Location</span>
+                  <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Use My Live Device GPS Location</span>
                 </>
               )}
             </button>
 
             {/* GPS Error Notification */}
             {gpsError && (
-              <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl text-[11px] text-amber-800 flex items-start gap-1.5">
+              <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-[11px] text-amber-800 flex items-start gap-1.5">
                 <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                 <span>{gpsError}</span>
               </div>
@@ -552,11 +627,37 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
             {/* Interactive Leaflet Map Container */}
             <LeafletMapPicker
               initialCoords={selectedCoords}
-              onLocationChange={(newCoords) => {
-                setSelectedCoords(newCoords);
+              deviceCoords={deviceCoords}
+              onLocationChange={handleMapLocationChange}
+              onDeviceLocated={(coords) => {
+                setDeviceCoords(coords);
+                setSelectedCoords(coords);
               }}
-              height="260px"
+              height="280px"
             />
+
+            {/* Live Address Preview Card */}
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex items-start gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                📍
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">
+                    Selected Delivery Point
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500 font-semibold">
+                    {selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-900 truncate mt-0.5">
+                  {liveAddressSummary}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Doorstep dairy order will be dispatched to this pin
+                </p>
+              </div>
+            </div>
 
             {/* Out of Delivery Zone Alert */}
             {!serviceCheck.isServiceable && (
@@ -574,17 +675,17 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               <button
                 type="button"
                 onClick={() => setViewMode('address-form')}
-                className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary hover:bg-slate-50 cursor-pointer"
+                className="flex-1 min-h-[46px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary hover:bg-slate-50 cursor-pointer"
               >
                 Manual Address
               </button>
               <button
                 type="button"
                 onClick={handleConfirmMapPin}
-                className="flex-2 min-h-[44px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                className="flex-2 min-h-[46px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Confirm Pin & Enter Address</span>
+                <span>Confirm Pin & Enter Doorstep Details</span>
               </button>
             </div>
           </div>
