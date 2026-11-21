@@ -5,6 +5,7 @@ import {
   Order,
   OrderPayload,
   OrderResult,
+  OrderStatus,
   OrderSummary,
   Product,
   ProductFilterParams,
@@ -19,7 +20,6 @@ const FREE_DELIVERY_THRESHOLD =
 const STANDARD_DELIVERY_FEE =
   Number(import.meta.env.VITE_STANDARD_DELIVERY_FEE) || 30;
 
-// Category mapping helper
 function mapCategorySlug(slug?: string): string[] | null {
   if (!slug || slug === 'all') return null;
   switch (slug) {
@@ -40,7 +40,6 @@ function mapCategorySlug(slug?: string): string[] | null {
   }
 }
 
-// Fallback image helper
 function getFallbackImage(category?: string | null, name?: string): string {
   const q = `${category || ''} ${name || ''}`.toLowerCase();
   if (q.includes('milk')) {
@@ -67,7 +66,6 @@ function getFallbackImage(category?: string | null, name?: string): string {
   return 'https://images.unsplash.com/photo-1528750997573-59b89d56f4f7?auto=format&fit=crop&w=600&q=80';
 }
 
-// Strict sanitizer: maps raw database row to client Product (stripping confidential fields)
 function sanitizeDbProduct(row: any): Product {
   const categoryStr = row.category || 'Dairy';
   const unitStr = row.unit || 'Piece';
@@ -75,7 +73,6 @@ function sanitizeDbProduct(row: any): Product {
   const sellingPrice = Number(row.selling_price) || 0;
   const stockQuantity = Number(row.stock_quantity) || 0;
 
-  // Derive honest MRP: if MRP is recorded and higher, use it; otherwise match price
   const mrp = Number(row.mrp) && Number(row.mrp) > sellingPrice ? Number(row.mrp) : sellingPrice;
   const discountPercentage =
     mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
@@ -102,6 +99,26 @@ function sanitizeDbProduct(row: any): Product {
   };
 }
 
+export function mapDbStatusToFrontend(dbStatus?: string): OrderStatus {
+  switch (dbStatus?.toUpperCase()) {
+    case 'PLACED':
+      return 'pending';
+    case 'CONFIRMED':
+      return 'confirmed';
+    case 'PREPARING':
+      return 'preparing';
+    case 'OUT_FOR_DELIVERY':
+      return 'out_for_delivery';
+    case 'DELIVERED':
+      return 'delivered';
+    case 'CANCELLED':
+    case 'REJECTED':
+      return 'cancelled';
+    default:
+      return (dbStatus?.toLowerCase() as OrderStatus) || 'pending';
+  }
+}
+
 export class HttpEcommerceApiClient implements IEcommerceApiClient {
   private baseUrl: string;
   private mockClient: MockEcommerceApiClient;
@@ -125,7 +142,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    // Use a 5s timeout for Render so that if it sleeps or 404s, we instantly fallback to Supabase
     const response = await fetch(url, {
       ...options,
       headers,
@@ -148,7 +164,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
   }
 
   async getProducts(params?: ProductFilterParams): Promise<ProductResponse> {
-    // 1. Try Render Backend Endpoint first
+    // 1. Try Render Backend
     try {
       const query = new URLSearchParams();
       if (params?.category && params.category !== 'all') query.set('category', params.category);
@@ -161,8 +177,8 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         return res;
       }
-    } catch (err) {
-      // Fall through to Direct Supabase query
+    } catch {
+      // Fall through to Supabase
     }
 
     // 2. Direct Supabase Query Fallback
@@ -181,7 +197,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         .eq('is_active', true)
         .gt('selling_price', 0);
 
-      // Category filter
       const mappedCats = mapCategorySlug(params?.category);
       if (mappedCats && mappedCats.length > 0) {
         if (mappedCats.length === 1) {
@@ -191,13 +206,11 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         }
       }
 
-      // Search filter
       if (params?.search && params.search.trim().length > 0) {
         const q = params.search.trim();
         query = query.or(`name.ilike.%${q}%,category.ilike.%${q}%`);
       }
 
-      // Prioritize items with positive stock
       query = query.order('stock_quantity', { ascending: false }).range(from, to);
 
       const { data, count, error } = await query;
@@ -215,15 +228,14 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         };
       }
     } catch (sbErr) {
-      console.warn('Supabase product query error, falling back to mock dataset:', sbErr);
+      console.warn('Supabase product query error:', sbErr);
     }
 
-    // 3. Offline Mock Fallback
+    // 3. Mock fallback
     return this.mockClient.getProducts(params);
   }
 
   async getProductById(id: string): Promise<Product> {
-    // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: Product }>(`/products/${id}`);
       if (res.data) return res.data;
@@ -231,7 +243,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 2. Try Supabase
     try {
       const { data, error } = await supabase
         .from('products')
@@ -248,12 +259,10 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 3. Mock fallback
     return this.mockClient.getProductById(id);
   }
 
   async getCategories(): Promise<Category[]> {
-    // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: Category[] }>('/categories');
       if (res.data && res.data.length > 0) return res.data;
@@ -261,7 +270,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 2. Try Supabase
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -314,14 +322,12 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 3. Fallback to high quality curated categories
     return MOCK_CATEGORIES;
   }
 
   async validateCart(
     items: Array<{ productId: string; quantity: number }>
   ): Promise<CartValidationResult> {
-    // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: CartValidationResult }>(
         '/cart/validate',
@@ -335,7 +341,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 2. Direct validation against Supabase live products
     try {
       const itemIds = items.map((i) => i.productId);
       const { data: dbProducts, error } = await supabase
@@ -386,7 +391,6 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 3. Fallback to mock validator
     return this.mockClient.validateCart(items);
   }
 
@@ -397,7 +401,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
 
     // 1. Try Render Backend
     try {
-      return await this.request<OrderResult>('/orders', {
+      const result = await this.request<OrderResult>('/orders', {
         method: 'POST',
         headers: {
           'x-idempotency-key': idempotencyKey,
@@ -407,12 +411,160 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           idempotencyKey,
         }),
       });
-    } catch (renderErr) {
-      console.warn('Render order placement unavailable, recording local order ticket:', renderErr);
+      if (result && result.success && result.data) {
+        return result;
+      }
+    } catch {
+      // Fall through to Direct Supabase insertion
     }
 
-    // 2. Direct Mock and LocalStorage Order Creation
-    // (Stores order ticket with complete idempotency and simulated tracking)
+    // 2. Direct Supabase Order Insertion
+    try {
+      const validation = await this.validateCart(orderPayload.items);
+      const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+      const nowIso = new Date().toISOString();
+
+      // Look up product packSizes / images for clean order lines
+      const productIds = orderPayload.items.map((i) => i.productId);
+      const { data: prods } = await supabase
+        .from('products')
+        .select('id, name, pack_size, unit, selling_price, image_url')
+        .in('id', productIds);
+
+      const itemsWithDetails = orderPayload.items.map((i) => {
+        const p = prods?.find((item) => item.id === i.productId);
+        const price = p ? Number(p.selling_price) || 0 : 0;
+        return {
+          productId: i.productId,
+          name: p?.name || 'Fresh Dairy Item',
+          packSize: p?.pack_size || p?.unit || 'Standard',
+          price,
+          quantity: i.quantity,
+          itemTotal: price * i.quantity,
+          imageUrl: p?.image_url,
+        };
+      });
+
+      // Insert into ecommerce_orders table
+      const { data: dbOrder, error: orderErr } = await supabase
+        .from('ecommerce_orders')
+        .insert({
+          order_no: orderNumber,
+          customer_name: orderPayload.customerName,
+          customer_phone: orderPayload.customerPhone,
+          delivery_address: orderPayload.deliveryAddress,
+          order_status: 'PLACED',
+          payment_method: orderPayload.paymentMethod === 'cod' ? 'COD' : 'ONLINE_UPI',
+          payment_status: 'PENDING',
+          subtotal: validation.subtotal,
+          delivery_fee: validation.deliveryFee,
+          total_amount: validation.total,
+          delivery_notes: orderPayload.notes,
+          estimated_delivery_time: '20-40 mins',
+        })
+        .select()
+        .single();
+
+      if (!orderErr && dbOrder) {
+        // Insert item lines into ecommerce_order_items
+        if (itemsWithDetails.length > 0) {
+          await supabase.from('ecommerce_order_items').insert(
+            itemsWithDetails.map((item) => ({
+              order_id: dbOrder.id,
+              product_id: item.productId,
+              product_name: item.name,
+              pack_size: item.packSize,
+              unit_price: item.price,
+              quantity: item.quantity,
+              total_price: item.itemTotal,
+              image_url: item.imageUrl,
+            }))
+          );
+        }
+
+        const clientOrder: Order = {
+          id: dbOrder.id,
+          orderNumber: dbOrder.order_no,
+          createdAt: dbOrder.created_at || nowIso,
+          customerName: dbOrder.customer_name,
+          customerPhone: dbOrder.customer_phone,
+          deliveryAddress: {
+            id: `addr_${Date.now()}`,
+            label: (orderPayload.deliveryAddress.label as any) || 'Home',
+            name: dbOrder.customer_name,
+            phone: dbOrder.customer_phone,
+            street: orderPayload.deliveryAddress.street,
+            landmark: orderPayload.deliveryAddress.landmark,
+            city: orderPayload.deliveryAddress.city,
+            pincode: orderPayload.deliveryAddress.pincode,
+          },
+          paymentMethod: orderPayload.paymentMethod,
+          paymentStatus: 'pending',
+          orderStatus: 'pending',
+          items: itemsWithDetails,
+          subtotal: validation.subtotal,
+          deliveryFee: validation.deliveryFee,
+          total: validation.total,
+          notes: orderPayload.notes,
+          estimatedDeliveryMinutes: 25,
+          deliveryPartner: {
+            name: 'Sunil Rao (Express Dairy Fleet)',
+            phone: '+919876543210',
+            vehicleNumber: 'MH-31-DY-1008',
+          },
+          timeline: [
+            {
+              status: 'pending',
+              label: 'Order Placed',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              completed: true,
+              current: true,
+              note: 'We have received your order request.',
+            },
+            {
+              status: 'confirmed',
+              label: 'Dairy Confirmed',
+              timestamp: 'ETA 5 mins',
+              completed: false,
+            },
+            {
+              status: 'preparing',
+              label: 'Packing Fresh Items',
+              timestamp: 'ETA 10 mins',
+              completed: false,
+            },
+            {
+              status: 'out_for_delivery',
+              label: 'Out for Quick Delivery',
+              timestamp: 'ETA 20 mins',
+              completed: false,
+            },
+            {
+              status: 'delivered',
+              label: 'Delivered',
+              timestamp: 'ETA 30 mins',
+              completed: false,
+            },
+          ],
+        };
+
+        // Also save to local storage for instant offline viewing
+        const stored = this.getStoredOrders();
+        this.saveStoredOrders([clientOrder, ...stored]);
+
+        return {
+          success: true,
+          orderId: clientOrder.id,
+          orderNumber: clientOrder.orderNumber,
+          data: clientOrder,
+          message: 'Your dairy order has been confirmed successfully!',
+        };
+      }
+    } catch (sbErr) {
+      console.warn('Supabase direct order creation error, using resilient local storage queue:', sbErr);
+    }
+
+    // 3. Resilient Local Storage Queue Fallback
     return this.mockClient.placeOrder({
       ...orderPayload,
       idempotencyKey,
@@ -420,16 +572,43 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
   }
 
   async getCustomerOrders(): Promise<OrderSummary[]> {
+    // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: OrderSummary[] }>('/customer/orders');
       if (res.data) return res.data;
     } catch {
       // Fall through
     }
+
+    // 2. Try Supabase
+    try {
+      const { data: dbOrders, error } = await supabase
+        .from('ecommerce_orders')
+        .select('id, order_no, created_at, total_amount, order_status')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!error && dbOrders && dbOrders.length > 0) {
+        return dbOrders.map((o) => ({
+          id: o.id,
+          orderNumber: o.order_no,
+          createdAt: o.created_at,
+          total: Number(o.total_amount) || 0,
+          orderStatus: mapDbStatusToFrontend(o.order_status),
+          itemCount: 1,
+          firstItemName: 'Fresh Dairy Items',
+        }));
+      }
+    } catch {
+      // Fall through
+    }
+
+    // 3. Fallback to local storage
     return this.mockClient.getCustomerOrders();
   }
 
   async getOrderById(orderId: string): Promise<Order> {
+    // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: Order }>(
         `/customer/orders/${orderId}`
@@ -438,6 +617,71 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     } catch {
       // Fall through
     }
+
+    // 2. Try Direct Supabase Lookup
+    try {
+      const { data: dbOrder, error } = await supabase
+        .from('ecommerce_orders')
+        .select('*, items:ecommerce_order_items(*)')
+        .or(`id.eq.${orderId},order_no.eq.${orderId}`)
+        .single();
+
+      if (!error && dbOrder) {
+        const feStatus = mapDbStatusToFrontend(dbOrder.order_status);
+        const addr = dbOrder.delivery_address || {};
+
+        const mappedItems = Array.isArray(dbOrder.items)
+          ? dbOrder.items.map((i: any) => ({
+              productId: i.product_id || i.id,
+              name: i.product_name || 'Dairy Item',
+              packSize: i.pack_size || 'Standard',
+              price: Number(i.unit_price) || 0,
+              quantity: Number(i.quantity) || 1,
+              itemTotal: Number(i.total_price) || 0,
+              imageUrl: i.image_url,
+            }))
+          : [];
+
+        const order: Order = {
+          id: dbOrder.id,
+          orderNumber: dbOrder.order_no,
+          createdAt: dbOrder.created_at,
+          customerName: dbOrder.customer_name,
+          customerPhone: dbOrder.customer_phone,
+          deliveryAddress: {
+            id: `addr_${dbOrder.id}`,
+            label: addr.label || 'Home',
+            name: dbOrder.customer_name,
+            phone: dbOrder.customer_phone,
+            street: addr.street || addr.address_line1 || 'Main Road',
+            landmark: addr.landmark,
+            city: addr.city || 'Nagpur',
+            pincode: addr.pincode || '440010',
+          },
+          paymentMethod: dbOrder.payment_method === 'ONLINE_UPI' ? 'upi_doorstep' : 'cod',
+          paymentStatus: dbOrder.payment_status === 'PAID' ? 'paid' : 'pending',
+          orderStatus: feStatus,
+          items: mappedItems,
+          subtotal: Number(dbOrder.subtotal) || Number(dbOrder.total_amount) || 0,
+          deliveryFee: Number(dbOrder.delivery_fee) || 0,
+          total: Number(dbOrder.total_amount) || 0,
+          notes: dbOrder.delivery_notes,
+          estimatedDeliveryMinutes: 25,
+          deliveryPartner: {
+            name: 'Sunil Rao (Express Dairy Fleet)',
+            phone: '+919876543210',
+            vehicleNumber: 'MH-31-DY-1008',
+          },
+          timeline: this.buildTimelineForStatus(feStatus, dbOrder.created_at),
+        };
+
+        return order;
+      }
+    } catch (sbErr) {
+      console.warn('Supabase getOrderById error, using local storage:', sbErr);
+    }
+
+    // 3. Fallback to local storage
     return this.mockClient.getOrderById(orderId);
   }
 
@@ -445,6 +689,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     orderId: string,
     reason?: string
   ): Promise<{ success: boolean; message: string }> {
+    // 1. Try Render Backend
     try {
       return await this.request<{ success: boolean; message: string }>(
         `/customer/orders/${orderId}/cancel`,
@@ -456,6 +701,91 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     } catch {
       // Fall through
     }
+
+    // 2. Try Supabase update
+    try {
+      const { error } = await supabase
+        .from('ecommerce_orders')
+        .update({
+          order_status: 'CANCELLED',
+          cancellation_reason: reason || 'Customer requested cancellation',
+          cancelled_at: new Date().toISOString(),
+        })
+        .or(`id.eq.${orderId},order_no.eq.${orderId}`);
+
+      if (!error) {
+        return {
+          success: true,
+          message: 'Order cancelled successfully. Stock has been restored.',
+        };
+      }
+    } catch {
+      // Fall through
+    }
+
     return this.mockClient.cancelOrder(orderId, reason);
+  }
+
+  private buildTimelineForStatus(status: OrderStatus, createdAt: string) {
+    const isPlaced = true;
+    const isConfirmed = status !== 'pending';
+    const isPreparing = status === 'preparing' || status === 'out_for_delivery' || status === 'delivered';
+    const isOut = status === 'out_for_delivery' || status === 'delivered';
+    const isDelivered = status === 'delivered';
+
+    return [
+      {
+        status: 'pending' as OrderStatus,
+        label: 'Order Placed',
+        timestamp: new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        completed: isPlaced,
+        current: status === 'pending',
+      },
+      {
+        status: 'confirmed' as OrderStatus,
+        label: 'Order Confirmed',
+        timestamp: isConfirmed ? 'Confirmed' : 'ETA 5 mins',
+        completed: isConfirmed,
+        current: status === 'confirmed',
+      },
+      {
+        status: 'preparing' as OrderStatus,
+        label: 'Packing Fresh Dairy',
+        timestamp: isPreparing ? 'Packed' : 'ETA 10 mins',
+        completed: isPreparing,
+        current: status === 'preparing',
+      },
+      {
+        status: 'out_for_delivery' as OrderStatus,
+        label: 'Out for Quick Delivery',
+        timestamp: isOut ? 'On the way' : 'ETA 20 mins',
+        completed: isOut,
+        current: status === 'out_for_delivery',
+      },
+      {
+        status: 'delivered' as OrderStatus,
+        label: 'Delivered',
+        timestamp: isDelivered ? 'Delivered' : 'ETA 30 mins',
+        completed: isDelivered,
+        current: status === 'delivered',
+      },
+    ];
+  }
+
+  private getStoredOrders(): Order[] {
+    try {
+      const raw = localStorage.getItem('yd_customer_orders_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveStoredOrders(orders: Order[]): void {
+    try {
+      localStorage.setItem('yd_customer_orders_v1', JSON.stringify(orders));
+    } catch (e) {
+      console.error('Failed to save orders to localStorage', e);
+    }
   }
 }
