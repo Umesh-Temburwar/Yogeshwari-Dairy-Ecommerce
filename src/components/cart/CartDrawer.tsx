@@ -8,7 +8,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Sparkles,
-  MessageCircle,
   AlertTriangle,
   User,
   Phone,
@@ -20,7 +19,6 @@ import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
 import { Order } from '@/types/ecommerce';
-import { openWhatsAppOrderConfirmation } from '@/utils/whatsapp';
 import {
   validateCustomerName,
   validateIndianMobile,
@@ -66,7 +64,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sendWhatsAppAlert, setSendWhatsAppAlert] = useState(true);
 
   // Form states for customer info verification
   const [nameInput, setNameInput] = useState(customerName || 'Ramesh Kumar');
@@ -165,11 +162,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         clearCart();
         closeCartDrawer();
         triggerHaptic('success');
-
-        if (sendWhatsAppAlert) {
-          openWhatsAppOrderConfirmation(result.data);
-        }
-
         onOrderSuccess(result.data);
       } else {
         throw new Error(result.message || 'Failed to place order');
@@ -524,22 +516,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* WhatsApp confirmation option */}
-            {items.length > 0 && (
-              <label className="flex items-center gap-2.5 p-3 bg-green-50 rounded-xl border border-green-200/60 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sendWhatsAppAlert}
-                  onChange={(e) => setSendWhatsAppAlert(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#0C831F] focus:ring-[#0C831F]"
-                />
-                <MessageCircle className="w-4 h-4 text-green-700 shrink-0" />
-                <span className="text-xs text-green-900 font-medium">
-                  Send copy of order directly to Dairy WhatsApp for priority dispatch
-                </span>
-              </label>
             )}
 
             {/* Bill Details */}
