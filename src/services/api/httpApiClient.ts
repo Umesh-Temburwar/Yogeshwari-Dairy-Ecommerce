@@ -775,6 +775,8 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
   }
 
   async getOrderById(orderId: string): Promise<Order> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
     // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: Order }>(
@@ -785,13 +787,19 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 2. Try Direct Supabase Lookup
+    // 2. Try Direct Supabase Lookup (Safely query UUID or order_no without Postgres 22P02 crash)
     try {
-      const { data: dbOrder, error } = await supabase
+      let query = supabase
         .from('ecommerce_orders')
-        .select('*, items:ecommerce_order_items(*)')
-        .or(`id.eq.${orderId},order_no.eq.${orderId}`)
-        .single();
+        .select('*, items:ecommerce_order_items(*)');
+
+      if (isUuid) {
+        query = query.eq('id', orderId);
+      } else {
+        query = query.eq('order_no', orderId);
+      }
+
+      const { data: dbOrder, error } = await query.maybeSingle();
 
       if (!error && dbOrder) {
         const feStatus = mapDbStatusToFrontend(dbOrder.order_status);
@@ -843,12 +851,16 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           notes: dbOrder.delivery_notes,
           estimatedDeliveryMinutes: 25,
           deliveryPartner: {
-            name: 'Sunil Rao (Express Dairy Fleet)',
-            phone: '+919876543210',
-            vehicleNumber: 'MH-31-DY-1008',
+            name: dbOrder.delivery_partner_name || 'Sunil Rao (Express Dairy Fleet)',
+            phone: dbOrder.delivery_partner_phone || '+919876543210',
+            vehicleNumber: dbOrder.delivery_partner_vehicle || 'MH-31-DY-1008',
           },
           timeline: this.buildTimelineForStatus(feStatus, dbOrder.created_at),
         };
+
+        // Update local cache so offline views stay synchronized
+        this.updateLocalStoredOrderStatus(order.id, feStatus);
+        this.updateLocalStoredOrderStatus(order.orderNumber, feStatus);
 
         return order;
       }
@@ -875,45 +887,83 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     orderId: string,
     reason?: string
   ): Promise<{ success: boolean; message: string }> {
-    // 1. Try Render Backend
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+    const finalReason = reason || 'Customer requested cancellation via app';
+
+    // 1. Try Render Backend first
     try {
-      return await this.request<{ success: boolean; message: string }>(
+      const res = await this.request<{ success: boolean; message: string }>(
         `/orders/${orderId}/cancel`,
         {
           method: 'POST',
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ reason: finalReason }),
         }
       );
-    } catch {
-      // Fall through
-    }
-
-    // 2. Try Supabase update
-    try {
-      const { error } = await supabase
-        .from('ecommerce_orders')
-        .update({
-          order_status: 'CANCELLED',
-          cancellation_reason: reason || 'Customer requested cancellation',
-          cancelled_at: new Date().toISOString(),
-        })
-        .or(`id.eq.${orderId},order_no.eq.${orderId}`);
-
-      if (!error) {
-        return {
-          success: true,
-          message: 'Order cancelled successfully. Stock has been restored.',
-        };
+      if (res && res.success) {
+        this.updateLocalStoredOrderStatus(orderId, 'cancelled');
+        return res;
       }
     } catch {
-      // Fall through
+      // Fall through to Direct Supabase atomic RPC
     }
+
+    // 2. Direct Supabase Atomic RPC Cancellation
+    try {
+      let targetUuid = isUuid ? orderId : '';
+      let targetOrderNo = isUuid ? '' : orderId;
+
+      // If provided an order_no, lookup the corresponding UUID first
+      if (!targetUuid) {
+        const { data: found } = await supabase
+          .from('ecommerce_orders')
+          .select('id, order_no')
+          .eq('order_no', orderId)
+          .maybeSingle();
+
+        if (found?.id) {
+          targetUuid = found.id;
+          targetOrderNo = found.order_no;
+        }
+      }
+
+      if (targetUuid) {
+        // Call the atomic function that actually restores FEFO inventory and updates status
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc(
+          'fn_cancel_ecommerce_order_atomic',
+          {
+            p_order_id: targetUuid,
+            p_cancellation_reason: finalReason,
+            p_cancelled_by: 'Customer',
+          }
+        );
+
+        if (!rpcErr && rpcRes && rpcRes.success) {
+          this.updateLocalStoredOrderStatus(targetUuid, 'cancelled');
+          if (targetOrderNo) {
+            this.updateLocalStoredOrderStatus(targetOrderNo, 'cancelled');
+          }
+          return {
+            success: true,
+            message: rpcRes.message || 'Order cancelled successfully and stock restored.',
+          };
+        } else if (rpcErr) {
+          console.warn('Supabase atomic cancel RPC notice:', rpcErr.message);
+        }
+      }
+    } catch (sbCancelErr) {
+      console.warn('Supabase atomic cancellation error:', sbCancelErr);
+    }
+
+    // Update in local storage
+    this.updateLocalStoredOrderStatus(orderId, 'cancelled');
 
     if (this.allowMockFallback) {
       return this.mockClient.cancelOrder(orderId, reason);
     }
 
-    throw new Error('Unable to cancel order at this time. Please contact Yogeshwari Dairy store at +91 9370869896.');
+    throw new Error(
+      'Unable to cancel order at this time. Please contact Yogeshwari Dairy store directly at +91 9370869896.'
+    );
   }
 
   private buildTimelineForStatus(status: OrderStatus, createdAt: string) {
@@ -976,6 +1026,25 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       localStorage.setItem('yd_customer_orders_v1', JSON.stringify(orders));
     } catch (e) {
       console.error('Failed to save orders to localStorage', e);
+    }
+  }
+
+  private updateLocalStoredOrderStatus(orderIdOrNo: string, newStatus: OrderStatus): void {
+    try {
+      const stored = this.getStoredOrders();
+      const updated = stored.map((o) => {
+        if (o.id === orderIdOrNo || o.orderNumber === orderIdOrNo) {
+          return {
+            ...o,
+            orderStatus: newStatus,
+            timeline: this.buildTimelineForStatus(newStatus, o.createdAt),
+          };
+        }
+        return o;
+      });
+      this.saveStoredOrders(updated);
+    } catch (e) {
+      console.warn('Failed to update local stored order status:', e);
     }
   }
 }
