@@ -492,6 +492,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         const { data: rpcData, error: rpcErr } = await supabase.rpc(
           'fn_create_ecommerce_order_atomic',
           {
+            p_cart_session_id: null,
             p_order_id: orderId,
             p_order_no: orderNumber,
             p_idempotency_key: idemUuid,
