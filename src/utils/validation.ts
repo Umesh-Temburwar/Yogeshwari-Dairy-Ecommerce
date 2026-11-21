@@ -37,7 +37,7 @@ export function validatePincode(pincode: string): ValidationResult {
     return { isValid: false, error: 'Pincode is required' };
   }
   const cleaned = pincode.trim();
-  const indianPincodeRegex = /^\d{6}$/;
+  const indianPincodeRegex = /^[1-9]\d{5}$/;
   if (!indianPincodeRegex.test(cleaned)) {
     return { isValid: false, error: 'Please enter a valid 6-digit postal pincode (e.g. 431517)' };
   }

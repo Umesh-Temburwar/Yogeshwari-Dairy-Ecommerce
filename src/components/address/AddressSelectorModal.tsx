@@ -10,10 +10,21 @@ import {
   AlertCircle,
   Loader2,
   Compass,
+  Home,
+  Briefcase,
+  Store,
+  FileText,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { useCustomerStore } from '@/store/customerStore';
 import { triggerHaptic } from '@/utils/haptics';
-import { validateCustomerName, validateIndianMobile, validateStreetAddress, validatePincode } from '@/utils/validation';
+import {
+  validateCustomerName,
+  validateIndianMobile,
+  validateStreetAddress,
+  validatePincode,
+} from '@/utils/validation';
 import { LeafletMapPicker } from './LeafletMapPicker';
 import {
   AMBAJOGAI_CENTER,
@@ -22,6 +33,7 @@ import {
   searchAddress,
   reverseGeocode,
   GeocodingResult,
+  checkDeliveryServiceability,
 } from '@/utils/geoService';
 import { DeliveryAddress } from '@/types/ecommerce';
 
@@ -35,6 +47,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     savedAddresses,
     selectedAddressId,
     setSelectedAddressId,
+    setDefaultAddress,
     addAddress,
     updateAddress,
     deleteAddress,
@@ -62,15 +75,20 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
   const [recipientName, setRecipientName] = useState(customerName || 'Customer');
   const [recipientPhone, setRecipientPhone] = useState(customerPhone || '');
   const [houseNo, setHouseNo] = useState('');
+  const [building, setBuilding] = useState('');
   const [street, setStreet] = useState('');
   const [area, setArea] = useState('');
   const [landmark, setLandmark] = useState('');
   const [city, setCity] = useState('Ambajogai');
   const [state, setState] = useState('Maharashtra');
   const [pincode, setPincode] = useState('431517');
+  const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const serviceCheck = checkDeliveryServiceability(selectedCoords);
 
   // Handle address selection from saved list
   const handleSelect = (id: string) => {
@@ -89,12 +107,15 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     setSearchQuery('');
     setSearchResults([]);
     setHouseNo('');
+    setBuilding('');
     setStreet('');
     setArea('');
     setLandmark('');
     setCity('Ambajogai');
     setState('Maharashtra');
     setPincode('431517');
+    setDeliveryInstructions('');
+    setIsDefault(savedAddresses.length === 0);
     setRecipientName(customerName || 'Customer');
     setRecipientPhone(customerPhone || '');
     setViewMode('map-picker');
@@ -114,12 +135,15 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     setRecipientName(addr.name || customerName);
     setRecipientPhone(addr.phone || customerPhone);
     setHouseNo(addr.houseNo || '');
+    setBuilding(addr.building || '');
     setStreet(addr.street);
     setArea(addr.area || '');
     setLandmark(addr.landmark || '');
     setCity(addr.city || 'Ambajogai');
     setState(addr.state || 'Maharashtra');
     setPincode(addr.pincode || '431517');
+    setDeliveryInstructions(addr.deliveryInstructions || '');
+    setIsDefault(Boolean(addr.isDefault));
     setViewMode('address-form');
   };
 
@@ -146,8 +170,10 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
       setSelectedCoords(coords);
       triggerHaptic('success');
 
-      // Reverse geocode to autofill address
+      // Reverse geocode to autofill address parts
       const details = await reverseGeocode(coords.lat, coords.lng);
+      if (details.houseNumber) setHouseNo(details.houseNumber);
+      if (details.building) setBuilding(details.building);
       if (details.street) setStreet(details.street);
       if (details.area) setArea(details.area);
       if (details.pincode) setPincode(details.pincode);
@@ -160,7 +186,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     }
   };
 
-  // Perform search query
+  // Perform search query with Nominatim
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -179,6 +205,8 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     setSelectedCoords({ lat: result.lat, lng: result.lng });
     setSearchResults([]);
     setSearchQuery('');
+    if (result.houseNumber) setHouseNo(result.houseNumber);
+    if (result.building) setBuilding(result.building);
     if (result.street) setStreet(result.street);
     if (result.area) setArea(result.area);
     if (result.pincode) setPincode(result.pincode);
@@ -206,14 +234,14 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
 
     const phoneVal = validateIndianMobile(recipientPhone);
     if (!phoneVal.isValid) {
-      setFormError(phoneVal.error || 'Valid contact phone number is required');
+      setFormError(phoneVal.error || 'Valid 10-digit mobile number is required');
       triggerHaptic('warning');
       return;
     }
 
     const streetVal = validateStreetAddress(street);
     if (!streetVal.isValid) {
-      setFormError(streetVal.error || 'Street / Building details are required');
+      setFormError(streetVal.error || 'Street / Road details are required');
       triggerHaptic('warning');
       return;
     }
@@ -232,6 +260,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
       name: recipientName.trim(),
       phone: recipientPhone.trim(),
       houseNo: houseNo.trim(),
+      building: building.trim(),
       street: street.trim(),
       area: area.trim(),
       landmark: landmark.trim(),
@@ -241,11 +270,17 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
       latitude: selectedCoords.lat,
       longitude: selectedCoords.lng,
       isConfirmedOnMap: isPinConfirmed,
+      isDefault,
+      deliveryInstructions: deliveryInstructions.trim(),
     };
 
     if (editingAddressId) {
       updateAddress(editingAddressId, addressPayload);
-      setSelectedAddressId(editingAddressId);
+      if (isDefault) {
+        setDefaultAddress(editingAddressId);
+      } else {
+        setSelectedAddressId(editingAddressId);
+      }
     } else {
       addAddress(addressPayload);
     }
@@ -254,11 +289,24 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     onClose();
   };
 
+  const getLabelIcon = (type: string) => {
+    switch (type) {
+      case 'Home':
+        return <Home className="w-4 h-4 text-emerald-600" />;
+      case 'Work':
+        return <Briefcase className="w-4 h-4 text-blue-600" />;
+      case 'Shop':
+        return <Store className="w-4 h-4 text-purple-600" />;
+      default:
+        return <MapPin className="w-4 h-4 text-amber-600" />;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-float p-4 sm:p-6 z-10 animate-slide-up max-h-[90vh] flex flex-col pb-safe">
+      <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-float p-4 sm:p-6 z-10 animate-slide-up max-h-[92vh] flex flex-col pb-safe">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-brand-slate-border mb-3 shrink-0">
           <div className="flex items-center gap-2">
@@ -273,12 +321,12 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   ? 'Pin Location on Map'
                   : editingAddressId
                   ? 'Edit Delivery Address'
-                  : 'Complete Address Details'}
+                  : 'Complete Delivery Details'}
               </h3>
               <p className="text-[11px] text-brand-text-muted">
                 {viewMode === 'map-picker'
                   ? 'Drag pin to your doorstep'
-                  : 'Ambajogai Fast Delivery Network'}
+                  : 'Yogeshwari Dairy Fast Local Delivery'}
               </p>
             </div>
           </div>
@@ -291,19 +339,23 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                 onClose();
               }
             }}
-            className="w-10 h-10 rounded-full bg-[#F4F6F8] flex items-center justify-center text-brand-text-secondary hover:text-black"
+            className="w-10 h-10 rounded-full bg-[#F4F6F8] flex items-center justify-center text-brand-text-secondary hover:text-black cursor-pointer"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* View Mode 1: Saved Addresses List */}
+        {/* VIEW MODE 1: SAVED ADDRESSES LIST */}
         {viewMode === 'list' && (
           <div className="overflow-y-auto no-scrollbar space-y-3 pb-2 flex-1">
             {savedAddresses.map((addr) => {
               const isSelected = addr.id === selectedAddressId;
               const hasCoordinates = Boolean(addr.latitude && addr.longitude);
+              const addrService = checkDeliveryServiceability(
+                hasCoordinates ? { lat: addr.latitude!, lng: addr.longitude! } : null
+              );
+
               return (
                 <div
                   key={addr.id}
@@ -315,17 +367,11 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <span className="text-base mt-0.5">
-                      {addr.label === 'Home'
-                        ? '🏠'
-                        : addr.label === 'Shop'
-                        ? '🏪'
-                        : addr.label === 'Work'
-                        ? '🏢'
-                        : '📍'}
-                    </span>
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+                      {getLabelIcon(addr.label)}
+                    </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-extrabold text-xs sm:text-sm text-brand-text-primary">
                           {addr.label}
                         </span>
@@ -344,16 +390,37 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                             Manual Address
                           </span>
                         )}
+                        {hasCoordinates && (
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                              addrService.isServiceable
+                                ? 'bg-green-50 text-green-700'
+                                : 'bg-rose-50 text-rose-700'
+                            }`}
+                          >
+                            {addrService.zoneName}
+                          </span>
+                        )}
                       </div>
+
                       <p className="text-xs text-brand-text-secondary mt-1 leading-snug">
                         {addr.houseNo ? `${addr.houseNo}, ` : ''}
+                        {addr.building ? `${addr.building}, ` : ''}
                         {addr.street}
                         {addr.area ? `, ${addr.area}` : ''}
                         {addr.landmark ? `, Near ${addr.landmark}` : ''}
                       </p>
+
                       <p className="text-[11px] text-brand-text-muted mt-0.5">
                         {addr.city} - {addr.pincode} &bull; Ph: {addr.phone}
                       </p>
+
+                      {addr.deliveryInstructions && (
+                        <div className="mt-1 text-[10px] text-brand-text-secondary flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                          <FileText className="w-2.5 h-2.5 text-slate-500" />
+                          <span className="truncate">Note: {addr.deliveryInstructions}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -361,7 +428,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                     <button
                       type="button"
                       onClick={(e) => handleStartEdit(addr, e)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                       title="Edit address"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -370,7 +437,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                       <button
                         type="button"
                         onClick={(e) => handleDelete(addr.id, e)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Delete address"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -390,12 +457,12 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               );
             })}
 
-            {/* Add New Address Button with Map Pin option */}
+            {/* Action Buttons */}
             <div className="pt-2 space-y-2">
               <button
                 type="button"
                 onClick={handleStartAddNew}
-                className="w-full min-h-[48px] py-3 border-2 border-dashed border-[#0C831F] text-[#0C831F] hover:bg-brand-green-light/30 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-colors bg-brand-green-light/10 shadow-xs"
+                className="w-full min-h-[48px] py-3 border-2 border-dashed border-[#0C831F] text-[#0C831F] hover:bg-brand-green-light/30 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-colors bg-brand-green-light/10 shadow-xs cursor-pointer"
               >
                 <MapPin className="w-4 h-4" />
                 <span>Choose Delivery Location on Map</span>
@@ -405,9 +472,9 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                 type="button"
                 onClick={() => {
                   handleStartAddNew();
-                  setViewMode('address-form'); // Skip directly to manual form
+                  setViewMode('address-form');
                 }}
-                className="w-full py-2 text-xs font-semibold text-brand-text-muted hover:text-brand-text-primary text-center"
+                className="w-full py-2 text-xs font-semibold text-brand-text-muted hover:text-brand-text-primary text-center cursor-pointer"
               >
                 Or enter address manually without map
               </button>
@@ -415,10 +482,10 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
           </div>
         )}
 
-        {/* View Mode 2: Interactive Leaflet Map Picker */}
+        {/* VIEW MODE 2: INTERACTIVE LEAFLET MAP PICKER */}
         {viewMode === 'map-picker' && (
           <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pb-2">
-            {/* Search Input for Nominatim Geocoding */}
+            {/* Search Input for OpenStreetMap Nominatim */}
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
@@ -431,13 +498,13 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               <button
                 type="submit"
                 disabled={isSearching}
-                className="absolute right-1.5 top-1.5 px-2.5 py-1.5 rounded-lg bg-[#0C831F] text-white text-[11px] font-bold disabled:opacity-50"
+                className="absolute right-1.5 top-1.5 px-2.5 py-1.5 rounded-lg bg-[#0C831F] text-white text-[11px] font-bold disabled:opacity-50 cursor-pointer"
               >
                 {isSearching ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Search'}
               </button>
             </form>
 
-            {/* Autocomplete Results Dropdown */}
+            {/* Search Autocomplete Dropdown */}
             {searchResults.length > 0 && (
               <div className="bg-white border border-brand-slate-border rounded-xl shadow-lg p-1.5 space-y-1 max-h-40 overflow-y-auto">
                 {searchResults.map((res) => (
@@ -445,7 +512,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                     key={res.placeId}
                     type="button"
                     onClick={() => handleSelectSearchResult(res)}
-                    className="w-full text-left p-2 rounded-lg hover:bg-slate-50 text-xs flex items-start gap-2 text-brand-text-primary"
+                    className="w-full text-left p-2 rounded-lg hover:bg-slate-50 text-xs flex items-start gap-2 text-brand-text-primary cursor-pointer"
                   >
                     <MapPin className="w-3.5 h-3.5 text-[#0C831F] shrink-0 mt-0.5" />
                     <span className="truncate">{res.displayName}</span>
@@ -459,7 +526,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               type="button"
               disabled={isLocating}
               onClick={handleUseCurrentLocation}
-              className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors min-h-[42px]"
+              className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors min-h-[42px] cursor-pointer"
             >
               {isLocating ? (
                 <>
@@ -474,6 +541,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               )}
             </button>
 
+            {/* GPS Error Notification */}
             {gpsError && (
               <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl text-[11px] text-amber-800 flex items-start gap-1.5">
                 <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
@@ -481,7 +549,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               </div>
             )}
 
-            {/* Interactive Leaflet Map with drag marker */}
+            {/* Interactive Leaflet Map Container */}
             <LeafletMapPicker
               initialCoords={selectedCoords}
               onLocationChange={(newCoords) => {
@@ -490,28 +558,39 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               height="260px"
             />
 
+            {/* Out of Delivery Zone Alert */}
+            {!serviceCheck.isServiceable && (
+              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block">Outside Delivery Network:</span>
+                  <span>{serviceCheck.message}</span>
+                </div>
+              </div>
+            )}
+
             {/* Confirm Pin Action */}
             <div className="pt-1 flex gap-2">
               <button
                 type="button"
                 onClick={() => setViewMode('address-form')}
-                className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary"
+                className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary hover:bg-slate-50 cursor-pointer"
               >
-                Skip to Form
+                Manual Address
               </button>
               <button
                 type="button"
                 onClick={handleConfirmMapPin}
-                className="flex-2 min-h-[44px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-2 min-h-[44px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Confirm Location & Add Flat/Street</span>
+                <span>Confirm Pin & Enter Address</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* View Mode 3: Full Delivery Address Form */}
+        {/* VIEW MODE 3: FULL DELIVERY ADDRESS FORM */}
         {viewMode === 'address-form' && (
           <form onSubmit={handleSaveAddress} className="space-y-3 overflow-y-auto no-scrollbar flex-1 pb-2">
             {formError && (
@@ -520,26 +599,40 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               </div>
             )}
 
-            {/* Pin Confirmation Status Pill */}
-            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-brand-slate-border text-[11px]">
+            {/* Pin Confirmation Status Banner */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-brand-slate-border text-[11px]">
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#0C831F]" />
                 <span className="font-semibold text-brand-text-primary">
                   {isPinConfirmed
                     ? `Pin Confirmed (${selectedCoords.lat.toFixed(4)}, ${selectedCoords.lng.toFixed(4)})`
-                    : 'Coordinates: Ambajogai Default'}
+                    : 'Manual Address (No Map Pin)'}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setViewMode('map-picker')}
-                className="text-[#0C831F] font-bold hover:underline"
+                className="text-[#0C831F] font-bold hover:underline cursor-pointer"
               >
-                Change Pin
+                {isPinConfirmed ? 'Change Pin' : 'Select on Map'}
               </button>
             </div>
 
-            {/* Address Type Tag */}
+            {/* Serviceability Status Indicator */}
+            {isPinConfirmed && (
+              <div
+                className={`p-2 rounded-xl text-xs flex items-center gap-1.5 ${
+                  serviceCheck.isServiceable
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border border-rose-200'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>{serviceCheck.badgeText} &bull; {serviceCheck.zoneName}</span>
+              </div>
+            )}
+
+            {/* Address Type Tag (Home / Work / Shop / Other) */}
             <div>
               <label className="text-xs font-bold text-brand-text-primary block mb-1">
                 Save Address As:
@@ -550,7 +643,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                     key={type}
                     type="button"
                     onClick={() => setLabel(type)}
-                    className={`min-h-[38px] py-1.5 text-xs font-bold rounded-lg border text-center transition-all ${
+                    className={`min-h-[38px] py-1.5 text-xs font-bold rounded-lg border text-center transition-all cursor-pointer ${
                       label === type
                         ? 'bg-[#0C831F] text-white border-[#0C831F] shadow-xs'
                         : 'bg-[#F4F6F8] text-brand-text-secondary border-brand-slate-border hover:bg-gray-100'
@@ -562,23 +655,24 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               </div>
             </div>
 
-            {/* Recipient Details */}
+            {/* Recipient Details: Full Name & Mobile */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Recipient Name:
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="e.g. Ramesh Kumar"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Contact Phone:
+                  10-Digit Mobile <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -586,73 +680,104 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   maxLength={10}
                   value={recipientPhone}
                   onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 9876543210"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
             </div>
 
-            {/* House / Flat & Street */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* House / Flat & Building / Apartment */}
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  House / Flat:
+                  House / Flat Number
                 </label>
                 <input
                   type="text"
                   value={houseNo}
                   onChange={(e) => setHouseNo(e.target.value)}
-                  placeholder="e.g. Flat 302"
+                  placeholder="e.g. Flat 302 / House 12"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
-              <div className="col-span-2">
+              <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Street / Building Name:
+                  Building / Apartment
+                </label>
+                <input
+                  type="text"
+                  value={building}
+                  onChange={(e) => setBuilding(e.target.value)}
+                  placeholder="e.g. Sai Complex / Gokul Heights"
+                  className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
+                />
+              </div>
+            </div>
+
+            {/* Street / Road & Area / Locality */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-bold text-brand-text-primary block mb-1">
+                  Street / Road <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={street}
                   onChange={(e) => setStreet(e.target.value)}
-                  placeholder="e.g. Mandi Bazar, Mangalwar Peth Rd"
+                  placeholder="e.g. Mandi Bazar / Mangalwar Peth Rd"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
-            </div>
-
-            {/* Area & Landmark */}
-            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Area / Locality:
+                  Area / Locality
                 </label>
                 <input
                   type="text"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="e.g. Guruwar Peth / Shivaji Chowk"
-                  className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Nearby Landmark:
-                </label>
-                <input
-                  type="text"
-                  value={landmark}
-                  onChange={(e) => setLandmark(e.target.value)}
-                  placeholder="e.g. Near Masjid / Temple"
+                  placeholder="e.g. Mandi Bazar / Gawli Pura"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
             </div>
 
-            {/* City, State, Pincode */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Landmark & PIN Code */}
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  City:
+                  Nearby Landmark
+                </label>
+                <input
+                  type="text"
+                  value={landmark}
+                  onChange={(e) => setLandmark(e.target.value)}
+                  placeholder="e.g. Near Masjid / Yogeshwari Mandir"
+                  className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-text-primary block mb-1">
+                  6-Digit PIN Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 431517"
+                  className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
+                />
+              </div>
+            </div>
+
+            {/* City & State */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-bold text-brand-text-primary block mb-1">
+                  City
                 </label>
                 <input
                   type="text"
@@ -664,7 +789,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               </div>
               <div>
                 <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  State:
+                  State
                 </label>
                 <input
                   type="text"
@@ -674,19 +799,34 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border bg-gray-50 focus:outline-none min-h-[42px]"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-brand-text-primary block mb-1">
-                  Pincode:
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:outline-none min-h-[42px]"
-                />
-              </div>
+            </div>
+
+            {/* Delivery Instructions */}
+            <div>
+              <label className="text-xs font-bold text-brand-text-primary block mb-1">
+                Delivery Instructions:
+              </label>
+              <input
+                type="text"
+                value={deliveryInstructions}
+                onChange={(e) => setDeliveryInstructions(e.target.value)}
+                placeholder="e.g. Leave with guard / Ring doorbell twice / Call on arrival"
+                className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
+              />
+            </div>
+
+            {/* Set as Default Checkbox */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="isDefaultAddr"
+                checked={isDefault}
+                onChange={(e) => setIsDefault(e.target.checked)}
+                className="w-4 h-4 text-[#0C831F] rounded border-gray-300 focus:ring-[#0C831F] cursor-pointer"
+              />
+              <label htmlFor="isDefaultAddr" className="text-xs font-medium text-brand-text-primary cursor-pointer">
+                Set as my default delivery address
+              </label>
             </div>
 
             {/* Form Actions */}
@@ -694,13 +834,13 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary"
+                className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-brand-slate-border text-xs font-bold text-brand-text-secondary hover:bg-slate-50 cursor-pointer"
               >
                 Back to List
               </button>
               <button
                 type="submit"
-                className="flex-2 min-h-[44px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-2 min-h-[44px] py-2.5 rounded-xl bg-[#0C831F] text-white text-xs font-bold hover:bg-[#086617] flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <Check className="w-4 h-4" />
                 <span>Save Delivery Address</span>

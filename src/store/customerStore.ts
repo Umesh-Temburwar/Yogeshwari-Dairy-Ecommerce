@@ -76,6 +76,7 @@ interface CustomerStore {
 
   setCustomerProfile: (name: string, phone: string) => void;
   setSelectedAddressId: (id: string) => void;
+  setDefaultAddress: (id: string) => void;
   addAddress: (address: Omit<DeliveryAddress, 'id'>) => void;
   updateAddress: (id: string, updated: Partial<DeliveryAddress>) => void;
   deleteAddress: (id: string) => void;
@@ -119,6 +120,16 @@ export const useCustomerStore = create<CustomerStore>()(
       },
 
       setSelectedAddressId: (id) => set({ selectedAddressId: id }),
+
+      setDefaultAddress: (id) => {
+        set((state) => ({
+          savedAddresses: state.savedAddresses.map((addr) => ({
+            ...addr,
+            isDefault: addr.id === id,
+          })),
+          selectedAddressId: id,
+        }));
+      },
 
       addAddress: (newAddr) => {
         const id = `addr_${Date.now()}`;

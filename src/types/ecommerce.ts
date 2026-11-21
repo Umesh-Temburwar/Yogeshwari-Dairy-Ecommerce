@@ -67,16 +67,18 @@ export interface DeliveryAddress {
   name: string;
   phone: string;
   street: string;
+  houseNo?: string;
+  building?: string;
+  area?: string;
   landmark?: string;
   city: string;
   state?: string;
   pincode: string;
-  houseNo?: string;
-  area?: string;
   latitude?: number;
   longitude?: number;
   isConfirmedOnMap?: boolean;
   isDefault?: boolean;
+  deliveryInstructions?: string;
 }
 
 export type PaymentMethod = 'cod' | 'upi_doorstep';
@@ -137,6 +139,7 @@ export interface OrderPayload {
   customerPhone: string;
   deliveryAddress: {
     houseNo?: string;
+    building?: string;
     street: string;
     area?: string;
     landmark?: string;
@@ -147,6 +150,7 @@ export interface OrderPayload {
     latitude?: number;
     longitude?: number;
     isConfirmedOnMap?: boolean;
+    deliveryInstructions?: string;
   };
   paymentMethod: PaymentMethod;
   notes?: string;

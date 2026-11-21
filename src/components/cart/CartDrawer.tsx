@@ -4,7 +4,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  MapPin,
   ArrowRight,
   CheckCircle2,
   Sparkles,
@@ -19,6 +18,7 @@ import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
 import { Order } from '@/types/ecommerce';
+import { checkDeliveryServiceability } from '@/utils/geoService';
 import {
   validateCustomerName,
   validateIndianMobile,
@@ -101,7 +101,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const phoneVal = validateIndianMobile(phoneInput);
     if (!phoneVal.isValid) errors.phone = phoneVal.error;
 
-    // 3. Validate Delivery Address
+    // 3. Validate Delivery Address & Serviceability Area
     const streetVal = validateStreetAddress(selectedAddress.street);
     const pincodeVal = validatePincode(selectedAddress.pincode);
     if (!streetVal.isValid) errors.address = streetVal.error;
@@ -109,6 +109,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
+      triggerHaptic('warning');
+      return;
+    }
+
+    const hasCoords = Boolean(selectedAddress.latitude && selectedAddress.longitude);
+    const serviceInfo = checkDeliveryServiceability(
+      hasCoords ? { lat: selectedAddress.latitude!, lng: selectedAddress.longitude! } : null
+    );
+    if (!serviceInfo.isServiceable) {
+      setErrorMessage(
+        serviceInfo.message || 'Delivery is currently not available at the selected location.'
+      );
       triggerHaptic('warning');
       return;
     }
@@ -141,6 +153,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         customerPhone: phoneInput.trim(),
         deliveryAddress: {
           houseNo: selectedAddress.houseNo,
+          building: selectedAddress.building,
           street: selectedAddress.street,
           area: selectedAddress.area,
           landmark: selectedAddress.landmark,
@@ -151,6 +164,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           latitude: selectedAddress.latitude,
           longitude: selectedAddress.longitude,
           isConfirmedOnMap: selectedAddress.isConfirmedOnMap,
+          deliveryInstructions: selectedAddress.deliveryInstructions || deliveryNotes,
         },
         paymentMethod: selectedPaymentMethod,
         notes: deliveryNotes,
@@ -429,7 +443,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="bg-[#F4F6F8] rounded-2xl p-3 border border-brand-slate-border">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5 text-xs font-extrabold text-brand-text-primary">
-                    <MapPin className="w-4 h-4 text-[#0C831F]" />
+                    <span className="text-sm">
+                      {selectedAddress.label === 'Home'
+                        ? '🏠'
+                        : selectedAddress.label === 'Work'
+                        ? '🏢'
+                        : selectedAddress.label === 'Shop'
+                        ? '🏪'
+                        : '📍'}
+                    </span>
                     <span>Delivering To: {selectedAddress.label}</span>
                   </div>
                   <button
@@ -438,16 +460,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       triggerHaptic('light');
                       onOpenAddressModal();
                     }}
-                    className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1"
+                    className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1 cursor-pointer"
                   >
                     <span>Change Pin</span>
                   </button>
                 </div>
 
                 {selectedAddress.latitude && selectedAddress.longitude ? (
-                  <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md mb-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                    <span>Map Pin Confirmed ({selectedAddress.latitude.toFixed(4)}, {selectedAddress.longitude.toFixed(4)})</span>
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      <span>Map Pin Confirmed ({selectedAddress.latitude.toFixed(4)}, {selectedAddress.longitude.toFixed(4)})</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200">
+                      {checkDeliveryServiceability({ lat: selectedAddress.latitude, lng: selectedAddress.longitude }).zoneName}
+                    </span>
                   </div>
                 ) : (
                   <div className="text-[10px] text-amber-700 font-medium mb-1.5 flex items-center gap-1">
@@ -457,11 +484,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                 <p className="text-xs text-brand-text-secondary leading-snug">
                   {selectedAddress.houseNo ? `${selectedAddress.houseNo}, ` : ''}
+                  {selectedAddress.building ? `${selectedAddress.building}, ` : ''}
                   {selectedAddress.street}
                   {selectedAddress.area ? `, ${selectedAddress.area}` : ''}
                   {selectedAddress.landmark ? `, Near ${selectedAddress.landmark}` : ''},{' '}
                   {selectedAddress.city} - {selectedAddress.pincode}
                 </p>
+
+                {selectedAddress.deliveryInstructions && (
+                  <p className="text-[10px] text-slate-500 mt-1 italic">
+                    Instructions: {selectedAddress.deliveryInstructions}
+                  </p>
+                )}
+
                 {validationErrors.address && (
                   <span className="text-[10px] text-red-600 font-medium block mt-1">
                     {validationErrors.address}

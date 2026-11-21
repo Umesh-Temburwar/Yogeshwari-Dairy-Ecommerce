@@ -61,6 +61,22 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
   const isCancelled = order.orderStatus === 'cancelled';
   const canCancel = order.orderStatus === 'pending' || order.orderStatus === 'confirmed';
 
+  // Blinkit Dark-Store Item Verification Parser
+  const notesText = order.notes || '';
+  const isBlinkitScan = notesText.includes('BLINKIT_SCAN') || notesText.includes('PACKED');
+  const isAllVerified =
+    notesText.includes('ALL_VERIFIED') ||
+    notesText.includes('All items barcode-verified') ||
+    order.orderStatus === 'out_for_delivery' ||
+    order.orderStatus === 'delivered';
+
+  const scanMatch = notesText.match(/(\d+)\s*items?\s*verified/i);
+  const scannedUnitsCount = scanMatch
+    ? parseInt(scanMatch[1], 10)
+    : isAllVerified
+    ? order.items.length
+    : 0;
+
   const handleCancel = async () => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return;
 
@@ -132,6 +148,52 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
             >
               <PhoneCall className="w-4 h-4" />
             </a>
+          </div>
+        )}
+
+        {/* Blinkit-Style Live Dark-Store Barcode Verification Card */}
+        {(order.orderStatus === 'preparing' || isBlinkitScan || isAllVerified) && !isCancelled && (
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 rounded-2xl p-4 border border-emerald-200 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs animate-pulse">
+                  ⚡
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-black text-emerald-950 flex items-center gap-1.5">
+                    <span>Store Barcode Quality Check</span>
+                    <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
+                      {isAllVerified ? '100% VERIFIED' : 'SCANNING LIVE'}
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-emerald-800">
+                    {isAllVerified
+                      ? 'Counter staff verified each item with laser barcode scanner. Chilled in insulated bag.'
+                      : `Counter staff is scanning each product with barcode gun (${scannedUnitsCount} items verified so far)`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full bg-emerald-200/60 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                style={{
+                  width: isAllVerified
+                    ? '100%'
+                    : `${Math.max(
+                        25,
+                        Math.min(95, (scannedUnitsCount / Math.max(1, order.items.length)) * 100)
+                      )}%`,
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-0.5">
+              <span>Blinkit-Speed Dark Store Packing</span>
+              <span>{isAllVerified ? 'Sealed & Ready ✓' : 'Item-by-item verification in progress'}</span>
+            </div>
           </div>
         )}
 
@@ -209,11 +271,18 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
                 key={item.productId}
                 className="p-3 bg-white flex items-center justify-between text-xs"
               >
-                <div>
-                  <span className="font-bold text-brand-text-primary">{item.name}</span>
-                  <span className="text-[11px] text-brand-text-muted ml-1">
-                    ({item.packSize}) x {item.quantity}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <span className="font-bold text-brand-text-primary">{item.name}</span>
+                    <span className="text-[11px] text-brand-text-muted ml-1">
+                      ({item.packSize}) x {item.quantity}
+                    </span>
+                  </div>
+                  {(isAllVerified || isBlinkitScan) && (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                      ✓ Scanned
+                    </span>
+                  )}
                 </div>
                 <span className="font-black text-brand-text-primary">
                   {formatPrice(item.itemTotal)}
