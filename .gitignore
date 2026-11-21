@@ -12,6 +12,7 @@ dist
 dist-ssr
 
 # Local environment files (contains developer-specific credentials)
+.env
 .env.local
 .env.*.local
 *.local
