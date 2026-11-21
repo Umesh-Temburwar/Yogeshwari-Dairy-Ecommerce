@@ -140,11 +140,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         customerName: nameInput.trim(),
         customerPhone: phoneInput.trim(),
         deliveryAddress: {
+          houseNo: selectedAddress.houseNo,
           street: selectedAddress.street,
+          area: selectedAddress.area,
           landmark: selectedAddress.landmark,
           city: selectedAddress.city,
+          state: selectedAddress.state || 'Maharashtra',
           pincode: selectedAddress.pincode,
           label: selectedAddress.label,
+          latitude: selectedAddress.latitude,
+          longitude: selectedAddress.longitude,
+          isConfirmedOnMap: selectedAddress.isConfirmedOnMap,
         },
         paymentMethod: selectedPaymentMethod,
         notes: deliveryNotes,
@@ -421,7 +427,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {/* Delivery Address Card */}
             {items.length > 0 && (
               <div className="bg-[#F4F6F8] rounded-2xl p-3 border border-brand-slate-border">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5 text-xs font-extrabold text-brand-text-primary">
                     <MapPin className="w-4 h-4 text-[#0C831F]" />
                     <span>Delivering To: {selectedAddress.label}</span>
@@ -432,13 +438,27 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       triggerHaptic('light');
                       onOpenAddressModal();
                     }}
-                    className="text-xs font-bold text-[#0C831F] hover:underline p-1"
+                    className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1"
                   >
-                    Change
+                    <span>Change Pin</span>
                   </button>
                 </div>
+
+                {selectedAddress.latitude && selectedAddress.longitude ? (
+                  <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md mb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                    <span>Map Pin Confirmed ({selectedAddress.latitude.toFixed(4)}, {selectedAddress.longitude.toFixed(4)})</span>
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-amber-700 font-medium mb-1.5 flex items-center gap-1">
+                    <span>⚠️ Approximate address &bull; Click "Change Pin" to set exact map location</span>
+                  </div>
+                )}
+
                 <p className="text-xs text-brand-text-secondary leading-snug">
+                  {selectedAddress.houseNo ? `${selectedAddress.houseNo}, ` : ''}
                   {selectedAddress.street}
+                  {selectedAddress.area ? `, ${selectedAddress.area}` : ''}
                   {selectedAddress.landmark ? `, Near ${selectedAddress.landmark}` : ''},{' '}
                   {selectedAddress.city} - {selectedAddress.pincode}
                 </p>

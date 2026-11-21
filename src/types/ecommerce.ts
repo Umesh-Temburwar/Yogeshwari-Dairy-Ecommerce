@@ -69,7 +69,13 @@ export interface DeliveryAddress {
   street: string;
   landmark?: string;
   city: string;
+  state?: string;
   pincode: string;
+  houseNo?: string;
+  area?: string;
+  latitude?: number;
+  longitude?: number;
+  isConfirmedOnMap?: boolean;
   isDefault?: boolean;
 }
 
@@ -130,11 +136,17 @@ export interface OrderPayload {
   customerName: string;
   customerPhone: string;
   deliveryAddress: {
+    houseNo?: string;
     street: string;
+    area?: string;
     landmark?: string;
     city: string;
+    state?: string;
     pincode: string;
     label?: string;
+    latitude?: number;
+    longitude?: number;
+    isConfirmedOnMap?: boolean;
   };
   paymentMethod: PaymentMethod;
   notes?: string;

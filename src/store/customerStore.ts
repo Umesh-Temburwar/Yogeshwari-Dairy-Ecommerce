@@ -8,10 +8,16 @@ const DEFAULT_ADDRESSES: DeliveryAddress[] = [
     label: 'Home',
     name: 'Ramesh Kumar',
     phone: '9370869896',
+    houseNo: 'House 14',
     street: 'Mandi Bazar, Mangalwar Peth Road',
+    area: 'Mandi Bazar',
     landmark: 'Near Masjid',
     city: 'Ambajogai',
+    state: 'Maharashtra',
     pincode: '431517',
+    latitude: 18.7304,
+    longitude: 76.3879,
+    isConfirmedOnMap: true,
     isDefault: true,
   },
   {
@@ -19,10 +25,16 @@ const DEFAULT_ADDRESSES: DeliveryAddress[] = [
     label: 'Shop',
     name: 'Yogeshwari Dairy Counter',
     phone: '9370869896',
-    street: 'Shop No. 1, Mandi Bazar Market',
+    houseNo: 'Shop No. 1',
+    street: 'Main Market, Mandi Bazar Road',
+    area: 'Mandi Bazar',
     landmark: 'Mangalwar Peth Road',
     city: 'Ambajogai',
+    state: 'Maharashtra',
     pincode: '431517',
+    latitude: 18.7312,
+    longitude: 76.3885,
+    isConfirmedOnMap: true,
     isDefault: false,
   },
   {
@@ -30,10 +42,16 @@ const DEFAULT_ADDRESSES: DeliveryAddress[] = [
     label: 'Work',
     name: 'Ramesh Kumar',
     phone: '9370869896',
+    houseNo: 'Office 202',
     street: 'Near Yogeshwari Devi Mandir',
-    landmark: 'Mandir Road',
+    area: 'Mandir Road',
+    landmark: 'Main Gate',
     city: 'Ambajogai',
+    state: 'Maharashtra',
     pincode: '431517',
+    latitude: 18.7335,
+    longitude: 76.3842,
+    isConfirmedOnMap: true,
     isDefault: false,
   },
 ];
@@ -60,6 +78,7 @@ interface CustomerStore {
   setSelectedAddressId: (id: string) => void;
   addAddress: (address: Omit<DeliveryAddress, 'id'>) => void;
   updateAddress: (id: string, updated: Partial<DeliveryAddress>) => void;
+  deleteAddress: (id: string) => void;
   setSelectedPaymentMethod: (method: PaymentMethod) => void;
   setDeliveryNotes: (notes: string) => void;
   addActiveOrderId: (orderId: string) => void;
@@ -115,6 +134,19 @@ export const useCustomerStore = create<CustomerStore>()(
             addr.id === id ? { ...addr, ...updated } : addr
           ),
         }));
+      },
+
+      deleteAddress: (id) => {
+        set((state) => {
+          const remaining = state.savedAddresses.filter((addr) => addr.id !== id);
+          const nextSelected = state.selectedAddressId === id
+            ? (remaining[0]?.id || '')
+            : state.selectedAddressId;
+          return {
+            savedAddresses: remaining,
+            selectedAddressId: nextSelected,
+          };
+        });
       },
 
       setSelectedPaymentMethod: (method) => set({ selectedPaymentMethod: method }),
