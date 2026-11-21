@@ -96,7 +96,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </h1>
               <p className="text-xs sm:text-sm text-white/85 font-medium mt-1.5 leading-relaxed">
                 100% Unadulterated Cow & Buffalo Milk, Soft Malai Paneer, and Desi Bilona Ghee.
-                Delivery by 8:00 AM / Same Day across Nagpur.
+                Delivery across Ambajogai • Open Daily: 6:00 AM – 10:00 PM.
               </p>
 
               {/* Guarantees checklist */}

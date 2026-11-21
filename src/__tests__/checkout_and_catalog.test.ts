@@ -167,6 +167,7 @@ describe('Checkout Validation & Idempotency Rules', () => {
   });
 
   it('validates 6-digit postal pincodes', () => {
+    expect(validatePincode('431517').isValid).toBe(true); // Ambajogai pincode
     expect(validatePincode('441904').isValid).toBe(true); // Bhandara pincode
     expect(validatePincode('440010').isValid).toBe(true); // Nagpur pincode
     expect(validatePincode('44190').isValid).toBe(false); // 5 digits

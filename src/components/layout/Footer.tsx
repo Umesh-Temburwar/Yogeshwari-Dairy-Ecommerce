@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-brand-text-muted max-w-sm leading-relaxed">
-              Nagpur's trusted local dairy brand. Farm-fresh cow & buffalo milk, pure bilona ghee,
+              Ambajogai's trusted local dairy brand. Farm-fresh cow & buffalo milk, pure bilona ghee,
               daily-made spongy paneer, and authentic festival sweets delivered in 15-20 minutes.
             </p>
             <div className="flex items-center gap-3 pt-2">
@@ -45,15 +45,11 @@ export const Footer: React.FC = () => {
             <ul className="space-y-1.5 text-brand-text-muted">
               <li className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#0C831F]" />
-                <span>Morning: 6:00 AM – 1:00 PM</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#0C831F]" />
-                <span>Evening: 4:30 PM – 10:00 PM</span>
+                <span>Open Daily: 6:00 AM – 10:00 PM</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#0C831F]" />
-                <span>Ramdas Peth, Dharampeth, Nagpur</span>
+                <span>Mandi Bazar, Mangalwar Peth Rd, near Masjid, Ambajogai - 431517</span>
               </li>
             </ul>
           </div>

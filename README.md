@@ -1,6 +1,6 @@
 # Yogeshwari Dairy Customer E-Commerce 🥛⚡
 
-Customer-facing quick-commerce web application for **Yogeshwari Dairy Products**, delivering fresh farm cow & buffalo milk, curd, malai paneer, desi bilona ghee, and traditional sweets across Nagpur in **15-20 minutes**.
+Customer-facing quick-commerce web application for **Yogeshwari Dairy Products**, delivering fresh farm cow & buffalo milk, curd, malai paneer, desi bilona ghee, and traditional sweets across Ambajogai in **15-20 minutes**.
 
 Integrates directly with the Yogeshwari Dairy backend and Supabase inventory system.
 
@@ -48,7 +48,7 @@ cp .env.example .env
 |---|---|---|
 | `VITE_USE_MOCK_API` | Use offline local mock adapter (`true`/`false`) | `true` |
 | `VITE_BACKEND_URL` | Express backend base URL | `https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1/ecommerce` |
-| `VITE_STORE_PHONE` | Dairy hotline / WhatsApp number | `+9370869896` |
+| `VITE_STORE_PHONE` | Dairy hotline / WhatsApp number | `+919370869896` |
 | `VITE_FREE_DELIVERY_THRESHOLD` | Order amount for zero delivery charges | `300` |
 | `VITE_STANDARD_DELIVERY_FEE` | Flat delivery fee below threshold | `30` |
 

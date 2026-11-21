@@ -23,8 +23,8 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
   const [newLabel, setNewLabel] = useState<'Home' | 'Shop' | 'Work' | 'Other'>('Home');
   const [street, setStreet] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [city, setCity] = useState('Nagpur');
-  const [pincode, setPincode] = useState('440010');
+  const [city, setCity] = useState('Ambajogai');
+  const [pincode, setPincode] = useState('431517');
   const [formError, setFormError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -85,7 +85,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
               <h3 className="font-black text-sm sm:text-base text-brand-text-primary">
                 Select Delivery Location
               </h3>
-              <p className="text-[11px] text-brand-text-muted">Nagpur Quick Delivery Zones</p>
+              <p className="text-[11px] text-brand-text-muted">Ambajogai Quick Delivery Zones</p>
             </div>
           </div>
           <button
@@ -211,7 +211,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   required
                   value={street}
                   onChange={(e) => setStreet(e.target.value)}
-                  placeholder="e.g. Flat 402, Shiv Residency, Wardha Road"
+                  placeholder="e.g. Mandi Bazar / Mangalwar Peth Road"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[44px]"
                 />
               </div>
@@ -224,7 +224,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   type="text"
                   value={landmark}
                   onChange={(e) => setLandmark(e.target.value)}
-                  placeholder="e.g. Near Metro Station / Hanuman Mandir"
+                  placeholder="e.g. Near Masjid / Yogeshwari Devi Mandir"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[44px]"
                 />
               </div>

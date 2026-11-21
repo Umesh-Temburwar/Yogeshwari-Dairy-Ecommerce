@@ -56,6 +56,7 @@ describe('Customer & Checkout Validation Utilities', () => {
     });
 
     it('accepts valid 6-digit Indian postal codes', () => {
+      expect(validatePincode('431517').isValid).toBe(true);
       expect(validatePincode('440010').isValid).toBe(true);
       expect(validatePincode('440022').isValid).toBe(true);
     });

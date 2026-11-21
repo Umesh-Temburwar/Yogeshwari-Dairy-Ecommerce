@@ -1,7 +1,8 @@
 import { Order } from '@/types/ecommerce';
 
-const STORE_PHONE = import.meta.env.VITE_STORE_PHONE || '+9370869896';
-const CLEAN_STORE_PHONE = STORE_PHONE.replace(/[^0-9]/g, '');
+const STORE_PHONE = import.meta.env.VITE_STORE_PHONE || '+919370869896';
+const rawDigits = STORE_PHONE.replace(/[^0-9]/g, '');
+const CLEAN_STORE_PHONE = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
 
 export function generateWhatsAppOrderMessage(order: Order): string {
   const itemsText = order.items

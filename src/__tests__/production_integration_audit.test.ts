@@ -158,8 +158,8 @@ describe('PHASE 9: Post-Deployment Production Integration Test Suite', () => {
         customerPhone: '9876543210',
         deliveryAddress: {
           street: '123 Test Street',
-          city: 'Nagpur',
-          pincode: '440010',
+          city: 'Ambajogai',
+          pincode: '431517',
           label: 'Home' as const,
         },
         paymentMethod: 'cod' as const,
