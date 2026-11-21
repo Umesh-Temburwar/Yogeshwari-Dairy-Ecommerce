@@ -80,7 +80,7 @@ FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 CREATE TABLE IF NOT EXISTS public.ecommerce_orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_no VARCHAR(50) UNIQUE NOT NULL,
-    customer_id UUID NOT NULL REFERENCES auth.users(id),
+    customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     customer_name VARCHAR(150) NOT NULL,
     customer_phone VARCHAR(25) NOT NULL,
     customer_email VARCHAR(255),
@@ -111,6 +111,9 @@ CREATE TABLE IF NOT EXISTS public.ecommerce_orders (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure customer_id can be NULL for anonymous/guest checkout
+ALTER TABLE public.ecommerce_orders ALTER COLUMN customer_id DROP NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_ecommerce_orders_customer 
     ON public.ecommerce_orders (customer_id, created_at DESC);
@@ -627,12 +630,21 @@ CREATE POLICY "customer_addresses_delete"
 DROP POLICY IF EXISTS "ecommerce_orders_select" ON public.ecommerce_orders;
 CREATE POLICY "ecommerce_orders_select"
     ON public.ecommerce_orders FOR SELECT
-    USING (auth.uid() = customer_id OR public.is_dairy_staff());
+    USING (
+        auth.uid() = customer_id 
+        OR public.is_dairy_staff() 
+        OR auth.role() = 'anon'
+    );
 
 DROP POLICY IF EXISTS "ecommerce_orders_insert" ON public.ecommerce_orders;
 CREATE POLICY "ecommerce_orders_insert"
     ON public.ecommerce_orders FOR INSERT
-    WITH CHECK (auth.uid() = customer_id OR public.is_dairy_staff());
+    WITH CHECK (
+        (customer_phone IS NOT NULL AND total_amount >= 0)
+        OR auth.uid() = customer_id 
+        OR public.is_dairy_staff()
+        OR auth.role() = 'anon'
+    );
 
 DROP POLICY IF EXISTS "ecommerce_orders_update" ON public.ecommerce_orders;
 CREATE POLICY "ecommerce_orders_update"
@@ -650,17 +662,19 @@ CREATE POLICY "ecommerce_orders_delete"
 DROP POLICY IF EXISTS "ecommerce_order_items_select" ON public.ecommerce_order_items;
 CREATE POLICY "ecommerce_order_items_select"
     ON public.ecommerce_order_items FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.ecommerce_orders o 
-            WHERE o.id = order_id AND (o.customer_id = auth.uid() OR public.is_dairy_staff())
-        )
-    );
+    USING (TRUE);
 
 DROP POLICY IF EXISTS "ecommerce_order_items_insert" ON public.ecommerce_order_items;
 CREATE POLICY "ecommerce_order_items_insert"
     ON public.ecommerce_order_items FOR INSERT
-    WITH CHECK (public.is_dairy_staff());
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.ecommerce_orders o 
+            WHERE o.id = order_id
+        ) 
+        OR public.is_dairy_staff() 
+        OR auth.role() = 'anon'
+    );
 
 -- D. ecommerce_order_item_allocations Policies (Staff Only)
 DROP POLICY IF EXISTS "order_allocations_staff_select" ON public.ecommerce_order_item_allocations;
@@ -713,5 +727,7 @@ BEGIN
         END IF;
     END IF;
 END $$;
+
+ALTER TABLE public.ecommerce_orders REPLICA IDENTITY FULL;
 
 COMMIT;
