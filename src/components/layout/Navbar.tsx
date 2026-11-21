@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice } from '@/utils/formatters';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
@@ -28,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { getTotalItemsCount, getSubtotal, openCartDrawer } = useCartStore();
   const { getSelectedAddress } = useCustomerStore();
+  const { isStoreOpen } = useStoreStatusStore();
   const selectedAddress = getSelectedAddress();
   const [isListening, setIsListening] = useState(false);
 
@@ -45,31 +47,68 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-subtle border-b border-brand-slate-border">
-      {/* Top Announcement Bar with honest delivery time claim */}
-      <div className="bg-[#0C831F] text-white px-3 py-1.5 text-xs font-semibold flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-400"></span>
+      {/* Top Announcement Bar with honest delivery time claim & Store Open/Closed status */}
+      <div
+        className={`px-3 py-1.5 text-xs font-semibold flex items-center justify-between transition-colors duration-300 ${
+          isStoreOpen ? 'bg-[#0C831F] text-white' : 'bg-red-600 text-white'
+        }`}
+      >
+        <div className="flex items-center gap-1.5 truncate">
+          <span className="flex h-2 w-2 relative shrink-0">
+            <span
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                isStoreOpen ? 'bg-yellow-300' : 'bg-white'
+              }`}
+            />
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                isStoreOpen ? 'bg-yellow-400' : 'bg-white'
+              }`}
+            />
           </span>
-          <span className="tracking-wide text-[11px] sm:text-xs">
-            ⚡ FAST LOCAL DELIVERY (EST. 20-40 MINS)
-          </span>
-          <span className="text-white/60">|</span>
-          <span className="text-brand-yellow font-medium hidden sm:inline">Yogeshwari Fresh Dairy</span>
+          {isStoreOpen ? (
+            <>
+              <span className="tracking-wide text-[11px] sm:text-xs font-black truncate">
+                ⚡ FAST LOCAL DELIVERY (EST. 20-40 MINS)
+              </span>
+              <span className="text-white/60 hidden xs:inline">|</span>
+              <span className="text-brand-yellow font-medium hidden sm:inline">
+                Yogeshwari Fresh Dairy
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="tracking-wide text-[11px] sm:text-xs font-black truncate">
+                🔴 DUKAN ABHI BAND HAI • Online Orders Resume at 6:00 AM
+              </span>
+              <span className="text-white/60 hidden sm:inline">|</span>
+              <span className="text-yellow-200 font-medium hidden md:inline">
+                दुकान सध्या बंद आहे
+              </span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <a
             href={getStoreCallHref()}
-            className="flex items-center gap-1 hover:text-brand-yellow transition-colors text-[11px] sm:text-xs"
+            className="flex items-center gap-1 hover:text-yellow-200 transition-colors text-[11px] sm:text-xs"
             title="Dairy Contact Hotline"
           >
             <PhoneCall className="w-3 h-3" />
             <span className="hidden xs:inline">+91 93708 69896</span>
           </a>
           <span className="text-white/60">|</span>
-          <span className="bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
-            Store Open
+          <span
+            className={`px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-wider flex items-center gap-1 ${
+              isStoreOpen ? 'bg-white/20 text-white' : 'bg-black/30 text-white'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isStoreOpen ? 'bg-emerald-300 animate-pulse' : 'bg-white'
+              }`}
+            />
+            {isStoreOpen ? 'Store Open' : 'Store Closed'}
           </span>
         </div>
       </div>

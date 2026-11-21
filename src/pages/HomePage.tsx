@@ -5,6 +5,8 @@ import { CategoryPills } from '@/components/layout/CategoryPills';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
 import { Category, Product } from '@/types/ecommerce';
 import { ecommerceApi, isUsingMockApi } from '@/services/api';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
+import { getStoreCallHref } from '@/utils/whatsapp';
 
 interface HomePageProps {
   searchQuery: string;
@@ -12,6 +14,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }) => {
+  const { isStoreOpen } = useStoreStatusStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -51,6 +54,33 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 space-y-4">
+        {/* Store Closed Banner (Flipkart / Blinkit Style Alert) */}
+        {!isStoreOpen && (
+          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in border border-red-500/40">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+                🌙
+              </div>
+              <div>
+                <div className="font-black text-sm sm:text-base flex items-center gap-2">
+                  <span>🔴 Dukan Abhi Band Hai</span>
+                  <span className="text-yellow-200 text-xs font-semibold">| दुकान सध्या बंद आहे</span>
+                </div>
+                <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
+                  Yogeshwari Dairy store is currently closed for the night. Online deliveries will resume tomorrow fresh at <strong>6:00 AM</strong>. You can browse products & build your cart anytime!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
+              <a
+                href={getStoreCallHref()}
+                className="w-full sm:w-auto text-center bg-white text-red-700 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-50 transition-colors shadow-xs"
+              >
+                Call Store Hotline
+              </a>
+            </div>
+          </div>
+        )}
         {/* Banner Alert for Mock API Mode or Live Stock Mode */}
         {isUsingMockApi ? (
           <div className="bg-amber-50 border border-amber-200/80 rounded-2xl px-3 py-2 flex items-center justify-between text-xs text-amber-900 shadow-xs">

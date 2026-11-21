@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -11,11 +11,20 @@ import { OrdersPage } from '@/pages/OrdersPage';
 import { TrackOrderPage } from '@/pages/TrackOrderPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Order } from '@/types/ecommerce';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 
 export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
+
+  // Synchronize store open/closed state in real-time with Shop Counter POS
+  useEffect(() => {
+    const cleanup = useStoreStatusStore.getState().initRealtimeSubscription();
+    return () => {
+      cleanup();
+    };
+  }, []);
 
   return (
     <Router>

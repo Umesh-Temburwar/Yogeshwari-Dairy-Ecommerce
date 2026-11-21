@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
@@ -61,6 +62,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     addActiveOrderId,
   } = useCustomerStore();
 
+  const { isStoreOpen } = useStoreStatusStore();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sendWhatsAppAlert, setSendWhatsAppAlert] = useState(true);
@@ -81,6 +84,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const handleCheckout = async () => {
     if (items.length === 0 || isSubmitting) return;
+
+    if (!isStoreOpen) {
+      setErrorMessage(
+        'Dukan Abhi Band Hai • Yogeshwari Dairy online orders resume tomorrow at 6:00 AM'
+      );
+      triggerHaptic('warning');
+      return;
+    }
 
     setErrorMessage(null);
     const errors: { name?: string; phone?: string; address?: string } = {};
@@ -214,6 +225,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Body Content */}
           <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-safe">
+            {/* Store Closed Persistent Alert Banner in Cart */}
+            {!isStoreOpen && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-red-900 shadow-xs animate-fade-in">
+                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-black block text-red-900">
+                    🔴 Dukan Abhi Band Hai (दुकान सध्या बंद आहे)
+                  </span>
+                  <span className="text-red-700 leading-relaxed block mt-0.5">
+                    Yogeshwari Dairy store is currently closed for the night. Online deliveries resume fresh tomorrow at <strong>6:00 AM</strong>. You can keep items in your cart and order first thing in the morning!
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Free Delivery Goal Tracker */}
             <div className="bg-brand-slate-bg border border-brand-slate-border rounded-2xl p-3">
               {amountNeeded > 0 ? (
@@ -563,21 +589,35 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           {items.length > 0 && (
             <div className="p-4 bg-white border-t border-brand-slate-border shadow-float shrink-0">
               <button
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isStoreOpen}
                 onClick={handleCheckout}
-                className="w-full min-h-[52px] bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between shadow-sm transition-all active:scale-98"
+                className={`w-full min-h-[52px] py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between shadow-sm transition-all active:scale-98 ${
+                  !isStoreOpen
+                    ? 'bg-slate-500 text-white cursor-not-allowed opacity-90'
+                    : 'bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white'
+                }`}
               >
                 <div className="text-left">
                   <div className="text-[11px] text-white/80 uppercase font-semibold">
                     Total: {formatPrice(total)}
                   </div>
                   <div className="text-xs font-medium text-white/90">
-                    {selectedPaymentMethod === 'cod' ? 'Cash on Delivery' : 'Scan QR at Doorstep'}
+                    {!isStoreOpen
+                      ? 'Orders Resume at 6:00 AM'
+                      : selectedPaymentMethod === 'cod'
+                      ? 'Cash on Delivery'
+                      : 'Scan QR at Doorstep'}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 bg-white text-[#0C831F] px-4 py-2 rounded-xl text-xs sm:text-sm font-black">
-                  {isSubmitting ? (
+                <div
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-black ${
+                    !isStoreOpen ? 'bg-white/20 text-white' : 'bg-white text-[#0C831F]'
+                  }`}
+                >
+                  {!isStoreOpen ? (
+                    <span>🚫 Store Closed</span>
+                  ) : isSubmitting ? (
                     <span className="flex items-center gap-1.5">
                       <span className="w-3.5 h-3.5 border-2 border-[#0C831F] border-t-transparent rounded-full animate-spin" />
                       <span>Placing Order...</span>
