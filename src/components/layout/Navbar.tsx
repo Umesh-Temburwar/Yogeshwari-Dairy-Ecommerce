@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ⚡ FAST LOCAL DELIVERY (EST. 20-40 MINS)
           </span>
           <span className="text-white/60">|</span>
-          <span className="text-brand-yellow font-medium hidden sm:inline">Ambajogai Fresh Dairy</span>
+          <span className="text-brand-yellow font-medium hidden sm:inline">Yogeshwari Fresh Dairy</span>
         </div>
         <div className="flex items-center gap-3">
           <a
@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Dairy Contact Hotline"
           >
             <PhoneCall className="w-3 h-3" />
-            <span className="hidden xs:inline">+91 98765 43210 (Demo Contact)</span>
+            <span className="hidden xs:inline">+91 93708 69896</span>
           </a>
           <span className="text-white/60">|</span>
           <span className="bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">

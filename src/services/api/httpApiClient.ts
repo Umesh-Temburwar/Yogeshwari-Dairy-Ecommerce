@@ -438,7 +438,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through to Direct Supabase insertion
     }
 
-    // 2. Direct Supabase Order Insertion
+    // 2. Direct Supabase Order Insertion (Atomic RPC or Table Insert)
     try {
       const validation = await this.validateCart(orderPayload.items);
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
@@ -465,7 +465,103 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         };
       });
 
-      // Insert into ecommerce_orders table
+      // Standard UUIDs for atomic database execution
+      const orderId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `a0eebc99-9c0b-4ef8-bb6d-${Date.now().toString(16).padStart(12, '0')}`;
+      const idemUuid =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `b0eebc99-9c0b-4ef8-bb6d-${Date.now().toString(16).padStart(12, '0')}`;
+
+      // 2A. Attempt Atomic RPC Function (FEFO & concurrency reservation)
+      try {
+        const rpcItems = itemsWithDetails.map((item) => ({
+          product_id: item.productId,
+          product_name: item.name,
+          quantity: item.quantity,
+          pack_size: item.packSize,
+          unit: 'Piece',
+          unit_price: item.price,
+          mrp: item.price,
+          total_price: item.itemTotal,
+          image_url: item.imageUrl,
+        }));
+
+        const { data: rpcData, error: rpcErr } = await supabase.rpc(
+          'fn_create_ecommerce_order_atomic',
+          {
+            p_order_id: orderId,
+            p_order_no: orderNumber,
+            p_idempotency_key: idemUuid,
+            p_customer_id: null,
+            p_customer_name: orderPayload.customerName,
+            p_customer_phone: orderPayload.customerPhone,
+            p_customer_email: null,
+            p_delivery_address: orderPayload.deliveryAddress,
+            p_payment_method: orderPayload.paymentMethod === 'cod' ? 'COD' : 'ONLINE_UPI',
+            p_payment_reference: null,
+            p_subtotal: validation.subtotal,
+            p_delivery_fee: validation.deliveryFee,
+            p_discount_amount: 0,
+            p_total_amount: validation.total,
+            p_items: rpcItems,
+          }
+        );
+
+        if (!rpcErr && rpcData && rpcData.success) {
+          const clientOrder: Order = {
+            id: rpcData.order_id || orderId,
+            orderNumber: rpcData.order_no || orderNumber,
+            createdAt: nowIso,
+            customerName: orderPayload.customerName,
+            customerPhone: orderPayload.customerPhone,
+            deliveryAddress: {
+              id: `addr_${Date.now()}`,
+              label: (orderPayload.deliveryAddress.label as any) || 'Home',
+              name: orderPayload.customerName,
+              phone: orderPayload.customerPhone,
+              street: orderPayload.deliveryAddress.street,
+              landmark: orderPayload.deliveryAddress.landmark,
+              city: orderPayload.deliveryAddress.city,
+              pincode: orderPayload.deliveryAddress.pincode,
+            },
+            paymentMethod: orderPayload.paymentMethod,
+            paymentStatus: 'pending',
+            orderStatus: 'pending',
+            items: itemsWithDetails,
+            subtotal: validation.subtotal,
+            deliveryFee: validation.deliveryFee,
+            total: validation.total,
+            notes: orderPayload.notes,
+            estimatedDeliveryMinutes: 25,
+            deliveryPartner: {
+              name: 'Sunil Rao (Express Dairy Fleet)',
+              phone: '+919876543210',
+              vehicleNumber: 'MH-31-DY-1008',
+            },
+            timeline: this.buildTimelineForStatus('pending', nowIso),
+          };
+
+          const stored = this.getStoredOrders();
+          this.saveStoredOrders([clientOrder, ...stored]);
+
+          return {
+            success: true,
+            orderId: clientOrder.id,
+            orderNumber: clientOrder.orderNumber,
+            data: clientOrder,
+            message: 'Your dairy order has been confirmed successfully via atomic FEFO reservation!',
+          };
+        } else if (rpcErr) {
+          console.warn('Atomic RPC fn_create_ecommerce_order_atomic notice:', rpcErr.message);
+        }
+      } catch (rpcCallErr) {
+        console.warn('Atomic RPC call exception:', rpcCallErr);
+      }
+
+      // 2B. Direct Table Insert Fallback (if RPC is undergoing migration)
       const { data: dbOrder, error: orderErr } = await supabase
         .from('ecommerce_orders')
         .insert({
