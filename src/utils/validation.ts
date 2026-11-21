@@ -21,7 +21,7 @@ export function validateIndianMobile(phone: string): ValidationResult {
   if (!phone || !phone.trim()) {
     return { isValid: false, error: 'Mobile number is required' };
   }
-  const cleaned = phone.replace(/[\s\-\+]/g, '').replace(/^91/, '');
+  const cleaned = phone.replace(/[\s\-\+]/g, '').replace(/^91/, '').replace(/^0/, '');
   const indianMobileRegex = /^[6-9]\d{9}$/;
   if (!indianMobileRegex.test(cleaned)) {
     return {

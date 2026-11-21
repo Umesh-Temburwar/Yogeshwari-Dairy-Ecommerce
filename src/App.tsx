@@ -9,6 +9,7 @@ import { OrderSuccessModal } from '@/components/order/OrderSuccessModal';
 import { HomePage } from '@/pages/HomePage';
 import { OrdersPage } from '@/pages/OrdersPage';
 import { TrackOrderPage } from '@/pages/TrackOrderPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Order } from '@/types/ecommerce';
 
 export const App: React.FC = () => {
@@ -40,6 +41,7 @@ export const App: React.FC = () => {
             />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/track/:orderId" element={<TrackOrderPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
 
