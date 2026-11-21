@@ -122,13 +122,21 @@ export function mapDbStatusToFrontend(dbStatus?: string): OrderStatus {
 export class HttpEcommerceApiClient implements IEcommerceApiClient {
   private baseUrl: string;
   private mockClient: MockEcommerceApiClient;
+  private allowMockFallback: boolean;
 
-  constructor(baseUrl?: string) {
-    this.baseUrl =
+  constructor(baseUrl?: string, allowMockFallback?: boolean) {
+    const rawUrl =
       baseUrl ||
       import.meta.env.VITE_BACKEND_URL ||
       'https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1/ecommerce';
+    this.baseUrl = rawUrl.replace(/\/+$/, '');
     this.mockClient = new MockEcommerceApiClient();
+
+    // In production (VITE_USE_MOCK_API=false), silent mock fallback is strictly forbidden
+    const isMockEnv =
+      import.meta.env.VITE_USE_MOCK_API !== undefined &&
+      import.meta.env.VITE_USE_MOCK_API.trim().toLowerCase() === 'true';
+    this.allowMockFallback = typeof allowMockFallback === 'boolean' ? allowMockFallback : isMockEnv;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -231,8 +239,12 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       console.warn('Supabase product query error:', sbErr);
     }
 
-    // 3. Mock fallback
-    return this.mockClient.getProducts(params);
+    // 3. Fallback (Only allowed if explicitly in Mock development mode)
+    if (this.allowMockFallback) {
+      return this.mockClient.getProducts(params);
+    }
+
+    throw new Error('Unable to load dairy catalogue. Please check your internet connection or try again shortly.');
   }
 
   async getProductById(id: string): Promise<Product> {
@@ -259,7 +271,11 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    return this.mockClient.getProductById(id);
+    if (this.allowMockFallback) {
+      return this.mockClient.getProductById(id);
+    }
+
+    throw new Error('Product not found or unavailable for online sale.');
   }
 
   async getCategories(): Promise<Category[]> {
@@ -391,7 +407,11 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    return this.mockClient.validateCart(items);
+    if (this.allowMockFallback) {
+      return this.mockClient.validateCart(items);
+    }
+
+    throw new Error('Unable to validate cart with live store inventory.');
   }
 
   async placeOrder(orderPayload: OrderPayload): Promise<OrderResult> {
@@ -559,22 +579,39 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           data: clientOrder,
           message: 'Your dairy order has been confirmed successfully!',
         };
+      } else if (orderErr) {
+        console.warn('Supabase direct order creation rejected:', orderErr.message);
+        if (!this.allowMockFallback) {
+          throw new Error(
+            `Order placement error: ${orderErr.message || 'Store database policy violation'}. Please call +91 9370869896 to complete your order.`
+          );
+        }
       }
-    } catch (sbErr) {
-      console.warn('Supabase direct order creation error, using resilient local storage queue:', sbErr);
+    } catch (sbErr: any) {
+      console.warn('Order placement attempt error:', sbErr);
+      if (!this.allowMockFallback) {
+        throw new Error(
+          sbErr?.message ||
+            'Unable to place order: Live store dispatch service is currently unavailable. Please contact Yogeshwari Dairy directly at +91 9370869896.'
+        );
+      }
     }
 
-    // 3. Resilient Local Storage Queue Fallback
-    return this.mockClient.placeOrder({
-      ...orderPayload,
-      idempotencyKey,
-    });
+    // 3. Fallback (Only allowed in local mock development mode)
+    if (this.allowMockFallback) {
+      return this.mockClient.placeOrder({
+        ...orderPayload,
+        idempotencyKey,
+      });
+    }
+
+    throw new Error('Store order service is currently offline. No payment was charged.');
   }
 
   async getCustomerOrders(): Promise<OrderSummary[]> {
     // 1. Try Render Backend
     try {
-      const res = await this.request<{ success: boolean; data: OrderSummary[] }>('/customer/orders');
+      const res = await this.request<{ success: boolean; data: OrderSummary[] }>('/orders');
       if (res.data) return res.data;
     } catch {
       // Fall through
@@ -603,15 +640,32 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    // 3. Fallback to local storage
-    return this.mockClient.getCustomerOrders();
+    // 3. Fallback to local storage (or mock in dev)
+    const stored = this.getStoredOrders();
+    if (stored.length > 0) {
+      return stored.map((o) => ({
+        id: o.id,
+        orderNumber: o.orderNumber,
+        createdAt: o.createdAt,
+        total: o.total,
+        orderStatus: o.orderStatus,
+        itemCount: o.items.length,
+        firstItemName: o.items[0]?.name || 'Dairy Item',
+      }));
+    }
+
+    if (this.allowMockFallback) {
+      return this.mockClient.getCustomerOrders();
+    }
+
+    return [];
   }
 
   async getOrderById(orderId: string): Promise<Order> {
     // 1. Try Render Backend
     try {
       const res = await this.request<{ success: boolean; data: Order }>(
-        `/customer/orders/${orderId}`
+        `/orders/${orderId}`
       );
       if (res.data) return res.data;
     } catch {
@@ -681,8 +735,19 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       console.warn('Supabase getOrderById error, using local storage:', sbErr);
     }
 
-    // 3. Fallback to local storage
-    return this.mockClient.getOrderById(orderId);
+    // 3. Fallback to client-side stored order or mock
+    const localMatch = this.getStoredOrders().find(
+      (o) => o.id === orderId || o.orderNumber === orderId
+    );
+    if (localMatch) {
+      return localMatch;
+    }
+
+    if (this.allowMockFallback) {
+      return this.mockClient.getOrderById(orderId);
+    }
+
+    throw new Error(`Order #${orderId} not found.`);
   }
 
   async cancelOrder(
@@ -692,7 +757,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     // 1. Try Render Backend
     try {
       return await this.request<{ success: boolean; message: string }>(
-        `/customer/orders/${orderId}/cancel`,
+        `/orders/${orderId}/cancel`,
         {
           method: 'POST',
           body: JSON.stringify({ reason }),
@@ -723,7 +788,11 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       // Fall through
     }
 
-    return this.mockClient.cancelOrder(orderId, reason);
+    if (this.allowMockFallback) {
+      return this.mockClient.cancelOrder(orderId, reason);
+    }
+
+    throw new Error('Unable to cancel order at this time. Please contact Yogeshwari Dairy store at +91 9370869896.');
   }
 
   private buildTimelineForStatus(status: OrderStatus, createdAt: string) {
