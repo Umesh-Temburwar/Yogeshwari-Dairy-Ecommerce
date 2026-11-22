@@ -2,59 +2,34 @@ import { DeliveryAddress, PaymentMethod } from '@/types/ecommerce';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const DEFAULT_ADDRESSES: DeliveryAddress[] = [
-  {
-    id: 'addr_home',
-    label: 'Home',
-    name: 'Ramesh Kumar',
-    phone: '9370869896',
-    houseNo: 'House 14',
-    street: 'Mandi Bazar, Mangalwar Peth Road',
-    area: 'Mandi Bazar',
-    landmark: 'Near Masjid',
-    city: 'Ambajogai',
-    state: 'Maharashtra',
-    pincode: '431517',
-    latitude: 18.7304,
-    longitude: 76.3879,
-    isConfirmedOnMap: true,
-    isDefault: true,
-  },
-  {
-    id: 'addr_shop',
-    label: 'Shop',
-    name: 'Yogeshwari Dairy Counter',
-    phone: '9370869896',
-    houseNo: 'Shop No. 1',
-    street: 'Main Market, Mandi Bazar Road',
-    area: 'Mandi Bazar',
-    landmark: 'Mangalwar Peth Road',
-    city: 'Ambajogai',
-    state: 'Maharashtra',
-    pincode: '431517',
-    latitude: 18.7312,
-    longitude: 76.3885,
-    isConfirmedOnMap: true,
-    isDefault: false,
-  },
-  {
-    id: 'addr_work',
-    label: 'Work',
-    name: 'Ramesh Kumar',
-    phone: '9370869896',
-    houseNo: 'Office 202',
-    street: 'Near Yogeshwari Devi Mandir',
-    area: 'Mandir Road',
-    landmark: 'Main Gate',
-    city: 'Ambajogai',
-    state: 'Maharashtra',
-    pincode: '431517',
-    latitude: 18.7335,
-    longitude: 76.3842,
-    isConfirmedOnMap: true,
-    isDefault: false,
-  },
-];
+export const EMPTY_ADDRESS: DeliveryAddress = {
+  id: '',
+  label: 'Home',
+  name: '',
+  phone: '',
+  houseNo: '',
+  street: '',
+  area: '',
+  landmark: '',
+  city: 'Ambajogai',
+  state: 'Maharashtra',
+  pincode: '431517',
+  isConfirmedOnMap: false,
+  isDefault: false,
+};
+
+const isDummyAddress = (addr: DeliveryAddress): boolean => {
+  return Boolean(
+    addr.id === 'addr_home' ||
+    addr.id === 'addr_shop' ||
+    addr.id === 'addr_work' ||
+    addr.name === 'Ramesh Kumar' ||
+    addr.phone === '9876543210' ||
+    addr.city === 'Nagpur' ||
+    (addr.street && addr.street.includes('Ramdas Peth')) ||
+    (addr.street && addr.street.includes('Dharampeth'))
+  );
+};
 
 export interface CustomerProfile {
   id: string;
@@ -92,15 +67,15 @@ export const useCustomerStore = create<CustomerStore>()(
   persist(
     (set, get) => ({
       customerProfile: {
-        id: 'cust_default_ramesh',
-        name: 'Ramesh Kumar',
-        phone: '9876543210',
+        id: '',
+        name: '',
+        phone: '',
         role: 'customer',
       },
-      customerName: 'Ramesh Kumar',
-      customerPhone: '9876543210',
-      savedAddresses: DEFAULT_ADDRESSES,
-      selectedAddressId: DEFAULT_ADDRESSES[0].id,
+      customerName: '',
+      customerPhone: '',
+      savedAddresses: [],
+      selectedAddressId: '',
       selectedPaymentMethod: 'cod',
       deliveryNotes: '',
       activeOrderIds: [],
@@ -176,12 +151,48 @@ export const useCustomerStore = create<CustomerStore>()(
 
       getSelectedAddress: () => {
         const state = get();
+        if (!state.savedAddresses || state.savedAddresses.length === 0) {
+          return EMPTY_ADDRESS;
+        }
         const found = state.savedAddresses.find((a) => a.id === state.selectedAddressId);
-        return found || state.savedAddresses[0] || DEFAULT_ADDRESSES[0];
+        return found || state.savedAddresses[0] || EMPTY_ADDRESS;
       },
     }),
     {
-      name: 'yd_customer_storage_v1',
+      name: 'yd_customer_storage_v2',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Clean out old dummy addresses if previously stored
+        if (Array.isArray(state.savedAddresses)) {
+          state.savedAddresses = state.savedAddresses.filter((a) => !isDummyAddress(a));
+          if (!state.savedAddresses.some((a) => a.id === state.selectedAddressId)) {
+            state.selectedAddressId = state.savedAddresses[0]?.id || '';
+          }
+        }
+        if (state.customerName === 'Ramesh Kumar') {
+          state.customerName = '';
+        }
+        if (state.customerPhone === '9876543210' || state.customerPhone === '9370869896') {
+          state.customerPhone = '';
+        }
+        if (state.customerProfile && state.customerProfile.name === 'Ramesh Kumar') {
+          state.customerProfile = {
+            id: '',
+            name: '',
+            phone: '',
+            role: 'customer',
+          };
+        }
+      },
     }
   )
 );
+
+// Clean up old legacy dummy storage key
+if (typeof window !== 'undefined') {
+  try {
+    window.localStorage.removeItem('yd_customer_storage_v1');
+  } catch {
+    // ignore
+  }
+}

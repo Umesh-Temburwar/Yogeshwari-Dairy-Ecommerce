@@ -219,6 +219,24 @@ describe('CUSTOMER MAP LOCATION & ADDRESS SYSTEM SUITE', () => {
   describe('5. Checkout Integration Snapshot Verification', () => {
     it('creates immutable address snapshot payload for order placement', () => {
       const store = useCustomerStore.getState();
+      if (!store.savedAddresses.length) {
+        store.addAddress({
+          label: 'Home',
+          name: 'Umesh Customer',
+          phone: '9370869896',
+          houseNo: 'House 14',
+          street: 'Mandi Bazar',
+          area: 'Mandi Bazar',
+          landmark: 'Near Masjid',
+          city: 'Ambajogai',
+          state: 'Maharashtra',
+          pincode: '431517',
+          latitude: 18.7304,
+          longitude: 76.3879,
+          isConfirmedOnMap: true,
+          isDefault: true,
+        });
+      }
       const activeAddress = store.getSelectedAddress();
 
       const orderPayload = {

@@ -1,8 +1,8 @@
 import React from 'react';
-import { X, Star, ShieldCheck, AlertCircle } from 'lucide-react';
+import { X, Star, ShieldCheck, AlertCircle, Calendar } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
-import { formatPrice } from '@/utils/formatters';
+import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 
 interface ProductDetailModalProps {
@@ -58,7 +58,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
           </div>
 
           <div className="p-4 sm:p-6">
-            {/* Badges & Rating */}
+            {/* Badges & Real Rating */}
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-1.5">
                 <span className="w-3.5 h-3.5 border border-[#0C831F] p-[2px] rounded-xs flex items-center justify-center">
@@ -66,11 +66,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                 </span>
                 <span className="text-xs font-bold text-[#0C831F] uppercase">100% Pure Dairy</span>
               </div>
-              {product.rating && (
+              {product.rating && product.ratingCount && product.ratingCount > 0 ? (
                 <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full text-xs font-bold text-amber-800">
                   <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                  <span>{product.rating}</span>
+                  <span>{product.rating.toFixed(1)}</span>
                   <span className="text-amber-700/70">({product.ratingCount} reviews)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-xs font-bold text-emerald-800">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Fresh Batch Certified</span>
                 </div>
               )}
             </div>
@@ -97,6 +102,45 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               )}
               <span className="text-xs text-brand-green font-bold">Inclusive of all taxes</span>
             </div>
+
+            {/* Batch & Dates Card */}
+            {(product.batchNo || product.mfgDate || product.expiryDate) && (
+              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3 mb-4">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-emerald-900 font-extrabold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#0C831F]" />
+                    <span>Active Stock Batch Details</span>
+                  </span>
+                  {product.batchNo && (
+                    <span className="font-mono text-[10px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                      {product.batchNo}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {product.mfgDate && (
+                    <div className="bg-white/80 p-2 rounded-xl border border-emerald-100">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold block">
+                        Manufacturing Date
+                      </span>
+                      <span className="font-bold text-slate-800">
+                        {formatDisplayDate(product.mfgDate)}
+                      </span>
+                    </div>
+                  )}
+                  {product.expiryDate && (
+                    <div className="bg-white/80 p-2 rounded-xl border border-emerald-100">
+                      <span className="text-[10px] text-emerald-800 uppercase font-bold block">
+                        Best Before / Expiry
+                      </span>
+                      <span className="font-black text-emerald-700">
+                        {formatDisplayDate(product.expiryDate)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div className="border-t border-b border-brand-slate-border py-3 mb-4">

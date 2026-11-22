@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   User,
   Phone,
+  MapPin,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
@@ -94,6 +95,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     setErrorMessage(null);
     const errors: { name?: string; phone?: string; address?: string } = {};
+
+    // 0. Check Delivery Address
+    if (!selectedAddress || !selectedAddress.street) {
+      errors.address = 'Please select or add a delivery address on the map.';
+      setValidationErrors(errors);
+      setErrorMessage('Please add your delivery address before placing order.');
+      triggerHaptic('warning');
+      onOpenAddressModal();
+      return;
+    }
 
     // 1. Validate Customer Name
     const nameVal = validateCustomerName(nameInput);
@@ -444,69 +455,97 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Delivery Address Card */}
             {items.length > 0 && (
-              <div className="bg-[#F4F6F8] rounded-2xl p-3 border border-brand-slate-border">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-brand-text-primary">
-                    <span className="text-sm">
-                      {selectedAddress.label === 'Home'
-                        ? '🏠'
-                        : selectedAddress.label === 'Work'
-                        ? '🏢'
-                        : selectedAddress.label === 'Shop'
-                        ? '🏪'
-                        : '📍'}
-                    </span>
-                    <span>Delivering To: {selectedAddress.label}</span>
+              selectedAddress && selectedAddress.street ? (
+                <div className="bg-[#F4F6F8] rounded-2xl p-3 border border-brand-slate-border">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-brand-text-primary">
+                      <span className="text-sm">
+                        {selectedAddress.label === 'Home'
+                          ? '🏠'
+                          : selectedAddress.label === 'Work'
+                          ? '🏢'
+                          : selectedAddress.label === 'Shop'
+                          ? '🏪'
+                          : '📍'}
+                      </span>
+                      <span>Delivering To: {selectedAddress.label}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        onOpenAddressModal();
+                      }}
+                      className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Change Pin</span>
+                    </button>
                   </div>
+
+                  {selectedAddress.latitude && selectedAddress.longitude ? (
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        <span>Map Pin Confirmed ({selectedAddress.latitude.toFixed(4)}, {selectedAddress.longitude.toFixed(4)})</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200">
+                        {checkDeliveryServiceability({ lat: selectedAddress.latitude, lng: selectedAddress.longitude }).zoneName}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-amber-700 font-medium mb-1.5 flex items-center gap-1">
+                      <span>⚠️ Approximate address &bull; Click "Change Pin" to set exact map location</span>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-brand-text-secondary leading-snug">
+                    {selectedAddress.houseNo ? `${selectedAddress.houseNo}, ` : ''}
+                    {selectedAddress.building ? `${selectedAddress.building}, ` : ''}
+                    {selectedAddress.street}
+                    {selectedAddress.area ? `, ${selectedAddress.area}` : ''}
+                    {selectedAddress.landmark ? `, Near ${selectedAddress.landmark}` : ''},{' '}
+                    {selectedAddress.city} - {selectedAddress.pincode}
+                  </p>
+
+                  {selectedAddress.deliveryInstructions && (
+                    <p className="text-[10px] text-slate-500 mt-1 italic">
+                      Instructions: {selectedAddress.deliveryInstructions}
+                    </p>
+                  )}
+
+                  {validationErrors.address && (
+                    <span className="text-[10px] text-red-600 font-medium block mt-1">
+                      {validationErrors.address}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 text-center">
+                  <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-2">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900">No Delivery Address Set</h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5 mb-2.5">
+                    Add your Ambajogai doorstep address to complete this order
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
                       triggerHaptic('light');
                       onOpenAddressModal();
                     }}
-                    className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1 cursor-pointer"
+                    className="w-full py-2 px-3 bg-[#0C831F] hover:bg-[#086617] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
                   >
-                    <span>Change Pin</span>
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>+ Add Delivery Address on Map</span>
                   </button>
+                  {validationErrors.address && (
+                    <span className="text-[10px] text-red-600 font-medium block mt-1.5">
+                      {validationErrors.address}
+                    </span>
+                  )}
                 </div>
-
-                {selectedAddress.latitude && selectedAddress.longitude ? (
-                  <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                      <span>Map Pin Confirmed ({selectedAddress.latitude.toFixed(4)}, {selectedAddress.longitude.toFixed(4)})</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200">
-                      {checkDeliveryServiceability({ lat: selectedAddress.latitude, lng: selectedAddress.longitude }).zoneName}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-[10px] text-amber-700 font-medium mb-1.5 flex items-center gap-1">
-                    <span>⚠️ Approximate address &bull; Click "Change Pin" to set exact map location</span>
-                  </div>
-                )}
-
-                <p className="text-xs text-brand-text-secondary leading-snug">
-                  {selectedAddress.houseNo ? `${selectedAddress.houseNo}, ` : ''}
-                  {selectedAddress.building ? `${selectedAddress.building}, ` : ''}
-                  {selectedAddress.street}
-                  {selectedAddress.area ? `, ${selectedAddress.area}` : ''}
-                  {selectedAddress.landmark ? `, Near ${selectedAddress.landmark}` : ''},{' '}
-                  {selectedAddress.city} - {selectedAddress.pincode}
-                </p>
-
-                {selectedAddress.deliveryInstructions && (
-                  <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Instructions: {selectedAddress.deliveryInstructions}
-                  </p>
-                )}
-
-                {validationErrors.address && (
-                  <span className="text-[10px] text-red-600 font-medium block mt-1">
-                    {validationErrors.address}
-                  </span>
-                )}
-              </div>
+              )
             )}
 
             {/* Delivery Instructions */}

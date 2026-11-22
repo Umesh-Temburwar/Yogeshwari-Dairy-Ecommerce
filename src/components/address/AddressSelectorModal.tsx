@@ -419,6 +419,18 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
         {/* VIEW MODE 1: SAVED ADDRESSES LIST */}
         {viewMode === 'list' && (
           <div className="overflow-y-auto no-scrollbar space-y-3 pb-2 flex-1">
+            {savedAddresses.length === 0 && (
+              <div className="py-7 px-4 text-center bg-[#F4F6F8] rounded-2xl border border-brand-slate-border mb-2">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#0C831F] mx-auto mb-2.5 shadow-xs">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <h4 className="font-extrabold text-sm text-slate-900">No Saved Delivery Address</h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                  Pin your exact doorstep in Ambajogai on the map for 20-40 min fresh dairy delivery.
+                </p>
+              </div>
+            )}
+
             {savedAddresses.map((addr) => {
               const isSelected = addr.id === selectedAddressId;
               const hasCoordinates = Boolean(addr.latitude && addr.longitude);

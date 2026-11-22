@@ -60,6 +60,34 @@ function sanitizeDbProduct(row: any): Product {
   const discountPercentage =
     mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
 
+  // Extract earliest active unexpired batch details for real Mfg & Expiry
+  let mfgDate: string | undefined = row.mfg_date;
+  let expiryDate: string | undefined = row.expiry_date;
+  let batchNo: string | undefined = row.batch_no;
+
+  if (Array.isArray(row.batches) && row.batches.length > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    const validBatches = row.batches
+      .filter(
+        (b: any) =>
+          b &&
+          (b.qty_remaining === undefined || b.qty_remaining > 0) &&
+          (!b.expiry_date || b.expiry_date >= today)
+      )
+      .sort((a: any, b: any) => (a.expiry_date || '').localeCompare(b.expiry_date || ''));
+
+    const activeBatch = validBatches[0] || row.batches[0];
+    if (activeBatch) {
+      if (activeBatch.mfg_date) mfgDate = activeBatch.mfg_date;
+      if (activeBatch.expiry_date) expiryDate = activeBatch.expiry_date;
+      if (activeBatch.batch_no) batchNo = activeBatch.batch_no;
+    }
+  }
+
+  // Real ratings only - do NOT display fake 4.8 / 140 reviews
+  const realRating = row.rating ? Number(row.rating) : undefined;
+  const realRatingCount = row.rating_count ? Number(row.rating_count) : realRating ? 1 : undefined;
+
   return {
     id: row.id,
     name: row.name,
@@ -75,10 +103,13 @@ function sanitizeDbProduct(row: any): Product {
     imageUrl: row.image_url || getFallbackImage(categoryStr, row.name),
     inStock: stockQuantity > 0,
     stockQuantity,
-    rating: 4.8,
-    ratingCount: 140,
+    rating: realRating,
+    ratingCount: realRatingCount,
     isFreshToday: true,
     tags: [categoryStr, 'Fresh Dairy'],
+    mfgDate,
+    expiryDate,
+    batchNo,
   };
 }
 
@@ -158,26 +189,53 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     try {
       // Direct Supabase Live Stock Query:
       // STRICT REQUIREMENT: Only fetch products with active status and POSITIVE stock_quantity (> 0)
-      const { data, error } = await supabase
-        .from('products')
-        .select(
-          'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
-        )
-        .eq('is_active', true)
-        .gt('selling_price', 0)
-        .gt('stock_quantity', 0)
-        .order('stock_quantity', { ascending: false });
+      // Attempt query with active batches join for real Mfg & Expiry dates
+      let data: any = null;
+      let error: any = null;
+
+      try {
+        const queryWithBatches = await supabase
+          .from('products')
+          .select(`
+            id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active,
+            batches (id, batch_no, mfg_date, expiry_date, qty_remaining, status)
+          `)
+          .eq('is_active', true)
+          .gt('selling_price', 0)
+          .gt('stock_quantity', 0)
+          .order('stock_quantity', { ascending: false });
+
+        data = queryWithBatches.data;
+        error = queryWithBatches.error;
+      } catch {
+        // Fallback to basic product query
+      }
+
+      if (error || !data) {
+        const fallbackQuery = await supabase
+          .from('products')
+          .select(
+            'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
+          )
+          .eq('is_active', true)
+          .gt('selling_price', 0)
+          .gt('stock_quantity', 0)
+          .order('stock_quantity', { ascending: false });
+
+        data = fallbackQuery.data;
+        error = fallbackQuery.error;
+      }
 
       if (!error && data && data.length > 0) {
         // Sanitize and strictly filter out-of-stock items (stock_quantity must be > 0)
-        let sanitized = data
+        let sanitized: Product[] = data
           .map(sanitizeDbProduct)
-          .filter((p) => p.inStock && p.stockQuantity > 0);
+          .filter((p: Product) => p.inStock && p.stockQuantity > 0);
 
         // Apply smart category filtering
         if (params?.category && params.category !== 'all') {
           sanitized = sanitized.filter(
-            (p) => getCategorySlugForProduct(p.category, p.name) === params.category
+            (p: Product) => getCategorySlugForProduct(p.category, p.name) === params.category
           );
         }
 
@@ -185,7 +243,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         if (params?.search && params.search.trim()) {
           const q = params.search.trim().toLowerCase();
           sanitized = sanitized.filter(
-            (p) =>
+            (p: Product) =>
               p.name.toLowerCase().includes(q) ||
               (p.marathiName && p.marathiName.toLowerCase().includes(q)) ||
               p.category.toLowerCase().includes(q)
@@ -216,14 +274,37 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
 
   async getProductById(id: string): Promise<Product> {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(
-          'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
-        )
-        .eq('id', id)
-        .gt('stock_quantity', 0)
-        .single();
+      let data: any = null;
+      let error: any = null;
+
+      try {
+        const withBatches = await supabase
+          .from('products')
+          .select(`
+            id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active,
+            batches (id, batch_no, mfg_date, expiry_date, qty_remaining, status)
+          `)
+          .eq('id', id)
+          .gt('stock_quantity', 0)
+          .single();
+        data = withBatches.data;
+        error = withBatches.error;
+      } catch {
+        // Fallback
+      }
+
+      if (error || !data) {
+        const fallbackRes = await supabase
+          .from('products')
+          .select(
+            'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
+          )
+          .eq('id', id)
+          .gt('stock_quantity', 0)
+          .single();
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+      }
 
       if (!error && data) {
         return sanitizeDbProduct(data);

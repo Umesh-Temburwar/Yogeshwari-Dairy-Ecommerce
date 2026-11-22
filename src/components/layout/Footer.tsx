@@ -9,8 +9,12 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Brand info */}
           <div className="md:col-span-2 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🥛</span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/YDO_logo.png"
+                alt="Yogeshwari Dairy"
+                className="w-8 h-8 rounded-lg object-contain shadow-xs"
+              />
               <span className="font-extrabold text-base text-brand-text-primary">
                 Yogeshwari Dairy Products
               </span>

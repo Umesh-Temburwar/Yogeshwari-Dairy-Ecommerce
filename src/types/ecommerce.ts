@@ -20,6 +20,9 @@ export interface Product {
   fatContent?: string;
   storageInfo?: string;
   tags?: string[];
+  mfgDate?: string;
+  expiryDate?: string;
+  batchNo?: string;
 }
 
 export interface Category {

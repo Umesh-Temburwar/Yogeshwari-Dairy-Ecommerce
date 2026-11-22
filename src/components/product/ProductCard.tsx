@@ -2,7 +2,7 @@ import React from 'react';
 import { Minus, Plus, Star, Sparkles, Zap } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
-import { formatPrice } from '@/utils/formatters';
+import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 
 interface ProductCardProps {
@@ -80,17 +80,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
 
       {/* Info Section */}
       <div className="flex-1 flex flex-col justify-start">
-        {/* Veg Dairy Dot & Rating */}
-        <div className="flex items-center gap-1.5 mb-1">
+        {/* Veg Dairy Dot & Real Rating */}
+        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
           <span className="w-3 h-3 border border-[#0C831F] p-[1.5px] rounded-xs flex items-center justify-center shrink-0" title="100% Pure Vegetarian Dairy">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0C831F]" />
           </span>
-          {product.rating && (
+          {product.rating && product.ratingCount && product.ratingCount > 0 ? (
             <div className="flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold text-slate-600">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-              <span>{product.rating}</span>
-              <span className="text-slate-400 text-[9px]">({product.ratingCount || 100}+)</span>
+              <span>{product.rating.toFixed(1)}</span>
+              <span className="text-slate-400 text-[9px]">({product.ratingCount})</span>
             </div>
+          ) : (
+            <span className="text-[9.5px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
+              Fresh Batch
+            </span>
           )}
         </div>
 
@@ -105,6 +109,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
             {product.marathiName}
           </p>
         )}
+
+        {/* Real Mfg & Expiry Dates */}
+        {(product.mfgDate || product.expiryDate) ? (
+          <div className="mt-0.5 mb-1 flex items-center gap-1.5 text-[9.5px] text-slate-600 font-medium bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 flex-wrap">
+            {product.mfgDate && (
+              <span className="truncate">
+                Mfg: <strong className="text-slate-800 font-semibold">{formatDisplayDate(product.mfgDate)}</strong>
+              </span>
+            )}
+            {product.mfgDate && product.expiryDate && <span className="text-slate-300">•</span>}
+            {product.expiryDate && (
+              <span className="truncate text-emerald-800 font-semibold">
+                Exp: <strong>{formatDisplayDate(product.expiryDate)}</strong>
+              </span>
+            )}
+          </div>
+        ) : product.shelfLife ? (
+          <div className="mt-0.5 mb-1 text-[9.5px] text-slate-500 font-medium">
+            Shelf Life: <span className="text-slate-700 font-semibold">{product.shelfLife}</span>
+          </div>
+        ) : null}
       </div>
 
       {/* Price & Action Row */}

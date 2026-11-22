@@ -20,7 +20,7 @@ export const BlinkitCategorySidebar: React.FC<BlinkitCategorySidebarProps> = ({
         {/* Sidebar Header */}
         <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-b border-emerald-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-base">🥛</span>
+            <img src="/YDO_logo.png" alt="YDO" className="w-5 h-5 rounded object-contain" />
             <div>
               <h3 className="font-black text-xs text-emerald-950 uppercase tracking-wider">
                 Categories

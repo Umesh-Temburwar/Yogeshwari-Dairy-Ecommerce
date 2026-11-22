@@ -118,9 +118,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-3">
           {/* Logo & Store Info */}
           <Link to="/" className="flex items-center gap-2 group shrink-0 min-h-[44px]">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#0C831F] to-[#086617] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
-              <span className="text-xl">🥛</span>
-            </div>
+            <img
+              src="/YDO_logo.png"
+              alt="Yogeshwari Dairy Logo"
+              className="w-10 h-10 rounded-xl object-contain shadow-xs group-hover:scale-105 transition-transform"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base sm:text-lg font-extrabold text-[#1C1C1C] tracking-tight group-hover:text-[#0C831F] transition-colors leading-none">
@@ -149,11 +151,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div className="truncate">
               <div className="text-[11px] font-bold text-[#1C1C1C] flex items-center gap-1">
-                <span>Deliver to: {selectedAddress.label}</span>
+                <span>
+                  {selectedAddress && selectedAddress.street
+                    ? `Deliver to: ${selectedAddress.label}`
+                    : 'Select Delivery Location'}
+                </span>
                 <span className="text-[#0C831F] text-[10px]">▼</span>
               </div>
               <div className="text-[11px] text-brand-text-secondary truncate">
-                {selectedAddress.street}, {selectedAddress.city}
+                {selectedAddress && selectedAddress.street
+                  ? `${selectedAddress.street}, ${selectedAddress.city}`
+                  : 'Tap to set doorstep address on map'}
               </div>
             </div>
           </button>
