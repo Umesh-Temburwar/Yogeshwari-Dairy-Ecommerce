@@ -15,33 +15,33 @@ export const FloatingCartBar: React.FC = () => {
   const hasCartItems = isStoreOpen && totalCount > 0 && !isCartDrawerOpen;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none pb-safe">
-      <div className="max-w-md mx-auto px-4 pb-3 relative">
-        {/* Floating WhatsApp Button (Positioned above cart bar when visible) */}
-        {!isCartDrawerOpen && (
-          <div
-            className={`absolute right-4 transition-all duration-300 pointer-events-auto ${
-              hasCartItems ? 'bottom-16 sm:bottom-18' : 'bottom-3 sm:bottom-4'
-            }`}
+    <>
+      {/* Floating WhatsApp Button - Anchored to viewport corner, elevated when cart bar is active */}
+      {!isCartDrawerOpen && (
+        <div
+          className={`fixed right-4 sm:right-6 z-40 transition-all duration-300 ${
+            hasCartItems ? 'bottom-20 sm:bottom-20' : 'bottom-4 sm:bottom-6'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              openWhatsAppStoreInquiry();
+            }}
+            className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20bd5c] text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-all transform active:scale-90 cursor-pointer focus:outline-hidden"
+            aria-label="Chat with Yogeshwari Dairy on WhatsApp"
+            title="Chat on WhatsApp"
           >
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                openWhatsAppStoreInquiry();
-              }}
-              className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20bd5c] text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-all transform active:scale-90 cursor-pointer focus:outline-hidden"
-              aria-label="Chat with Yogeshwari Dairy on WhatsApp"
-              title="Chat on WhatsApp"
-            >
-              <MessageCircle className="w-6 h-6 fill-white text-[#25D366]" />
-            </button>
-          </div>
-        )}
+            <MessageCircle className="w-6 h-6 fill-white text-[#25D366]" />
+          </button>
+        </div>
+      )}
 
-        {/* Sticky Cart Bar (Emerald-700, rounded-2xl, animated) */}
-        {hasCartItems && (
-          <div className="pointer-events-auto animate-slide-up motion-reduce:animate-none">
+      {/* Sticky Bottom Cart Bar (Emerald-700, rounded-2xl, animated) */}
+      {hasCartItems && (
+        <div className="fixed inset-x-0 bottom-3 z-40 pointer-events-none pb-safe px-4">
+          <div className="max-w-md mx-auto pointer-events-auto animate-slide-up motion-reduce:animate-none">
             <button
               type="button"
               onClick={() => {
@@ -68,8 +68,8 @@ export const FloatingCartBar: React.FC = () => {
               </div>
             </button>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };

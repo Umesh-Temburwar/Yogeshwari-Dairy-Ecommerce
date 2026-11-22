@@ -1,7 +1,6 @@
 import React from 'react';
 import { Category } from '@/types/ecommerce';
 import { triggerHaptic } from '@/utils/haptics';
-import { ChevronRight } from 'lucide-react';
 
 interface BlinkitCategorySidebarProps {
   categories: Category[];
@@ -15,26 +14,26 @@ export const BlinkitCategorySidebar: React.FC<BlinkitCategorySidebarProps> = ({
   onSelectCategory,
 }) => {
   return (
-    <aside className="hidden lg:block w-60 xl:w-64 shrink-0 self-start sticky top-[108px] sm:top-[116px] z-20">
-      <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs overflow-hidden">
-        {/* Sidebar Header */}
-        <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-b border-emerald-100 flex items-center justify-between">
+    <aside className="w-20 sm:w-24 lg:w-60 shrink-0 self-start sticky top-[112px] z-20">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+        {/* Sidebar Header (Hidden on small mobile screens to save space) */}
+        <div className="hidden lg:flex px-4 py-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-b border-emerald-100 items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/YDO_logo.png" alt="YDO" className="w-5 h-5 rounded object-contain" />
             <div>
-              <h3 className="font-black text-xs text-emerald-950 uppercase tracking-wider">
+              <h3 className="font-extrabold text-xs text-emerald-950 uppercase tracking-wider">
                 Categories
               </h3>
               <p className="text-[10px] text-emerald-700 font-bold">सर्व श्रेणी निवडा</p>
             </div>
           </div>
-          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-emerald-800 shadow-xs border border-emerald-200">
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-emerald-800 shadow-2xs border border-emerald-200">
             {categories.length - 1}+
           </span>
         </div>
 
-        {/* Categories List */}
-        <div className="p-1.5 space-y-1 max-h-[calc(100vh-160px)] overflow-y-auto no-scrollbar">
+        {/* Categories List (Vertical snap list) */}
+        <div className="p-1 sm:p-1.5 space-y-1 max-h-[calc(100vh-140px)] overflow-y-auto no-scrollbar">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.slug;
             return (
@@ -44,24 +43,24 @@ export const BlinkitCategorySidebar: React.FC<BlinkitCategorySidebarProps> = ({
                 onClick={() => {
                   triggerHaptic('light');
                   onSelectCategory(cat.slug);
-                  if (selectedCategory === 'all' && cat.slug !== 'all') {
-                    const el = document.getElementById(`category-section-${cat.slug}`);
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      return;
-                    }
-                  }
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                className={`w-full flex flex-col lg:flex-row items-center lg:justify-between p-2 lg:px-2.5 lg:py-2 rounded-xl text-center lg:text-left transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-emerald-50/90 text-[#0C831F] font-black border-l-4 border-[#0C831F] shadow-xs'
-                    : 'text-slate-700 hover:bg-slate-50 font-medium hover:text-black border-l-4 border-transparent'
+                    ? 'bg-emerald-50 text-emerald-900 font-extrabold border-l-3 lg:border-l-4 border-emerald-700 shadow-2xs'
+                    : 'text-slate-700 hover:bg-slate-50 font-medium hover:text-slate-900 border-l-3 lg:border-l-4 border-transparent'
                 }`}
+                aria-label={`Select category ${cat.name}`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {/* Category Real Photo Thumbnail */}
-                  <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative shadow-xs">
+                <div className="flex flex-col lg:flex-row items-center gap-1.5 lg:gap-2.5 min-w-0">
+                  {/* Category Photo Thumbnail */}
+                  <div
+                    className={`w-11 h-11 lg:w-9 lg:h-9 rounded-xl overflow-hidden shrink-0 border relative ${
+                      isSelected
+                        ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                        : 'border-slate-100 bg-slate-50'
+                    }`}
+                  >
                     {cat.imageUrl ? (
                       <img
                         src={cat.imageUrl}
@@ -70,41 +69,41 @@ export const BlinkitCategorySidebar: React.FC<BlinkitCategorySidebarProps> = ({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-base bg-emerald-50">
+                      <div className="w-full h-full flex items-center justify-center text-sm lg:text-base bg-emerald-50">
                         {cat.icon || '🥛'}
                       </div>
                     )}
                   </div>
 
-                  <div className="truncate">
-                    <p className={`text-xs truncate ${isSelected ? 'font-black text-[#0C831F]' : 'font-bold'}`}>
+                  <div className="truncate w-full lg:w-auto">
+                    <p
+                      className={`text-[11px] lg:text-xs leading-tight line-clamp-2 lg:truncate ${
+                        isSelected ? 'font-extrabold text-emerald-800' : 'font-semibold text-slate-800'
+                      }`}
+                    >
                       {cat.name}
                     </p>
                     {cat.marathiName && (
-                      <p className="text-[10px] text-gray-500 font-medium truncate">
+                      <p className="hidden lg:block text-[10px] text-slate-500 font-medium truncate">
                         {cat.marathiName}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0 ml-1">
+                {/* Count pill (visible on desktop) */}
+                <div className="hidden lg:flex items-center gap-1 shrink-0 ml-1">
                   {cat.count > 0 && (
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
                         isSelected
-                          ? 'bg-[#0C831F] text-white'
-                          : 'bg-gray-100 text-gray-500'
+                          ? 'bg-emerald-700 text-white'
+                          : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       {cat.count}
                     </span>
                   )}
-                  <ChevronRight
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isSelected ? 'text-[#0C831F] translate-x-0.5' : 'text-gray-300'
-                    }`}
-                  />
                 </div>
               </button>
             );

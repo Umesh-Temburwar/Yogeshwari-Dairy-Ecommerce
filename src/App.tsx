@@ -7,19 +7,23 @@ import { CartDrawer } from '@/components/cart/CartDrawer';
 import { AddressSelectorModal } from '@/components/address/AddressSelectorModal';
 import { OrderSuccessModal } from '@/components/order/OrderSuccessModal';
 import { HomePage } from '@/pages/HomePage';
+import { BrandsPage } from '@/pages/BrandsPage';
+import { BrandPage } from '@/pages/BrandPage';
 import { OrdersPage } from '@/pages/OrdersPage';
 import { TrackOrderPage } from '@/pages/TrackOrderPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Order } from '@/types/ecommerce';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
+import { initBrandLogos } from '@/utils/brands';
 
 export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
 
-  // Synchronize store open/closed state in real-time with Shop Counter POS
+  // Synchronize store open/closed state & brand logos in real-time
   useEffect(() => {
+    initBrandLogos();
     const cleanup = useStoreStatusStore.getState().initRealtimeSubscription();
     return () => {
       cleanup();
@@ -29,7 +33,7 @@ export const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-[#F4F6F8] font-sans antialiased text-[#1C1C1C]">
-        {/* Top Navbar */}
+        {/* Top Sticky Navbar */}
         <Navbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -48,16 +52,18 @@ export const App: React.FC = () => {
                 />
               }
             />
+            <Route path="/brands" element={<BrandsPage />} />
+            <Route path="/brand/:brandName" element={<BrandPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/track/:orderId" element={<TrackOrderPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
 
-        {/* Footer */}
+        {/* Responsive Footer */}
         <Footer />
 
-        {/* Floating Cart Bar (YogiMart style bottom sticky pill) */}
+        {/* Bottom Floating Cart Bar */}
         <FloatingCartBar />
 
         {/* Cart Drawer Slide-Over */}

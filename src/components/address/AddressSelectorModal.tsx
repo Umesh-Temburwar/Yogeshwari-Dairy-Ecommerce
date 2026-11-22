@@ -124,8 +124,8 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     setPincode('431517');
     setDeliveryInstructions('');
     setIsDefault(savedAddresses.length === 0);
-    setRecipientName(customerName || 'Customer');
-    setRecipientPhone(customerPhone || '');
+    setRecipientName(isDummyName(customerName) ? '' : (customerName || ''));
+    setRecipientPhone(isDummyPhone(customerPhone) ? '' : (customerPhone || ''));
     setViewMode('map-picker');
   };
 

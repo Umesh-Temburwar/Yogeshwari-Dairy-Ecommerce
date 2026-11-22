@@ -3,7 +3,7 @@ import { X, ChevronRight, ArrowLeft } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard';
 import { CategoryPills } from '@/components/layout/CategoryPills';
 import { BlinkitCategorySidebar } from '@/components/layout/BlinkitCategorySidebar';
-import { BrandBar } from '@/components/layout/BrandBar';
+import { ShopByBrandStrip } from '@/components/brand/ShopByBrandStrip';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
 import { HeroPromoCarousel } from '@/components/home/HeroPromoCarousel';
 import { Category, Product } from '@/types/ecommerce';
@@ -12,7 +12,7 @@ import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
-import { getProductBrand } from '@/utils/brands';
+import { getProductBrand, initBrandLogos } from '@/utils/brands';
 import { supabase } from '@/services/supabase/client';
 
 interface HomePageProps {
@@ -49,6 +49,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
   // Initial and reactive query fetch
   useEffect(() => {
+    initBrandLogos();
     fetchCatalogData(false);
   }, [fetchCatalogData]);
 
@@ -250,7 +251,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     return list;
   }, [allInStockProducts, selectedBrand, selectedCategory, searchQuery]);
 
-  // Group products category-wise for Blinkit storefront layout with real photos
+  // Group products category-wise for Blinkit storefront product rails
   const categoryGroups = useMemo(() => {
     const groups = BLINKIT_CATEGORIES.filter((c) => c.slug !== 'all').map((cat) => ({
       slug: cat.slug,
@@ -294,68 +295,79 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     );
   }, [displayedCategories, categories, selectedCategory]);
 
+  const isHomeView = selectedCategory === 'all' && !searchQuery.trim();
+
   return (
     <div className="min-h-screen pb-32 bg-[#F7F9FA]">
-      {/* Brand Horizontal Carousel */}
-      <BrandBar
-        brands={availableBrands}
-        selectedBrand={selectedBrand}
-        onSelectBrand={handleBrandChange}
-        filteredCount={filteredProducts.length}
-      />
-
-      {/* Category Horizontal Filter Bar (Cascading: only shows categories containing selected brand) */}
+      {/* Category Horizontal Snap Row - Placed directly right under sticky header */}
       <CategoryPills
         categories={displayedCategories}
         selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
+        onSelectCategory={(slug) => {
+          setSelectedCategory(slug);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3">
-        <div className="flex gap-4 sm:gap-6 items-start">
-          {/* Desktop Left Sticky Category Rail (Blinkit Style with Real Photos) */}
-          <BlinkitCategorySidebar
-            categories={displayedCategories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-
-          {/* Main Product Area */}
-          <div className="flex-1 min-w-0 space-y-4">
-            {/* Store Closed Banner */}
-            {!isStoreOpen && (
-              <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in border border-red-500/40">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-                    🌙
-                  </div>
-                  <div>
-                    <div className="font-black text-sm sm:text-base flex items-center gap-2">
-                      <span>🔴 Store is Currently Closed</span>
-                      <span className="text-yellow-200 text-xs font-semibold">| Opens tomorrow at 6:00 AM</span>
-                    </div>
-                    <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
-                      Yogeshwari Dairy store is currently closed. Online ordering and adding items to cart are paused right now. Deliveries will resume fresh tomorrow at <strong>6:00 AM</strong>.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
-                  <a
-                    href={getStoreCallHref()}
-                    className="w-full sm:w-auto text-center bg-white text-red-700 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-50 transition-colors shadow-xs"
-                  >
-                    Call Store Hotline
-                  </a>
-                </div>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 pt-3 space-y-4">
+        {/* Store Closed Banner - Single slim banner at top under header */}
+        {!isStoreOpen && (
+          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in border border-red-500/40">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0 backdrop-blur-xs">
+                🌙
               </div>
-            )}
+              <div>
+                <div className="font-extrabold text-sm sm:text-base flex items-center gap-2">
+                  <span>Store is Currently Closed</span>
+                  <span className="text-yellow-200 text-xs font-semibold hidden sm:inline">• Opens 6:00 AM</span>
+                </div>
+                <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
+                  Deliveries and online ordering are currently paused. Order dispatch will resume fresh at <strong>6:00 AM</strong>.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
+              <a
+                href={getStoreCallHref()}
+                className="w-full sm:w-auto text-center bg-white text-red-700 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-50 transition-colors shadow-2xs"
+              >
+                Call Hotline
+              </a>
+            </div>
+          </div>
+        )}
 
-            {/* Active Brand Filter Notice */}
+        {/* =========================================================================
+            HOME VIEW: Promo Banner -> Shop by Brand -> Category Product Rails
+           ========================================================================= */}
+        {isHomeView && (
+          <>
+            {/* Auto-Sliding Promotional Hero Banner Carousel (Blinkit/Zepto Style, <140px on mobile) */}
+            <HeroPromoCarousel
+              onSelectCategory={(slug) => {
+                setSelectedCategory(slug);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onSelectBrand={(brand) => {
+                handleBrandChange(brand);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+
+            {/* Flipkart-Style "Shop by Brand" Strip (Placed AFTER promo carousel!) */}
+            <ShopByBrandStrip
+              brands={availableBrands}
+              selectedBrand={selectedBrand}
+              onSelectBrand={handleBrandChange}
+            />
+
+            {/* Active Brand Filter Notice (if brand selected) */}
             {selectedBrand !== 'All' && (
-              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs">
+              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-slate-500 font-medium">Selected Brand:</span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-black text-xs shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-extrabold text-xs shadow-2xs">
                     <span>{selectedBrand}</span>
                     <button
                       type="button"
@@ -381,186 +393,56 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             )}
 
-            {/* Auto-Sliding Promotional Hero Banner Carousel (Blinkit/Zepto Style) */}
-            {!searchQuery && selectedCategory === 'all' && selectedBrand === 'All' && (
-              <HeroPromoCarousel
-                onSelectCategory={(slug) => {
-                  setSelectedCategory(slug);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onSelectBrand={(brand) => {
-                  handleBrandChange(brand);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            )}
-
-            {/* Search Header or Single Category Filter Bar */}
-            {searchQuery ? (
-              <div className="flex items-center justify-between bg-white rounded-2xl p-4 border border-gray-200 shadow-xs">
-                <div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900">
-                    Search results for &ldquo;{searchQuery}&rdquo;
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Found {filteredProducts.length} in-stock {filteredProducts.length === 1 ? 'item' : 'items'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onClearSearch?.()}
-                  className="text-xs font-bold text-[#0C831F] hover:underline flex items-center gap-1 p-1 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Clear Search</span>
-                </button>
-              </div>
-            ) : selectedCategory !== 'all' ? (
-              <div className="flex items-center justify-between bg-white rounded-2xl p-4 border border-gray-200 shadow-xs">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setSelectedCategory('all');
-                    }}
-                    className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-[#0C831F] flex items-center justify-center transition-colors cursor-pointer"
-                    title="All Categories"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                  <div className="flex items-center gap-3">
-                    {activeCategoryObj?.imageUrl && (
-                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0 shadow-xs">
-                        <img
-                          src={activeCategoryObj.imageUrl}
-                          alt={activeCategoryObj.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                        <span>{activeCategoryObj?.name || 'Category'}</span>
-                      </h2>
-                      {activeCategoryObj?.marathiName && (
-                        <p className="text-xs text-slate-500 font-medium">
-                          {activeCategoryObj.marathiName} • {filteredProducts.length} in-stock items
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setSelectedCategory('all');
-                  }}
-                  className="text-xs font-black text-[#0C831F] hover:underline cursor-pointer"
-                >
-                  View All Categories
-                </button>
-              </div>
-            ) : null}
-
-            {/* Loading Skeleton */}
+            {/* Blinkit-Style Product RAILS per category */}
             {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 py-4">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-2xl p-3 border border-gray-200 animate-pulse space-y-3"
-                  >
-                    <div className="w-full aspect-square bg-gray-100 rounded-xl" />
-                    <div className="h-4 bg-gray-100 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                    <div className="h-8 bg-gray-100 rounded-xl w-full" />
+              <div className="space-y-6 animate-pulse">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 space-y-3">
+                    <div className="w-40 h-5 bg-slate-200 rounded" />
+                    <div className="flex gap-3 overflow-hidden">
+                      {Array.from({ length: 4 }).map((_, j) => (
+                        <div key={j} className="w-36 h-48 bg-slate-100 rounded-xl shrink-0" />
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 text-center border border-gray-200 my-4 shadow-xs">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-3xl mb-3 border border-gray-200">
-                  🔍
-                </div>
-                <h3 className="font-black text-base text-slate-900">No items available right now</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                  {selectedBrand !== 'All'
-                    ? `No items found for brand "${selectedBrand}" in this selection.`
-                    : 'All items in this section are currently out of stock or being prepared fresh at the dairy. Please check other categories or return to All Items.'}
-                </p>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  {selectedBrand !== 'All' && (
-                    <button
-                      type="button"
-                      onClick={() => handleBrandChange('All')}
-                      className="bg-[#0C831F] text-white text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] cursor-pointer"
-                    >
-                      Clear Brand Filter
-                    </button>
-                  )}
-                  {selectedCategory !== 'all' && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('all')}
-                      className="bg-gray-100 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] hover:bg-gray-200 cursor-pointer"
-                    >
-                      Reset Category
-                    </button>
-                  )}
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => onClearSearch?.()}
-                      className="bg-gray-100 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] hover:bg-gray-200 cursor-pointer"
-                    >
-                      Clear Search
-                    </button>
-                  )}
-                </div>
+            ) : categoryGroups.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <p className="text-slate-600 font-medium text-sm">No items in stock right now.</p>
               </div>
-            ) : selectedCategory === 'all' && !searchQuery ? (
-              /* ============================================================== */
-              /* BLINKIT CATEGORY-WISE PRODUCT SECTIONS WITH REAL PHOTOS       */
-              /* ============================================================== */
-              <div id="products-section" className="space-y-8 pt-2">
+            ) : (
+              <div className="space-y-5">
                 {categoryGroups.map((group) => (
                   <section
                     key={group.slug}
-                    id={`category-section-${group.slug}`}
-                    className="scroll-mt-36 space-y-3"
+                    className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 shadow-2xs"
                   >
-                    {/* Category Section Header */}
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+                    {/* Rail Header: Category Name + Marathi + Count + See all > */}
+                    <div className="flex items-center justify-between mb-3 px-1">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                           {group.imageUrl ? (
                             <img
                               src={group.imageUrl}
                               alt={group.name}
-                              loading="lazy"
-                              width={40}
-                              height={40}
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-lg">{group.icon}</span>
+                            <span className="text-sm">{group.icon || '🥛'}</span>
                           )}
                         </div>
-
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight">
+                            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
                               {group.name}
                             </h3>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
-                              {group.items.length} items
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                              {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
                             </span>
                           </div>
                           {group.marathiName && (
-                            <p className="text-[11px] text-slate-500 font-normal">
+                            <p className="text-[10.5px] text-slate-400 font-medium leading-none mt-0.5">
                               {group.marathiName}
                             </p>
                           )}
@@ -574,41 +456,159 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                           setSelectedCategory(group.slug);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer"
-                        aria-label={`See all items in ${group.name}`}
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 cursor-pointer group"
+                        aria-label={`See all ${group.name}`}
                       >
                         <span>See all</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     </div>
 
-                    {/* 2 columns on mobile, gap-3 */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                      {group.items.slice(0, 10).map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onOpenDetails={(p) => setActiveModalProduct(p)}
-                        />
+                    {/* Horizontally scrollable snap row of compact cards (~144px width) */}
+                    <div className="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-1 px-1">
+                      {group.items.map((prod) => (
+                        <div
+                          key={prod.id}
+                          className="w-[144px] sm:w-[160px] snap-start shrink-0 flex"
+                        >
+                          <ProductCard
+                            product={prod}
+                            onOpenDetails={setActiveModalProduct}
+                          />
+                        </div>
                       ))}
                     </div>
                   </section>
                 ))}
               </div>
-            ) : (
-              /* Filtered / Searched Flat Grid */
-              <div id="products-section" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 pt-2">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onOpenDetails={(p) => setActiveModalProduct(p)}
-                  />
-                ))}
+            )}
+          </>
+        )}
+
+        {/* =========================================================================
+            CATEGORY DRILL-DOWN OR SEARCH VIEW: Blinkit Layout (Sidebar + 2-Col Grid)
+           ========================================================================= */}
+        {!isHomeView && (
+          <div className="space-y-4">
+            {/* Header / Filter Top Bar */}
+            <div className="flex items-center justify-between bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    if (searchQuery) onClearSearch?.();
+                    setSelectedCategory('all');
+                  }}
+                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  aria-label="Back to all categories"
+                  title="Back to all"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div>
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
+                    {searchQuery ? `Search: "${searchQuery}"` : activeCategoryObj?.name || 'Category'}
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+                  </p>
+                </div>
+              </div>
+
+              {selectedCategory !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedCategory('all');
+                  }}
+                  className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
+                >
+                  All Categories
+                </button>
+              )}
+            </div>
+
+            {/* Active Brand Filter Notice */}
+            {selectedBrand !== 'All' && (
+              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-slate-500 font-medium">Filtered Brand:</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-extrabold text-xs shadow-2xs">
+                    <span>{selectedBrand}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleBrandChange('All')}
+                      className="w-4 h-4 rounded-full bg-emerald-200/60 hover:bg-emerald-300 text-emerald-900 flex items-center justify-center cursor-pointer transition-colors"
+                      title="Clear brand"
+                    >
+                      <X className="w-2.5 h-2.5 stroke-[3]" />
+                    </button>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleBrandChange('All')}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
+                >
+                  All Brands
+                </button>
               </div>
             )}
+
+            {/* Blinkit Layout: Left Rail + Right Product Grid */}
+            <div className="flex gap-2 sm:gap-4 items-start">
+              {/* Left Vertical Rail (~84px mobile, 240px desktop) */}
+              <BlinkitCategorySidebar
+                categories={displayedCategories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={(slug) => {
+                  setSelectedCategory(slug);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+
+              {/* Right Side: Product Grid (2 cols mobile, 3-4 desktop) */}
+              <div className="flex-1 min-w-0">
+                {isLoading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 animate-pulse">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl h-56 border border-slate-100" />
+                    ))}
+                  </div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                    <p className="text-slate-600 font-medium text-sm">
+                      No products found matching your selection.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        handleBrandChange('All');
+                        if (searchQuery) onClearSearch?.();
+                      }}
+                      className="mt-3 text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
+                    >
+                      Reset all filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                    {filteredProducts.map((p) => (
+                      <ProductCard
+                        key={p.id}
+                        product={p}
+                        onOpenDetails={setActiveModalProduct}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Product Detail Modal */}

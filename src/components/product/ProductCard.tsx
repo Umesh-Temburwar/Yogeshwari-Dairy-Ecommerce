@@ -1,5 +1,6 @@
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
@@ -12,6 +13,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
+  const navigate = useNavigate();
   const { getItemQuantity, addItem, updateQuantity } = useCartStore();
   const { isStoreOpen } = useStoreStatusStore();
   const quantity = getItemQuantity(product.id);
@@ -43,6 +45,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
     e.stopPropagation();
     triggerHaptic('light');
     updateQuantity(product.id, quantity - 1);
+  };
+
+  const handleBrandClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (product.brand) {
+      triggerHaptic('light');
+      navigate(`/brand/${encodeURIComponent(product.brand)}`);
+    }
   };
 
   // Only show expiry on card if product is perishable or expiry is within 30 days
@@ -112,15 +122,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           {product.name}
         </h4>
 
-        {/* Pack Size / Unit & Brand */}
+        {/* Pack Size / Unit & Clickable Brand Chip */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5 truncate">
           <span>{product.packSize || product.unit || 'Standard'}</span>
           {product.brand && (
             <>
               <span className="text-slate-300">•</span>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100/80 truncate">
+              <button
+                type="button"
+                onClick={handleBrandClick}
+                className="text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-900 px-1.5 py-0.2 rounded border border-emerald-100/80 truncate cursor-pointer transition-colors"
+                title={`View all ${product.brand} products`}
+              >
                 {product.brand}
-              </span>
+              </button>
             </>
           )}
         </div>
@@ -159,12 +174,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
               Out of stock
             </span>
           ) : !isStoreOpen ? (
-            <span
-              className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 uppercase px-2 py-1.5 rounded-xl block text-center select-none"
+            /* Closed State: greyed disabled ADD button without cluttered red badges */
+            <button
+              type="button"
+              disabled
+              className="h-9 min-h-[36px] min-w-[64px] bg-slate-100 text-slate-400 border border-slate-200 font-bold text-xs px-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-0.5"
+              aria-label="Store is currently closed"
               title="Store is currently closed"
             >
-              Closed
-            </span>
+              <span>ADD</span>
+              <span className="text-sm font-bold leading-none">+</span>
+            </button>
           ) : quantity === 0 ? (
             <button
               type="button"

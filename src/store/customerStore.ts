@@ -18,22 +18,19 @@ export const EMPTY_ADDRESS: DeliveryAddress = {
   isDefault: false,
 };
 
-const isDummyAddress = (addr: DeliveryAddress): boolean => {
-  return Boolean(
-    !addr ||
-    !addr.id ||
-    addr.id === 'addr_home' ||
-    addr.id === 'addr_shop' ||
-    addr.id === 'addr_work' ||
-    addr.name === 'Ramesh Kumar' ||
-    addr.phone === '9876543210' ||
-    addr.city === 'Nagpur' ||
-    (addr.street && addr.street.includes('Ramdas Peth')) ||
-    (addr.street && addr.street.includes('Dharampeth')) ||
-    (addr.street && addr.street.includes('Sai Complex')) ||
-    (addr.street && addr.street.includes('IT Park')) ||
-    (addr.landmark && addr.landmark.includes('Hanuman Mandir')) ||
-    (addr.landmark && addr.landmark.includes('VNIT'))
+export const isDummyAddress = (addr: DeliveryAddress): boolean => {
+  if (!addr || !addr.id) return true;
+  if (addr.id === 'addr_home' || addr.id === 'addr_shop' || addr.id === 'addr_work') return true;
+  const str = `${addr.name || ''} ${addr.street || ''} ${addr.city || ''} ${addr.landmark || ''} ${addr.area || ''}`.toLowerCase();
+  return (
+    str.includes('nagpur') ||
+    str.includes('ramdas peth') ||
+    str.includes('dharampeth') ||
+    str.includes('sai complex') ||
+    str.includes('it park') ||
+    str.includes('vnit') ||
+    str.includes('ramesh kumar') ||
+    addr.phone === '9876543210'
   );
 };
 
@@ -41,7 +38,6 @@ export interface CustomerProfile {
   id: string;
   name: string;
   phone: string;
-  // Strict Security Rule: Customers cannot be assigned administrative roles
   readonly role: 'customer';
 }
 
@@ -95,7 +91,7 @@ export const useCustomerStore = create<CustomerStore>()(
             ...state.customerProfile,
             name: name.trim(),
             phone: cleanedPhone,
-            role: 'customer', // Immutable customer role
+            role: 'customer',
           },
         }));
       },
@@ -160,15 +156,19 @@ export const useCustomerStore = create<CustomerStore>()(
         if (!state.savedAddresses || state.savedAddresses.length === 0) {
           return EMPTY_ADDRESS;
         }
-        const found = state.savedAddresses.find((a) => a.id === state.selectedAddressId);
-        return found || state.savedAddresses[0] || EMPTY_ADDRESS;
+        const cleanAddresses = state.savedAddresses.filter((a) => !isDummyAddress(a));
+        if (cleanAddresses.length === 0) {
+          return EMPTY_ADDRESS;
+        }
+        const found = cleanAddresses.find((a) => a.id === state.selectedAddressId);
+        return found || cleanAddresses[0] || EMPTY_ADDRESS;
       },
     }),
     {
-      name: 'yd_customer_storage_v4',
+      name: 'yd_customer_storage_v5',
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        // Clean out old dummy addresses if previously stored
+        // Purge dummy addresses
         if (Array.isArray(state.savedAddresses)) {
           state.savedAddresses = state.savedAddresses.filter((a) => !isDummyAddress(a));
           if (!state.savedAddresses.some((a) => a.id === state.selectedAddressId)) {
@@ -197,10 +197,10 @@ export const useCustomerStore = create<CustomerStore>()(
 // Clean up all legacy dummy storage keys completely from browser
 if (typeof window !== 'undefined') {
   try {
-    ['yd_customer_storage', 'yd_customer_storage_v1', 'yd_customer_storage_v2', 'yd_customer_storage_v3'].forEach((k) => {
+    ['yd_customer_storage', 'yd_customer_storage_v1', 'yd_customer_storage_v2', 'yd_customer_storage_v3', 'yd_customer_storage_v4'].forEach((k) => {
       window.localStorage.removeItem(k);
     });
-    const current = window.localStorage.getItem('yd_customer_storage_v4');
+    const current = window.localStorage.getItem('yd_customer_storage_v5');
     if (current && (
       current.includes('Nagpur') ||
       current.includes('9876543210') ||
@@ -210,7 +210,7 @@ if (typeof window !== 'undefined') {
       current.includes('IT Park') ||
       current.includes('Ramesh Kumar')
     )) {
-      window.localStorage.removeItem('yd_customer_storage_v4');
+      window.localStorage.removeItem('yd_customer_storage_v5');
     }
   } catch {
     // ignore
