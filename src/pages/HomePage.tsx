@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ShieldCheck, Truck, Clock, X, ChevronRight, ArrowLeft } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard';
 import { CategoryPills } from '@/components/layout/CategoryPills';
@@ -9,22 +9,13 @@ import { ecommerceApi, isUsingMockApi } from '@/services/api';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
+import { BLINKIT_CATEGORIES } from '@/constants/categories';
+import { supabase } from '@/services/supabase/client';
 
 interface HomePageProps {
   searchQuery: string;
   onClearSearch?: () => void;
 }
-
-const DISPLAY_CATEGORIES = [
-  { slug: 'milk', name: 'Fresh Milk & Cream', marathiName: 'ताजे दूध आणि मलई', icon: '🥛' },
-  { slug: 'paneer-khoya', name: 'Fresh Paneer & Butter', marathiName: 'पनीर आणि बटर', icon: '🧀' },
-  { slug: 'dahi-chaas-lassi', name: 'Curd, Chaas & Lassi', marathiName: 'दही, ताक आणि लस्सी', icon: '🥣' },
-  { slug: 'ghee-butter', name: 'Pure Desi Ghee', marathiName: 'शुद्ध देशी तूप', icon: '🧈' },
-  { slug: 'sweets-shrikhand', name: 'Sweets, Mithai & Shrikhand', marathiName: 'मिठाई आणि श्रीखंड', icon: '🍯' },
-  { slug: 'bakery-essentials', name: 'Biscuits, Bakery & Snacks', marathiName: 'बिस्किट्स, बेकरी आणि स्नॅक्स', icon: '🍪' },
-  { slug: 'beverages', name: 'Cold Drinks & Beverages', marathiName: 'पेये आणि कोल्ड्रिंक्स', icon: '🥤' },
-  { slug: 'groceries-fmcg', name: 'Cooking & Grocery Essentials', marathiName: 'मसाले आणि किराणा', icon: '🥫' },
-];
 
 function getCategorySlugForProduct(categoryName?: string, productName?: string): string {
   const c = (categoryName || '').toLowerCase();
@@ -102,34 +93,117 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeModalProduct, setActiveModalProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [cats, prods] = await Promise.all([
-          ecommerceApi.getCategories(),
-          ecommerceApi.getProducts({
-            category: selectedCategory,
-            search: searchQuery,
-            limit: selectedCategory === 'all' && !searchQuery ? 300 : 100,
-          }),
-        ]);
-        setCategories(cats);
-        setProducts(prods.data);
-      } catch (err) {
-        console.error('Failed to load products', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchCatalogData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
+    try {
+      const [cats, prods] = await Promise.all([
+        ecommerceApi.getCategories(),
+        ecommerceApi.getProducts({
+          category: selectedCategory,
+          search: searchQuery,
+          limit: selectedCategory === 'all' && !searchQuery ? 300 : 100,
+        }),
+      ]);
+      setCategories(cats);
+      setProducts(prods.data);
+    } catch (err) {
+      console.error('Failed to load products', err);
+    } finally {
+      if (!isSilent) setIsLoading(false);
+    }
   }, [selectedCategory, searchQuery]);
 
-  // Group products category-wise for Blinkit storefront layout
+  // Initial and reactive query fetch
+  useEffect(() => {
+    fetchCatalogData(false);
+  }, [fetchCatalogData]);
+
+  // ============================================================================
+  // REAL-TIME SYNC: Main Shop Inventory changes reflect instantly on E-Commerce
+  // ============================================================================
+  useEffect(() => {
+    // 1. Supabase Realtime channel for live product & stock updates
+    const channel = supabase
+      .channel('ecommerce-shop-live-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            const row = payload.new as any;
+            setProducts((prev) =>
+              prev.map((p) => {
+                if (p.id === row.id) {
+                  const sellingPrice = Number(row.selling_price) || 0;
+                  const stockQuantity = Number(row.stock_quantity) || 0;
+                  const mrp = Number(row.mrp) && Number(row.mrp) > sellingPrice ? Number(row.mrp) : sellingPrice;
+                  const discountPercentage = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+
+                  return {
+                    ...p,
+                    name: row.name || p.name,
+                    category: row.category || p.category,
+                    price: sellingPrice,
+                    mrp,
+                    discountPercentage,
+                    stockQuantity,
+                    inStock: stockQuantity > 0,
+                    packSize: row.pack_size || p.packSize,
+                    imageUrl: row.image_url || p.imageUrl,
+                    description: row.description || p.description,
+                  };
+                }
+                return p;
+              })
+            );
+          } else if (payload.eventType === 'INSERT') {
+            // New product added at shop inventory
+            const row = payload.new as any;
+            if (row.is_active && Number(row.selling_price) > 0) {
+              fetchCatalogData(true);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const row = payload.old as any;
+            setProducts((prev) => prev.filter((p) => p.id !== row.id));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'batches' },
+        () => {
+          // Counter stock delivery or batch expiration changed
+          fetchCatalogData(true);
+        }
+      )
+      .subscribe();
+
+    // 2. Failsafe: Tab focus re-fetch to ensure fresh stock when app is reopened
+    const handleFocus = () => {
+      fetchCatalogData(true);
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // 3. 30-Second background sync interval
+    const interval = setInterval(() => {
+      fetchCatalogData(true);
+    }, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, [fetchCatalogData]);
+
+  // Group products category-wise for Blinkit storefront layout with real photos
   const categoryGroups = useMemo(() => {
-    const groups = DISPLAY_CATEGORIES.map((cat) => ({
-      ...cat,
+    const groups = BLINKIT_CATEGORIES.filter((c) => c.slug !== 'all').map((cat) => ({
+      slug: cat.slug,
+      name: cat.name,
+      marathiName: cat.marathiName,
+      icon: cat.icon,
+      imageUrl: cat.imageUrl,
       items: [] as Product[],
     }));
 
@@ -156,13 +230,13 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
   const activeCategoryObj = useMemo(() => {
     return (
       categories.find((c) => c.slug === selectedCategory) ||
-      DISPLAY_CATEGORIES.find((c) => c.slug === selectedCategory)
+      BLINKIT_CATEGORIES.find((c) => c.slug === selectedCategory)
     );
   }, [categories, selectedCategory]);
 
   return (
     <div className="min-h-screen pb-32 bg-[#F7F9FA]">
-      {/* Category Horizontal Filter Bar (Blinkit Circular Icon Bar) */}
+      {/* Category Horizontal Filter Bar (Blinkit Real Photos Carousel) */}
       <CategoryPills
         categories={categories}
         selectedCategory={selectedCategory}
@@ -171,7 +245,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3">
         <div className="flex gap-4 sm:gap-6 items-start">
-          {/* Desktop Left Sticky Category Rail (Blinkit Style) */}
+          {/* Desktop Left Sticky Category Rail (Blinkit Style with Real Photos) */}
           <BlinkitCategorySidebar
             categories={categories}
             selectedCategory={selectedCategory}
@@ -229,14 +303,15 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 <div className="flex items-center gap-2">
                   <span className="text-base">🟢</span>
                   <div>
-                    <span className="font-extrabold">Live Inventory Connected: </span>
+                    <span className="font-extrabold">Live Shop Inventory Connected: </span>
                     <span className="text-emerald-800">
-                      Real-time stock synced directly with Yogeshwari Dairy counter POS & Supabase.
+                      Real-time synced directly with Yogeshwari Dairy counter POS & Supabase.
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-2 py-0.5 rounded-full shrink-0">
-                  Live Stock
+                <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  Live Sync
                 </span>
               </div>
             )}
@@ -307,21 +382,31 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                       triggerHaptic('light');
                       setSelectedCategory('all');
                     }}
-                    className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-[#0C831F] flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-[#0C831F] flex items-center justify-center transition-colors cursor-pointer"
                     title="All Categories"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                      <span>{activeCategoryObj?.icon || '🥛'}</span>
-                      <span>{activeCategoryObj?.name || 'Category'}</span>
-                    </h2>
-                    {activeCategoryObj?.marathiName && (
-                      <p className="text-xs text-slate-500 font-medium">
-                        {activeCategoryObj.marathiName} • {products.length} items available
-                      </p>
+                  <div className="flex items-center gap-3">
+                    {activeCategoryObj?.imageUrl && (
+                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                        <img
+                          src={activeCategoryObj.imageUrl}
+                          alt={activeCategoryObj.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     )}
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                        <span>{activeCategoryObj?.name || 'Category'}</span>
+                      </h2>
+                      {activeCategoryObj?.marathiName && (
+                        <p className="text-xs text-slate-500 font-medium">
+                          {activeCategoryObj.marathiName} • {products.length} items available
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -331,7 +416,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     triggerHaptic('light');
                     setSelectedCategory('all');
                   }}
-                  className="text-xs font-black text-[#0C831F] hover:underline"
+                  className="text-xs font-black text-[#0C831F] hover:underline cursor-pointer"
                 >
                   View All Categories
                 </button>
@@ -384,7 +469,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             ) : selectedCategory === 'all' && !searchQuery ? (
               /* ============================================================== */
-              /* BLINKIT CATEGORY-WISE PRODUCT SECTIONS                         */
+              /* BLINKIT CATEGORY-WISE PRODUCT SECTIONS WITH REAL PHOTOS       */
               /* ============================================================== */
               <div className="space-y-8 pt-2">
                 {categoryGroups.map((group) => (
@@ -393,12 +478,27 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     id={`category-section-${group.slug}`}
                     className="scroll-mt-36 space-y-3"
                   >
-                    {/* Category Section Header */}
+                    {/* Category Section Header with Real Photo Thumbnail */}
                     <div className="flex items-center justify-between pb-2 border-b border-gray-200/80">
                       <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-200/80 flex items-center justify-center text-xl shadow-xs">
-                          {group.icon}
+                        <div className="w-11 h-11 rounded-2xl overflow-hidden border border-emerald-200/80 shrink-0 shadow-xs relative bg-emerald-50">
+                          {group.imageUrl ? (
+                            <img
+                              src={group.imageUrl}
+                              alt={group.name}
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl">
+                              {group.icon}
+                            </div>
+                          )}
+                          <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-[9px] shadow-xs">
+                            {group.icon}
+                          </div>
                         </div>
+
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">

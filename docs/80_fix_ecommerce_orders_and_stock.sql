@@ -308,7 +308,28 @@ BEGIN
 END;
 $$;
 
--- Grant execution to anon, authenticated, and service_role
+-- 5. Grant Execution to All Roles
 GRANT EXECUTE ON FUNCTION public.fn_create_ecommerce_order_atomic(
     UUID, TEXT, UUID, UUID, TEXT, TEXT, TEXT, JSONB, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, JSONB, TEXT
 ) TO anon, authenticated, service_role;
+
+-- 6. Enable Realtime Broadcasting on products and batches for Instant E-Commerce Sync
+ALTER TABLE IF EXISTS public.products REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.batches REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'products'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'batches'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.batches;
+    END IF;
+END $$;

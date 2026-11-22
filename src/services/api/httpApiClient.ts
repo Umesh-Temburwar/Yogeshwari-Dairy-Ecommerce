@@ -354,6 +354,18 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           'Groceries & FMCG': '🥫',
         };
 
+        const imageMap: Record<string, string> = {
+          'all': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80',
+          'Milk': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=300&q=80',
+          'Curd & Chaas': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=300&q=80',
+          'Paneer & Butter': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=300&q=80',
+          'Ghee': 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=300&q=80',
+          'Sweets/Mithai': 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=300&q=80',
+          'Bakery & Extras': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80',
+          'Beverages': 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=300&q=80',
+          'Groceries & FMCG': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=300&q=80',
+        };
+
         const marathiMap: Record<string, string> = {
           'Milk': 'ताजे दूध आणि मलई',
           'Curd & Chaas': 'दही, ताक आणि लस्सी',
@@ -384,6 +396,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
             slug: 'all',
             count: 1436,
             icon: '🔥',
+            imageUrl: imageMap['all'],
             description: 'All fresh dairy, sweets & daily essentials',
           },
           ...data.map((cat) => ({
@@ -393,6 +406,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
             slug: slugMap[cat.name] || cat.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
             count: cat.name === 'Bakery & Extras' ? 827 : cat.name === 'Sweets/Mithai' ? 37 : cat.name === 'Paneer & Butter' ? 30 : cat.name === 'Curd & Chaas' ? 19 : cat.name === 'Ghee' ? 12 : 10,
             icon: defaultIconMap[cat.name] || '🧀',
+            imageUrl: imageMap[cat.name] || imageMap['Milk'],
             description: cat.description || '',
           })),
         ];
