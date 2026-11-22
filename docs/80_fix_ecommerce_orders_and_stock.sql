@@ -50,8 +50,20 @@ WHERE p.stock_quantity > 0
         AND b.expiry_date >= CURRENT_DATE
   );
 
--- 3. Drop all previous overloaded function versions cleanly
-DROP FUNCTION IF EXISTS public.fn_create_ecommerce_order_atomic CASCADE;
+-- 3. Drop all previous overloaded function versions cleanly and dynamically
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT p.proname, pg_get_function_identity_arguments(p.oid) AS args
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public' AND p.proname = 'fn_create_ecommerce_order_atomic'
+    ) LOOP
+        EXECUTE format('DROP FUNCTION IF EXISTS public.%I(%s) CASCADE;', r.proname, r.args);
+    END LOOP;
+END $$;
 
 -- 4. Recreate Atomic Order Function with Matching Signature and Resilient Shop Stock
 CREATE OR REPLACE FUNCTION public.fn_create_ecommerce_order_atomic(

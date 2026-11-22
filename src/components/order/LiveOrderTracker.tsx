@@ -61,9 +61,9 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
   const isCancelled = order.orderStatus === 'cancelled';
   const canCancel = order.orderStatus === 'pending' || order.orderStatus === 'confirmed';
 
-  // Blinkit Dark-Store Item Verification Parser
+  // YogiMart Dark-Store Item Verification Parser
   const notesText = order.notes || '';
-  const isBlinkitScan = notesText.includes('BLINKIT_SCAN') || notesText.includes('PACKED');
+  const isYogiMartScan = notesText.includes('YogiMart_SCAN') || notesText.includes('PACKED');
   const isAllVerified =
     notesText.includes('ALL_VERIFIED') ||
     notesText.includes('All items barcode-verified') ||
@@ -74,8 +74,8 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
   const scannedUnitsCount = scanMatch
     ? parseInt(scanMatch[1], 10)
     : isAllVerified
-    ? order.items.length
-    : 0;
+      ? order.items.length
+      : 0;
 
   const handleCancel = async () => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return;
@@ -110,8 +110,8 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
               {isCancelled
                 ? 'Order Cancelled'
                 : order.orderStatus === 'delivered'
-                ? 'Order Delivered!'
-                : 'Arriving in 20-40 Mins ⚡'}
+                  ? 'Order Delivered!'
+                  : 'Arriving in 20-40 Mins ⚡'}
             </h2>
           </div>
           <div className="text-right">
@@ -151,8 +151,8 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
           </div>
         )}
 
-        {/* Blinkit-Style Live Dark-Store Barcode Verification Card */}
-        {(order.orderStatus === 'preparing' || isBlinkitScan || isAllVerified) && !isCancelled && (
+        {/* YogiMart-Style Live Dark-Store Barcode Verification Card */}
+        {(order.orderStatus === 'preparing' || isYogiMartScan || isAllVerified) && !isCancelled && (
           <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 rounded-2xl p-4 border border-emerald-200 shadow-xs space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -183,15 +183,15 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
                   width: isAllVerified
                     ? '100%'
                     : `${Math.max(
-                        25,
-                        Math.min(95, (scannedUnitsCount / Math.max(1, order.items.length)) * 100)
-                      )}%`,
+                      25,
+                      Math.min(95, (scannedUnitsCount / Math.max(1, order.items.length)) * 100)
+                    )}%`,
                 }}
               />
             </div>
 
             <div className="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-0.5">
-              <span>Blinkit-Speed Dark Store Packing</span>
+              <span>YogiMart-Speed Dark Store Packing</span>
               <span>{isAllVerified ? 'Sealed & Ready ✓' : 'Item-by-item verification in progress'}</span>
             </div>
           </div>
@@ -208,23 +208,21 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
               return (
                 <div key={step.key} className="relative flex items-start gap-3">
                   <div
-                    className={`absolute -left-[23px] w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      isPast
+                    className={`absolute -left-[23px] w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isPast
                         ? 'bg-[#0C831F] text-white ring-4 ring-green-100'
                         : 'bg-gray-100 text-gray-400 border border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div>
                     <h5
-                      className={`text-xs sm:text-sm font-bold leading-none ${
-                        isCurrent
+                      className={`text-xs sm:text-sm font-bold leading-none ${isCurrent
                           ? 'text-[#0C831F]'
                           : isPast
-                          ? 'text-brand-text-primary'
-                          : 'text-brand-text-muted'
-                      }`}
+                            ? 'text-brand-text-primary'
+                            : 'text-brand-text-muted'
+                        }`}
                     >
                       {step.title}
                     </h5>
@@ -278,7 +276,7 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
                       ({item.packSize}) x {item.quantity}
                     </span>
                   </div>
-                  {(isAllVerified || isBlinkitScan) && (
+                  {(isAllVerified || isYogiMartScan) && (
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
                       ✓ Scanned
                     </span>

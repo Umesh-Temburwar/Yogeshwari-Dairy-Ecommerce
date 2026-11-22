@@ -72,7 +72,7 @@ An end-to-end frontend audit, functional workflow test suite, and mobile layout 
 | **Standard Mobile** | `375px` | iOS safe areas respected; floating cart pill sits above home bar | ✅ PASSED |
 | **Standard Mobile** | `390px` | Crisp packshot images; drawer checkout button remains accessible | ✅ PASSED |
 | **Large Mobile** | `412px` | High-density Android layout renders crisp typography and badges | ✅ PASSED |
-| **Large Mobile** | `428px` | Maximum mobile width wrapper preserves Blinkit app-like experience | ✅ PASSED |
+| **Large Mobile** | `428px` | Maximum mobile width wrapper preserves YogiMart app-like experience | ✅ PASSED |
 | **Tablet** | `768px` | 3-column product grid; desktop location dropdown activates cleanly | ✅ PASSED |
 | **Desktop** | `1024px+`| 4-5 column responsive grid; max-w-7xl centered container | ✅ PASSED |
 

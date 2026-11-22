@@ -70,7 +70,7 @@
 3. **External GPS Fallback:**
    - Secondary button to open Google Maps / Apple Maps in a separate tab if driver prefers external voice navigation.
 4. **Delivery Rider Workflow:**
-   - Rider Assignment selector (`Sunil Rao`, `Ganesh Pawar`, `Store Express Fleet`).
+   - Rider Assignment selector (`Nikhil Sakhare`, `Ganesh Pawar`, `Store Express Fleet`).
    - Status advancement buttons:
      - `Start Delivery` -> Transitions status to `OUT_FOR_DELIVERY`
      - `Mark Delivered` -> Transitions status to `DELIVERED` & settles COD payment.

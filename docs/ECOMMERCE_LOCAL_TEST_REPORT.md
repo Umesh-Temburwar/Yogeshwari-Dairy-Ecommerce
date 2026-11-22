@@ -12,7 +12,7 @@
 
 ## 1. EXECUTIVE SUMMARY
 
-A full automated and functional verification audit was conducted on the customer-facing e-commerce web application for **Yogeshwari Dairy Products**. The system was verified for performance, Indian quick-commerce UX compliance (inspired by Blinkit and Zepto), mobile touch accessibility, stock limit safety, idempotency guards, and client-side error resilience.
+A full automated and functional verification audit was conducted on the customer-facing e-commerce web application for **Yogeshwari Dairy Products**. The system was verified for performance, Indian quick-commerce UX compliance (inspired by YogiMart and Zepto), mobile touch accessibility, stock limit safety, idempotency guards, and client-side error resilience.
 
 ### Key Verification Metrics
 * **Localhost URL:** `http://localhost:5174/` (active Vite v6 dev server)
@@ -50,7 +50,7 @@ Active Mode:            Hybrid Pluggable Architecture (Mock & Direct Supabase)
 | **WF-08** | **Live Search Bar** | Instant debounced search by name/description | Matches accurately; updates product count | 🟢 PASS |
 | **WF-09** | **Empty Search State** | Friendly empty UI with "Clear Search" button | Shows 🔍 icon, guidance, and 1-click reset | 🟢 PASS |
 | **WF-10** | **Product Detail Modal** | Modal with pack size, veg dot, MRP, price | Smooth backdrop blur, accessible close button | 🟢 PASS |
-| **WF-11** | **Add to Cart Interaction** | Tap `ADD +` expands into `[-] [1] [+]` | Smooth Blinkit-style animation | 🟢 PASS |
+| **WF-11** | **Add to Cart Interaction** | Tap `ADD +` expands into `[-] [1] [+]` | Smooth YogiMart-style animation | 🟢 PASS |
 | **WF-12** | **Touch Target Sizing** | Increment/decrement buttons >= 44x44px | Verified: `w-10 h-10` with `min-h-[44px]` container | 🟢 PASS |
 | **WF-13** | **Quantity Zero Drop** | Decrementing from 1 to 0 removes item | Item seamlessly removed from cart state | 🟢 PASS |
 | **WF-14** | **Stock Limit Protection** | Disable `+` when reaching available stock | Button disabled with `opacity-40` & tooltip | 🟢 PASS |

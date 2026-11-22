@@ -193,7 +193,7 @@ export class MockEcommerceApiClient implements IEcommerceApiClient {
       notes: orderPayload.notes,
       estimatedDeliveryMinutes: 15,
       deliveryPartner: {
-        name: 'Sunil Rao (Express Dairy Fleet)',
+        name: 'Nikhil Sakhare (Express Dairy Fleet)',
         phone: '+9370869896',
         vehicleNumber: 'MH-31-DY-1008',
       },

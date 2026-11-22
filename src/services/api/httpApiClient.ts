@@ -546,7 +546,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
             notes: orderPayload.notes,
             estimatedDeliveryMinutes: 25,
             deliveryPartner: {
-              name: 'Sunil Rao (Express Dairy Fleet)',
+              name: 'Nikhil Sakhare (Express Dairy Fleet)',
               phone: '+919876543210',
               vehicleNumber: 'MH-31-DY-1008',
             },
@@ -666,7 +666,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           notes: orderPayload.notes,
           estimatedDeliveryMinutes: 25,
           deliveryPartner: {
-            name: 'Sunil Rao (Express Dairy Fleet)',
+            name: 'Nikhil Sakhare (Express Dairy Fleet)',
             phone: '+919876543210',
             vehicleNumber: 'MH-31-DY-1008',
           },
@@ -730,7 +730,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       if (!this.allowMockFallback) {
         throw new Error(
           sbErr?.message ||
-            'Unable to place order: Live store dispatch service is currently unavailable. Please contact Yogeshwari Dairy directly at +91 9370869896.'
+          'Unable to place order: Live store dispatch service is currently unavailable. Please contact Yogeshwari Dairy directly at +91 9370869896.'
         );
       }
     }
@@ -832,14 +832,14 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
 
         const mappedItems = Array.isArray(dbOrder.items)
           ? dbOrder.items.map((i: any) => ({
-              productId: i.product_id || i.id,
-              name: i.product_name || 'Dairy Item',
-              packSize: i.pack_size || 'Standard',
-              price: Number(i.unit_price) || 0,
-              quantity: Number(i.quantity) || 1,
-              itemTotal: Number(i.total_price) || 0,
-              imageUrl: i.image_url,
-            }))
+            productId: i.product_id || i.id,
+            name: i.product_name || 'Dairy Item',
+            packSize: i.pack_size || 'Standard',
+            price: Number(i.unit_price) || 0,
+            quantity: Number(i.quantity) || 1,
+            itemTotal: Number(i.total_price) || 0,
+            imageUrl: i.image_url,
+          }))
           : [];
 
         const order: Order = {
@@ -876,7 +876,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           notes: dbOrder.delivery_notes,
           estimatedDeliveryMinutes: 25,
           deliveryPartner: {
-            name: dbOrder.delivery_partner_name || 'Sunil Rao (Express Dairy Fleet)',
+            name: dbOrder.delivery_partner_name || 'Nikhil Sakhare (Express Dairy Fleet)',
             phone: dbOrder.delivery_partner_phone || '+919876543210',
             vehicleNumber: dbOrder.delivery_partner_vehicle || 'MH-31-DY-1008',
           },

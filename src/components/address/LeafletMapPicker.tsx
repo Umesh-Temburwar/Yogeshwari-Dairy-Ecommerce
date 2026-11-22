@@ -289,25 +289,23 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({
       {/* Map Tile Container */}
       <div ref={mapContainerRef} style={{ height: effectiveHeight, width: '100%' }} />
 
-      {/* FIXED CENTER PIN (Swiggy / Blinkit style center screen cursor) */}
+      {/* FIXED CENTER PIN (Swiggy / YogiMart style center screen cursor) */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-[450]">
         <div className="relative flex flex-col items-center">
           {/* Status Tooltip above Pin */}
           <div
-            className={`mb-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide shadow-md transition-all duration-200 backdrop-blur-xs flex items-center gap-1.5 ${
-              isMapMoving
+            className={`mb-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide shadow-md transition-all duration-200 backdrop-blur-xs flex items-center gap-1.5 ${isMapMoving
                 ? 'bg-black/85 text-white scale-105 -translate-y-2'
                 : 'bg-emerald-600 text-white scale-100'
-            }`}
+              }`}
           >
             <span>{isMapMoving ? 'Locating Doorstep...' : 'Deliver Here 📍'}</span>
           </div>
 
           {/* Animated Center Delivery Pin */}
           <div
-            className={`transition-all duration-200 ease-out transform ${
-              isMapMoving ? '-translate-y-3.5 scale-110 drop-shadow-xl' : 'translate-y-0 scale-100 drop-shadow-md'
-            }`}
+            className={`transition-all duration-200 ease-out transform ${isMapMoving ? '-translate-y-3.5 scale-110 drop-shadow-xl' : 'translate-y-0 scale-100 drop-shadow-md'
+              }`}
           >
             <div className="w-10 h-10 bg-emerald-600 border-2.5 border-white rounded-full rounded-br-none -rotate-45 flex items-center justify-center shadow-lg">
               <span className="rotate-45 text-white text-base">📍</span>
@@ -316,9 +314,8 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({
 
           {/* Dynamic Pin Ground Contact Shadow */}
           <div
-            className={`w-4 h-1.5 bg-black/35 rounded-full filter blur-[1px] transition-all duration-200 ${
-              isMapMoving ? 'scale-75 opacity-40' : 'scale-100 opacity-90'
-            }`}
+            className={`w-4 h-1.5 bg-black/35 rounded-full filter blur-[1px] transition-all duration-200 ${isMapMoving ? 'scale-75 opacity-40' : 'scale-100 opacity-90'
+              }`}
             style={{ marginTop: '-2px' }}
           />
 
@@ -331,13 +328,12 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({
       <div className="absolute top-2.5 left-2.5 right-2.5 z-[400] flex items-center justify-between pointer-events-none gap-2">
         {/* Serviceability Badge */}
         <div
-          className={`pointer-events-auto px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-md backdrop-blur-md flex items-center gap-1.5 transition-colors ${
-            serviceInfo.isServiceable
+          className={`pointer-events-auto px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-md backdrop-blur-md flex items-center gap-1.5 transition-colors ${serviceInfo.isServiceable
               ? serviceInfo.zone === 'EXPRESS'
                 ? 'bg-emerald-700/90 text-white border border-emerald-500/50'
                 : 'bg-blue-700/90 text-white border border-blue-500/50'
               : 'bg-rose-700/95 text-white border border-rose-500/50'
-          }`}
+            }`}
         >
           <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
           <span>{serviceInfo.badgeText}</span>
@@ -373,11 +369,10 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({
           type="button"
           onClick={handleLocateMe}
           disabled={isLocating}
-          className={`pointer-events-auto w-10 h-10 rounded-2xl shadow-lg flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
-            deviceCoords
+          className={`pointer-events-auto w-10 h-10 rounded-2xl shadow-lg flex items-center justify-center transition-all active:scale-90 cursor-pointer ${deviceCoords
               ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-blue-300'
               : 'bg-white/95 text-slate-800 hover:bg-blue-50 border border-slate-200'
-          }`}
+            }`}
           title="Use My Live GPS Location"
         >
           {isLocating ? (

@@ -57,7 +57,7 @@ export const App: React.FC = () => {
         {/* Footer */}
         <Footer />
 
-        {/* Floating Cart Bar (Blinkit style bottom sticky pill) */}
+        {/* Floating Cart Bar (YogiMart style bottom sticky pill) */}
         <FloatingCartBar />
 
         {/* Cart Drawer Slide-Over */}

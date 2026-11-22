@@ -54,7 +54,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
       />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 space-y-4">
-        {/* Store Closed Banner (Flipkart / Blinkit Style Alert) */}
+        {/* Store Closed Banner (Flipkart / YogiMart Style Alert) */}
         {!isStoreOpen && (
           <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in border border-red-500/40">
             <div className="flex items-center gap-3">
@@ -158,8 +158,8 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               {searchQuery
                 ? `Search results for "${searchQuery}"`
                 : selectedCategory === 'all'
-                ? 'Fresh Today & Best Sellers'
-                : categories.find((c) => c.slug === selectedCategory)?.name || 'Products'}
+                  ? 'Fresh Today & Best Sellers'
+                  : categories.find((c) => c.slug === selectedCategory)?.name || 'Products'}
             </h2>
             <p className="text-xs text-brand-text-muted">
               {products.length} {products.length === 1 ? 'item available' : 'items available'}

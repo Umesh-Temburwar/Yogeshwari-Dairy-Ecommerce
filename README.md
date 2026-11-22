@@ -8,7 +8,7 @@ Integrates directly with the Yogeshwari Dairy backend and Supabase inventory sys
 
 ## 🚀 Features
 
-- **⚡ 15-Mins Quick-Commerce Architecture:** Styled with Blinkit / Zepto / Swiggy Instamart high-converting visual patterns.
+- **⚡ 15-Mins Quick-Commerce Architecture:** Styled with YogiMart / Zepto / Swiggy Instamart high-converting visual patterns.
 - **🥛 Authentic Vidarbha Dairy Catalogue:** 24+ curated local dairy items (Cow Milk, Buffalo Milk, Malai Paneer, Bilona Ghee, Amrakhand, Shrikhand, Gulab Jamun, Dahi, Masala Chaas).
 - **🛒 Dynamic Cart & Free Delivery Meter:** Live progress toward the ₹300 free delivery threshold.
 - **📍 Multi-Address Book:** Instant switching between `Home`, `Shop`, and `Work` delivery destinations with address creation.
