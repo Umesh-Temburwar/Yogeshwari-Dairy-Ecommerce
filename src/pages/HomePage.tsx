@@ -9,7 +9,7 @@ import { ecommerceApi, isUsingMockApi } from '@/services/api';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
-import { BLINKIT_CATEGORIES } from '@/constants/categories';
+import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
 import { supabase } from '@/services/supabase/client';
 
 interface HomePageProps {
@@ -17,78 +17,10 @@ interface HomePageProps {
   onClearSearch?: () => void;
 }
 
-function getCategorySlugForProduct(categoryName?: string, productName?: string): string {
-  const c = (categoryName || '').toLowerCase();
-  const n = (productName || '').toLowerCase();
-
-  if (c.includes('milk') || n.includes('milk')) return 'milk';
-  if (
-    c.includes('curd') ||
-    c.includes('chaas') ||
-    c.includes('dahi') ||
-    c.includes('lassi') ||
-    n.includes('curd') ||
-    n.includes('dahi') ||
-    n.includes('chaas') ||
-    n.includes('lassi')
-  ) {
-    return 'dahi-chaas-lassi';
-  }
-  if (c.includes('ghee') || n.includes('ghee')) return 'ghee-butter';
-  if (
-    c.includes('paneer') ||
-    c.includes('butter') ||
-    c.includes('khoya') ||
-    n.includes('paneer') ||
-    n.includes('butter') ||
-    n.includes('khoya') ||
-    n.includes('cheese')
-  ) {
-    return 'paneer-khoya';
-  }
-  if (
-    c.includes('sweet') ||
-    c.includes('mithai') ||
-    c.includes('shrikhand') ||
-    n.includes('shrikhand') ||
-    n.includes('gulab jamun') ||
-    n.includes('rasgulla') ||
-    n.includes('sonpapdi') ||
-    n.includes('laddu') ||
-    n.includes('petha')
-  ) {
-    return 'sweets-shrikhand';
-  }
-  if (
-    c.includes('beverage') ||
-    c.includes('drink') ||
-    n.includes('campa') ||
-    n.includes('cola') ||
-    n.includes('sprite') ||
-    n.includes('flavour')
-  ) {
-    return 'beverages';
-  }
-  if (
-    c.includes('grocery') ||
-    c.includes('fmcg') ||
-    c.includes('masala') ||
-    n.includes('masala') ||
-    n.includes('pickle') ||
-    n.includes('sauce') ||
-    n.includes('dal') ||
-    n.includes('ketchup') ||
-    n.includes('maggi')
-  ) {
-    return 'groceries-fmcg';
-  }
-  return 'bakery-essentials';
-}
-
 export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }) => {
   const { isStoreOpen } = useStoreStatusStore();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allInStockProducts, setAllInStockProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeModalProduct, setActiveModalProduct] = useState<Product | null>(null);
@@ -98,20 +30,18 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     try {
       const [cats, prods] = await Promise.all([
         ecommerceApi.getCategories(),
-        ecommerceApi.getProducts({
-          category: selectedCategory,
-          search: searchQuery,
-          limit: selectedCategory === 'all' && !searchQuery ? 300 : 100,
-        }),
+        ecommerceApi.getProducts({ category: 'all' }),
       ]);
       setCategories(cats);
-      setProducts(prods.data);
+      // Strictly ensure only products with stock_quantity > 0 are kept
+      const inStockOnly = prods.data.filter((p) => p.inStock && p.stockQuantity > 0);
+      setAllInStockProducts(inStockOnly);
     } catch (err) {
       console.error('Failed to load products', err);
     } finally {
       if (!isSilent) setIsLoading(false);
     }
-  }, [selectedCategory, searchQuery]);
+  }, []);
 
   // Initial and reactive query fetch
   useEffect(() => {
@@ -122,7 +52,6 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
   // REAL-TIME SYNC: Main Shop Inventory changes reflect instantly on E-Commerce
   // ============================================================================
   useEffect(() => {
-    // 1. Supabase Realtime channel for live product & stock updates
     const channel = supabase
       .channel('ecommerce-shop-live-sync')
       .on(
@@ -131,40 +60,69 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         (payload) => {
           if (payload.eventType === 'UPDATE') {
             const row = payload.new as any;
-            setProducts((prev) =>
-              prev.map((p) => {
-                if (p.id === row.id) {
-                  const sellingPrice = Number(row.selling_price) || 0;
-                  const stockQuantity = Number(row.stock_quantity) || 0;
-                  const mrp = Number(row.mrp) && Number(row.mrp) > sellingPrice ? Number(row.mrp) : sellingPrice;
-                  const discountPercentage = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+            const stockQuantity = Number(row.stock_quantity) || 0;
+            const sellingPrice = Number(row.selling_price) || 0;
 
-                  return {
-                    ...p,
-                    name: row.name || p.name,
-                    category: row.category || p.category,
-                    price: sellingPrice,
-                    mrp,
-                    discountPercentage,
-                    stockQuantity,
-                    inStock: stockQuantity > 0,
-                    packSize: row.pack_size || p.packSize,
-                    imageUrl: row.image_url || p.imageUrl,
-                    description: row.description || p.description,
-                  };
-                }
-                return p;
-              })
-            );
+            // If stock dropped to 0 or inactive, remove immediately from view
+            if (stockQuantity <= 0 || !row.is_active || sellingPrice <= 0) {
+              setAllInStockProducts((prev) => prev.filter((p) => p.id !== row.id));
+              return;
+            }
+
+            setAllInStockProducts((prev) => {
+              const exists = prev.some((p) => p.id === row.id);
+              const mrp = Number(row.mrp) && Number(row.mrp) > sellingPrice ? Number(row.mrp) : sellingPrice;
+              const discountPercentage = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+
+              if (exists) {
+                return prev.map((p) => {
+                  if (p.id === row.id) {
+                    return {
+                      ...p,
+                      name: row.name || p.name,
+                      category: row.category || p.category,
+                      price: sellingPrice,
+                      mrp,
+                      discountPercentage,
+                      stockQuantity,
+                      inStock: true,
+                      packSize: row.pack_size || p.packSize,
+                      imageUrl: row.image_url || p.imageUrl,
+                      description: row.description || p.description,
+                    };
+                  }
+                  return p;
+                });
+              } else {
+                // Was previously out of stock or new, now back in stock!
+                const newP: Product = {
+                  id: row.id,
+                  name: row.name,
+                  description: row.description || `${row.name} - Fresh dairy item`,
+                  category: row.category || 'Dairy',
+                  packSize: row.pack_size || 'Piece',
+                  unit: row.unit || 'Piece',
+                  mrp,
+                  price: sellingPrice,
+                  discountPercentage,
+                  imageUrl: row.image_url || 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
+                  inStock: true,
+                  stockQuantity,
+                  rating: 4.8,
+                  ratingCount: 120,
+                  isFreshToday: true,
+                };
+                return [newP, ...prev];
+              }
+            });
           } else if (payload.eventType === 'INSERT') {
-            // New product added at shop inventory
             const row = payload.new as any;
-            if (row.is_active && Number(row.selling_price) > 0) {
+            if (row.is_active && Number(row.selling_price) > 0 && Number(row.stock_quantity) > 0) {
               fetchCatalogData(true);
             }
           } else if (payload.eventType === 'DELETE') {
             const row = payload.old as any;
-            setProducts((prev) => prev.filter((p) => p.id !== row.id));
+            setAllInStockProducts((prev) => prev.filter((p) => p.id !== row.id));
           }
         }
       )
@@ -172,19 +130,16 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         'postgres_changes',
         { event: '*', schema: 'public', table: 'batches' },
         () => {
-          // Counter stock delivery or batch expiration changed
           fetchCatalogData(true);
         }
       )
       .subscribe();
 
-    // 2. Failsafe: Tab focus re-fetch to ensure fresh stock when app is reopened
     const handleFocus = () => {
       fetchCatalogData(true);
     };
     window.addEventListener('focus', handleFocus);
 
-    // 3. 30-Second background sync interval
     const interval = setInterval(() => {
       fetchCatalogData(true);
     }, 30000);
@@ -195,6 +150,29 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
       clearInterval(interval);
     };
   }, [fetchCatalogData]);
+
+  // Filtered products strictly matching the current search & category selection
+  const filteredProducts = useMemo(() => {
+    let list = allInStockProducts.filter((p) => p.inStock && p.stockQuantity > 0);
+
+    if (selectedCategory !== 'all') {
+      list = list.filter(
+        (p) => getCategorySlugForProduct(p.category, p.name) === selectedCategory
+      );
+    }
+
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.marathiName && p.marathiName.toLowerCase().includes(q)) ||
+          p.category.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [allInStockProducts, selectedCategory, searchQuery]);
 
   // Group products category-wise for Blinkit storefront layout with real photos
   const categoryGroups = useMemo(() => {
@@ -209,23 +187,21 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
     const groupMap = new Map(groups.map((g) => [g.slug, g]));
 
-    products.forEach((p) => {
-      const slug = getCategorySlugForProduct(p.category, p.name);
-      const target = groupMap.get(slug) || groupMap.get('bakery-essentials');
-      target?.items.push(p);
-    });
-
-    // Sort items within each category: inStock first, then highest stockQuantity
-    groups.forEach((g) => {
-      g.items.sort((a, b) => {
-        if (a.inStock && !b.inStock) return -1;
-        if (!a.inStock && b.inStock) return 1;
-        return (b.stockQuantity || 0) - (a.stockQuantity || 0);
+    allInStockProducts
+      .filter((p) => p.inStock && p.stockQuantity > 0)
+      .forEach((p) => {
+        const slug = getCategorySlugForProduct(p.category, p.name);
+        const target = groupMap.get(slug) || groupMap.get('bakery-essentials');
+        target?.items.push(p);
       });
+
+    // Sort items within each category: highest stockQuantity first
+    groups.forEach((g) => {
+      g.items.sort((a, b) => (b.stockQuantity || 0) - (a.stockQuantity || 0));
     });
 
     return groups.filter((g) => g.items.length > 0);
-  }, [products]);
+  }, [allInStockProducts]);
 
   const activeCategoryObj = useMemo(() => {
     return (
@@ -361,7 +337,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     Search results for &ldquo;{searchQuery}&rdquo;
                   </h2>
                   <p className="text-xs text-slate-500 font-medium">
-                    Found {products.length} {products.length === 1 ? 'item' : 'items'}
+                    Found {filteredProducts.length} in-stock {filteredProducts.length === 1 ? 'item' : 'items'}
                   </p>
                 </div>
                 <button
@@ -389,7 +365,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                   </button>
                   <div className="flex items-center gap-3">
                     {activeCategoryObj?.imageUrl && (
-                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0 shadow-xs">
                         <img
                           src={activeCategoryObj.imageUrl}
                           alt={activeCategoryObj.name}
@@ -403,7 +379,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                       </h2>
                       {activeCategoryObj?.marathiName && (
                         <p className="text-xs text-slate-500 font-medium">
-                          {activeCategoryObj.marathiName} • {products.length} items available
+                          {activeCategoryObj.marathiName} • {filteredProducts.length} in-stock items
                         </p>
                       )}
                     </div>
@@ -438,15 +414,14 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                   </div>
                 ))}
               </div>
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center border border-gray-200 my-4 shadow-xs">
                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-3xl mb-3 border border-gray-200">
                   🔍
                 </div>
-                <h3 className="font-black text-base text-slate-900">No items found</h3>
+                <h3 className="font-black text-base text-slate-900">No items available right now</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                  We couldn&apos;t find any products in this section. Try searching for &ldquo;Milk&rdquo;,
-                  &ldquo;Paneer&rdquo;, &ldquo;Ghee&rdquo; or return to All Items.
+                  All items in this section are currently out of stock or being prepared fresh at the dairy. Please check other categories or return to All Items.
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   {searchQuery && (
@@ -546,7 +521,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
             ) : (
               /* Filtered / Searched Flat Grid */
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 pt-2">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}

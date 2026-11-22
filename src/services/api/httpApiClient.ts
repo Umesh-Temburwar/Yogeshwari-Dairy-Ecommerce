@@ -13,40 +13,15 @@ import {
 } from '@/types/ecommerce';
 import { supabase } from '@/services/supabase/client';
 import { MockEcommerceApiClient } from './mockApiClient';
-import { MOCK_CATEGORIES } from './mockData';
+import {
+  toCategoryList,
+  getCategorySlugForProduct,
+} from '@/constants/categories';
 
 const FREE_DELIVERY_THRESHOLD =
   Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 300;
 const STANDARD_DELIVERY_FEE =
   Number(import.meta.env.VITE_STANDARD_DELIVERY_FEE) || 30;
-
-function mapCategorySlug(slug?: string): string[] | null {
-  if (!slug || slug === 'all') return null;
-  switch (slug) {
-    case 'milk':
-      return ['Milk', 'Dairy & Milk Products'];
-    case 'paneer-khoya':
-    case 'paneer-butter':
-      return ['Paneer & Butter', 'Paneer', 'Khoya'];
-    case 'dahi-chaas-lassi':
-    case 'curd-chaas':
-      return ['Curd & Chaas', 'Curd', 'Chaas', 'Lassi'];
-    case 'ghee-butter':
-    case 'ghee':
-      return ['Ghee'];
-    case 'sweets-shrikhand':
-      return ['Sweets/Mithai', 'Sweets', 'Mithai'];
-    case 'bakery-essentials':
-      return ['Bakery & Extras', 'Bakery', 'Biscuits'];
-    case 'beverages':
-      return ['Beverages', 'Cold Drinks'];
-    case 'groceries-fmcg':
-    case 'groceries':
-      return ['Groceries & FMCG', 'Grocery', 'Masala'];
-    default:
-      return [slug];
-  }
-}
 
 function getFallbackImage(category?: string | null, name?: string): string {
   const q = `${category || ''} ${name || ''}`.toLowerCase();
@@ -180,117 +155,60 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
   }
 
   async getProducts(params?: ProductFilterParams): Promise<ProductResponse> {
-    // 1. Try Render Backend
     try {
-      const query = new URLSearchParams();
-      if (params?.category && params.category !== 'all') query.set('category', params.category);
-      if (params?.search) query.set('search', params.search);
-      if (params?.page) query.set('page', params.page.toString());
-      if (params?.limit) query.set('limit', params.limit.toString());
-
-      const qs = query.toString();
-      const res = await this.request<ProductResponse>(`/products${qs ? `?${qs}` : ''}`);
-      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        return res;
-      }
-    } catch {
-      // Fall through to Supabase
-    }
-
-    // 2. Direct Supabase Query Fallback
-    try {
-      const page = params?.page || 1;
-      const limit = params?.limit || 100;
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-
-      // Special Optimization for All Items (Blinkit Category-Wise Grid):
-      // Fetch full dairy inventory (Milk, Paneer, Curd, Ghee) PLUS top in-stock products
-      if ((!params?.category || params.category === 'all') && (!params?.search || !params.search.trim())) {
-        const [dairyRes, generalRes] = await Promise.all([
-          supabase
-            .from('products')
-            .select(
-              'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
-            )
-            .eq('is_active', true)
-            .gt('selling_price', 0)
-            .in('category', ['Milk', 'Curd & Chaas', 'Paneer & Butter', 'Ghee', 'Dairy & Milk Products'])
-            .order('stock_quantity', { ascending: false }),
-          supabase
-            .from('products')
-            .select(
-              'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
-            )
-            .eq('is_active', true)
-            .gt('selling_price', 0)
-            .order('stock_quantity', { ascending: false })
-            .limit(250),
-        ]);
-
-        const combinedMap = new Map();
-        dairyRes.data?.forEach((p) => combinedMap.set(p.id, p));
-        generalRes.data?.forEach((p) => combinedMap.set(p.id, p));
-        const combinedData = Array.from(combinedMap.values());
-
-        if (combinedData.length > 0) {
-          const sanitizedProducts = combinedData.map(sanitizeDbProduct);
-          return {
-            success: true,
-            data: sanitizedProducts,
-            total: sanitizedProducts.length,
-            page: 1,
-            totalPages: 1,
-          };
-        }
-      }
-
-      let query = supabase
+      // Direct Supabase Live Stock Query:
+      // STRICT REQUIREMENT: Only fetch products with active status and POSITIVE stock_quantity (> 0)
+      const { data, error } = await supabase
         .from('products')
         .select(
-          'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active',
-          { count: 'exact' }
+          'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
         )
         .eq('is_active', true)
-        .gt('selling_price', 0);
-
-      const mappedCats = mapCategorySlug(params?.category);
-      if (mappedCats && mappedCats.length > 0) {
-        if (mappedCats.length === 1) {
-          query = query.ilike('category', `%${mappedCats[0]}%`);
-        } else {
-          query = query.or(mappedCats.map((c) => `category.ilike.%${c}%`).join(','));
-        }
-      }
-
-      if (params?.search && params.search.trim().length > 0) {
-        const q = params.search.trim();
-        query = query.or(`name.ilike.%${q}%,category.ilike.%${q}%`);
-      }
-
-      query = query.order('stock_quantity', { ascending: false }).range(from, to);
-
-      const { data, count, error } = await query;
+        .gt('selling_price', 0)
+        .gt('stock_quantity', 0)
+        .order('stock_quantity', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        const sanitizedProducts = data.map(sanitizeDbProduct);
-        const total = count || sanitizedProducts.length;
+        // Sanitize and strictly filter out-of-stock items (stock_quantity must be > 0)
+        let sanitized = data
+          .map(sanitizeDbProduct)
+          .filter((p) => p.inStock && p.stockQuantity > 0);
+
+        // Apply smart category filtering
+        if (params?.category && params.category !== 'all') {
+          sanitized = sanitized.filter(
+            (p) => getCategorySlugForProduct(p.category, p.name) === params.category
+          );
+        }
+
+        // Apply search filtering
+        if (params?.search && params.search.trim()) {
+          const q = params.search.trim().toLowerCase();
+          sanitized = sanitized.filter(
+            (p) =>
+              p.name.toLowerCase().includes(q) ||
+              (p.marathiName && p.marathiName.toLowerCase().includes(q)) ||
+              p.category.toLowerCase().includes(q)
+          );
+        }
 
         return {
           success: true,
-          data: sanitizedProducts,
-          total,
-          page,
-          totalPages: Math.ceil(total / limit),
+          data: sanitized,
+          total: sanitized.length,
+          page: 1,
+          totalPages: 1,
         };
       }
     } catch (sbErr) {
       console.warn('Supabase product query error:', sbErr);
     }
 
-    // 3. Fallback (Only allowed if explicitly in Mock development mode)
+    // Fallback (Only allowed if explicitly in Mock development mode)
     if (this.allowMockFallback) {
-      return this.mockClient.getProducts(params);
+      const mockRes = await this.mockClient.getProducts(params);
+      mockRes.data = mockRes.data.filter((p) => p.inStock && p.stockQuantity > 0);
+      return mockRes;
     }
 
     throw new Error('Unable to load dairy catalogue. Please check your internet connection or try again shortly.');
@@ -298,19 +216,13 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
 
   async getProductById(id: string): Promise<Product> {
     try {
-      const res = await this.request<{ success: boolean; data: Product }>(`/products/${id}`);
-      if (res.data) return res.data;
-    } catch {
-      // Fall through
-    }
-
-    try {
       const { data, error } = await supabase
         .from('products')
         .select(
           'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
         )
         .eq('id', id)
+        .gt('stock_quantity', 0)
         .single();
 
       if (!error && data) {
@@ -328,96 +240,34 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
   }
 
   async getCategories(): Promise<Category[]> {
-    try {
-      const res = await this.request<{ success: boolean; data: Category[] }>('/categories');
-      if (res.data && res.data.length > 0) return res.data;
-    } catch {
-      // Fall through
-    }
+    const baseCategories = toCategoryList();
 
     try {
+      // Fetch live in-stock item counts directly from Supabase
       const { data, error } = await supabase
-        .from('categories')
-        .select('id, name, description, is_active')
+        .from('products')
+        .select('category, name, stock_quantity')
         .eq('is_active', true)
-        .order('name');
+        .gt('selling_price', 0)
+        .gt('stock_quantity', 0);
 
       if (!error && data && data.length > 0) {
-        const defaultIconMap: Record<string, string> = {
-          'Milk': '🥛',
-          'Curd & Chaas': '🥣',
-          'Paneer & Butter': '🧀',
-          'Ghee': '🧈',
-          'Sweets/Mithai': '🍯',
-          'Bakery & Extras': '🍪',
-          'Beverages': '🥤',
-          'Groceries & FMCG': '🥫',
-        };
+        const countMap: Record<string, number> = { all: data.length };
+        data.forEach((p) => {
+          const slug = getCategorySlugForProduct(p.category, p.name);
+          countMap[slug] = (countMap[slug] || 0) + 1;
+        });
 
-        const imageMap: Record<string, string> = {
-          'all': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80',
-          'Milk': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=300&q=80',
-          'Curd & Chaas': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=300&q=80',
-          'Paneer & Butter': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=300&q=80',
-          'Ghee': 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=300&q=80',
-          'Sweets/Mithai': 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=300&q=80',
-          'Bakery & Extras': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80',
-          'Beverages': 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=300&q=80',
-          'Groceries & FMCG': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=300&q=80',
-        };
-
-        const marathiMap: Record<string, string> = {
-          'Milk': 'ताजे दूध आणि मलई',
-          'Curd & Chaas': 'दही, ताक आणि लस्सी',
-          'Paneer & Butter': 'पनीर आणि बटर',
-          'Ghee': 'शुद्ध देशी तूप',
-          'Sweets/Mithai': 'मिठाई आणि श्रीखंड',
-          'Bakery & Extras': 'बिस्किट्स आणि बेकरी',
-          'Beverages': 'पेये आणि कोल्ड्रिंक्स',
-          'Groceries & FMCG': 'मसाले आणि किराणा',
-        };
-
-        const slugMap: Record<string, string> = {
-          'Milk': 'milk',
-          'Curd & Chaas': 'dahi-chaas-lassi',
-          'Paneer & Butter': 'paneer-khoya',
-          'Ghee': 'ghee-butter',
-          'Sweets/Mithai': 'sweets-shrikhand',
-          'Bakery & Extras': 'bakery-essentials',
-          'Beverages': 'beverages',
-          'Groceries & FMCG': 'groceries-fmcg',
-        };
-
-        const mapped: Category[] = [
-          {
-            id: 'all',
-            name: 'All Items',
-            marathiName: 'सर्व उत्पादने',
-            slug: 'all',
-            count: 1436,
-            icon: '🔥',
-            imageUrl: imageMap['all'],
-            description: 'All fresh dairy, sweets & daily essentials',
-          },
-          ...data.map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            marathiName: marathiMap[cat.name] || 'ताजे दुग्धजन्य पदार्थ',
-            slug: slugMap[cat.name] || cat.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-            count: cat.name === 'Bakery & Extras' ? 827 : cat.name === 'Sweets/Mithai' ? 37 : cat.name === 'Paneer & Butter' ? 30 : cat.name === 'Curd & Chaas' ? 19 : cat.name === 'Ghee' ? 12 : 10,
-            icon: defaultIconMap[cat.name] || '🧀',
-            imageUrl: imageMap[cat.name] || imageMap['Milk'],
-            description: cat.description || '',
-          })),
-        ];
-
-        return mapped;
+        return baseCategories.map((cat) => ({
+          ...cat,
+          count: countMap[cat.slug] || 0,
+        }));
       }
     } catch {
-      // Fall through
+      // Fall through to base categories
     }
 
-    return MOCK_CATEGORIES;
+    return baseCategories;
   }
 
   async validateCart(

@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
             </div>
             <p className="text-xs text-brand-text-muted max-w-sm leading-relaxed">
               Ambajogai's trusted local dairy brand. Farm-fresh cow & buffalo milk, pure bilona ghee,
-              daily-made spongy paneer, and authentic festival sweets delivered in 15-20 minutes.
+              daily-made spongy paneer, and authentic festival sweets delivered in 10 minutes.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
