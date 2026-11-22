@@ -36,7 +36,7 @@ const getInitialDeliveryEta = (): string => {
 
 export const useStoreStatusStore = create<StoreStatusState>((set, get) => ({
   isStoreOpen: getInitialOpenState(),
-  storeMessage: 'Dukan Abhi Band Hai • Online orders resume tomorrow at 6:00 AM',
+  storeMessage: 'Store is Currently Closed • Online orders resume tomorrow at 6:00 AM',
   reopenTime: '6:00 AM',
   deliveryEta: getInitialDeliveryEta(),
   isLoading: false,
@@ -55,7 +55,7 @@ export const useStoreStatusStore = create<StoreStatusState>((set, get) => ({
         message ||
         (isOpen
           ? 'Store Open'
-          : 'Dukan Abhi Band Hai • Online orders resume tomorrow at 6:00 AM'),
+          : 'Store is Currently Closed • Online orders resume tomorrow at 6:00 AM'),
       reopenTime: reopenTime || '6:00 AM',
       deliveryEta: deliveryEta && deliveryEta.trim() ? deliveryEta.trim() : state.deliveryEta,
       lastChecked: Date.now(),

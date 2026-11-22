@@ -219,7 +219,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               </span>
             ) : !isStoreOpen ? (
               <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl min-h-[44px] flex items-center gap-1.5 cursor-not-allowed select-none">
-                <span>🔴 Dukan Band Hai (Opens 6:00 AM)</span>
+                <span>🔴 Store Closed (Opens 6:00 AM)</span>
               </span>
             ) : quantity === 0 ? (
               <button

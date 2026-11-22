@@ -240,8 +240,8 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                   </div>
                   <div>
                     <div className="font-black text-sm sm:text-base flex items-center gap-2">
-                      <span>🔴 Dukan Abhi Band Hai</span>
-                      <span className="text-yellow-200 text-xs font-semibold">| दुकान सध्या बंद आहे</span>
+                      <span>🔴 Store is Currently Closed</span>
+                      <span className="text-yellow-200 text-xs font-semibold">| Opens tomorrow at 6:00 AM</span>
                     </div>
                     <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
                       Yogeshwari Dairy store is currently closed. Online ordering and adding items to cart are paused right now. Deliveries will resume fresh tomorrow at <strong>6:00 AM</strong>.

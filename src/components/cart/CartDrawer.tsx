@@ -102,7 +102,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     if (!isStoreOpen) {
       setErrorMessage(
-        'Dukan Abhi Band Hai • Yogeshwari Dairy online orders resume tomorrow at 6:00 AM'
+        'Store is Currently Closed • Yogeshwari Dairy online orders resume tomorrow at 6:00 AM'
       );
       triggerHaptic('warning');
       return;
@@ -273,7 +273,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-black block text-red-900">
-                    🔴 Dukan Abhi Band Hai (दुकान सध्या बंद आहे)
+                    🔴 Store is Currently Closed
                   </span>
                   <span className="text-red-700 leading-relaxed block mt-0.5">
                     Yogeshwari Dairy store is currently closed for the night. Online deliveries resume fresh tomorrow at <strong>6:00 AM</strong>. You can keep items in your cart and order first thing in the morning!
@@ -706,7 +706,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {!isStoreOpen ? (
                 <div className="w-full min-h-[50px] p-3.5 rounded-2xl bg-slate-100 border border-slate-300 text-center flex flex-col items-center justify-center gap-1 shadow-xs">
                   <span className="text-xs font-black text-rose-700 flex items-center gap-1.5">
-                    <span>🚫 Dukan Band Hai • Ordering is Paused</span>
+                    <span>🚫 Store is Closed • Ordering is Paused</span>
                   </span>
                   <span className="text-[11px] text-slate-600 font-medium">
                     Online deliveries will resume tomorrow fresh at 6:00 AM
