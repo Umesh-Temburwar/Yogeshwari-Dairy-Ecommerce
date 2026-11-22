@@ -7,15 +7,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Build outputs & cache
 node_modules
 dist
 dist-ssr
+.vite
+.cache
 
-# Local environment files (contains developer-specific credentials)
+# Environment and sensitive credential files (STRICTLY SECURED)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.local
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+service-account*.json
+*.env.local
+*.env.development
+*.env.production
 
 # Editor directories and files
 .vscode/*
