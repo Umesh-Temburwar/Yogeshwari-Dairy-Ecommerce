@@ -573,8 +573,11 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
             throw new Error(rawMsg);
           }
         }
-      } catch (rpcCallErr) {
+      } catch (rpcCallErr: any) {
         console.warn('Atomic RPC call exception:', rpcCallErr);
+        if (rpcCallErr?.message && (rpcCallErr.message.includes('Stock unavailable') || rpcCallErr.message.includes('not available'))) {
+          throw rpcCallErr;
+        }
       }
 
       // 2B. Direct Table Insert Fallback (if RPC is undergoing migration)
@@ -593,6 +596,21 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           total_amount: validation.total,
           delivery_notes: orderPayload.notes,
           estimated_delivery_time: '20-40 mins',
+          delivery_latitude: orderPayload.deliveryAddress.latitude || null,
+          delivery_longitude: orderPayload.deliveryAddress.longitude || null,
+          full_address: [
+            orderPayload.deliveryAddress.houseNo,
+            orderPayload.deliveryAddress.building,
+            orderPayload.deliveryAddress.street,
+            orderPayload.deliveryAddress.area,
+            orderPayload.deliveryAddress.city,
+            orderPayload.deliveryAddress.pincode,
+          ]
+            .filter(Boolean)
+            .join(', '),
+          landmark: orderPayload.deliveryAddress.landmark || null,
+          address_type: orderPayload.deliveryAddress.label || 'HOME',
+          delivery_instructions: orderPayload.deliveryAddress.deliveryInstructions || orderPayload.notes || null,
         })
         .select()
         .single();

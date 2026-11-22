@@ -130,15 +130,11 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({
         attributionControl: false,
       });
 
-      // Crisp Modern Voyager Retina Tiles with high reliability
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 20,
-        }
-      ).addTo(map);
+      // Clean OpenStreetMap Tiles (100% Free, No Watermark, No API Key Required)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
 
       // Store Origin Marker (Yogeshwari Dairy in Mandi Bazar)
       storeMarkerRef.current = L.marker(
