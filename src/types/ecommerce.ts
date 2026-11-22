@@ -4,6 +4,7 @@ export interface Product {
   marathiName?: string;
   description: string;
   category: string;
+  brand?: string;
   packSize: string;
   unit: string;
   mrp: number;
@@ -166,6 +167,7 @@ export interface OrderPayload {
 
 export interface ProductFilterParams {
   category?: string;
+  brand?: string;
   search?: string;
   page?: number;
   limit?: number;

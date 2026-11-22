@@ -45,6 +45,11 @@ export class MockEcommerceApiClient implements IEcommerceApiClient {
 
     let filtered = [...MOCK_PRODUCTS];
 
+    if (params?.brand && params.brand !== 'All') {
+      const b = params.brand.toLowerCase();
+      filtered = filtered.filter((p) => (p.brand || '').toLowerCase() === b);
+    }
+
     if (params?.category && params.category !== 'all') {
       filtered = filtered.filter((p) => p.category === params.category);
     }

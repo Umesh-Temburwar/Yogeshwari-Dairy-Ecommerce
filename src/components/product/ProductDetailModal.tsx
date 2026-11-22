@@ -83,7 +83,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               )}
             </div>
 
-            {/* Title & Marathi Name */}
+            {/* Brand & Title */}
+            {product.brand && (
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-md mb-1.5">
+                Brand: {product.brand}
+              </span>
+            )}
             <h2 className="text-lg sm:text-xl font-extrabold text-brand-text-primary leading-tight">
               {product.name}
             </h2>

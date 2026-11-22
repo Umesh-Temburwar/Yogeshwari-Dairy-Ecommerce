@@ -17,6 +17,7 @@ import {
   toCategoryList,
   getCategorySlugForProduct,
 } from '@/constants/categories';
+import { getProductBrand } from '@/utils/brands';
 
 const FREE_DELIVERY_THRESHOLD =
   Number(import.meta.env.VITE_FREE_DELIVERY_THRESHOLD) || 300;
@@ -87,6 +88,7 @@ function sanitizeDbProduct(row: any): Product {
   // Real ratings only - do NOT display fake 4.8 / 140 reviews
   const realRating = row.rating ? Number(row.rating) : undefined;
   const realRatingCount = row.rating_count ? Number(row.rating_count) : realRating ? 1 : undefined;
+  const brandName = getProductBrand({ brand: row.brand, name: row.name });
 
   return {
     id: row.id,
@@ -95,6 +97,7 @@ function sanitizeDbProduct(row: any): Product {
       row.description ||
       `${row.name} - 100% pure and authentic product supplied directly by Yogeshwari Dairy. Freshly stocked and quality inspected.`,
     category: categoryStr,
+    brand: brandName,
     packSize: packSizeStr,
     unit: unitStr,
     mrp,
@@ -106,7 +109,7 @@ function sanitizeDbProduct(row: any): Product {
     rating: realRating,
     ratingCount: realRatingCount,
     isFreshToday: true,
-    tags: [categoryStr, 'Fresh Dairy'],
+    tags: [categoryStr, brandName, 'Fresh Dairy'],
     mfgDate,
     expiryDate,
     batchNo,
@@ -197,7 +200,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         const queryWithBatches = await supabase
           .from('products')
           .select(`
-            id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active,
+            id, name, category, brand, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active,
             batches (id, batch_no, mfg_date, expiry_date, qty_remaining, status)
           `)
           .eq('is_active', true)
@@ -215,7 +218,7 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         const fallbackQuery = await supabase
           .from('products')
           .select(
-            'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
+            'id, name, category, brand, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
           )
           .eq('is_active', true)
           .gt('selling_price', 0)
@@ -231,6 +234,14 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
         let sanitized: Product[] = data
           .map(sanitizeDbProduct)
           .filter((p: Product) => p.inStock && p.stockQuantity > 0);
+
+        // Apply brand filtering
+        if (params?.brand && params.brand !== 'All') {
+          const b = params.brand.toLowerCase();
+          sanitized = sanitized.filter(
+            (p: Product) => (p.brand || '').toLowerCase() === b
+          );
+        }
 
         // Apply smart category filtering
         if (params?.category && params.category !== 'all') {

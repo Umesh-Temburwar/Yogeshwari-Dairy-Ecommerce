@@ -3,6 +3,7 @@ import { ShieldCheck, Truck, Clock, X, ChevronRight, ArrowLeft } from 'lucide-re
 import { ProductCard } from '@/components/product/ProductCard';
 import { CategoryPills } from '@/components/layout/CategoryPills';
 import { BlinkitCategorySidebar } from '@/components/layout/BlinkitCategorySidebar';
+import { BrandBar } from '@/components/layout/BrandBar';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
 import { Category, Product } from '@/types/ecommerce';
 import { ecommerceApi } from '@/services/api';
@@ -11,6 +12,7 @@ import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
+import { getProductBrand } from '@/utils/brands';
 import { supabase } from '@/services/supabase/client';
 
 interface HomePageProps {
@@ -22,6 +24,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
   const { isStoreOpen, deliveryEta } = useStoreStatusStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [allInStockProducts, setAllInStockProducts] = useState<Product[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeModalProduct, setActiveModalProduct] = useState<Product | null>(null);
@@ -82,6 +85,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                       ...p,
                       name: row.name || p.name,
                       category: row.category || p.category,
+                      brand: row.brand || p.brand || getProductBrand({ name: row.name }),
                       price: sellingPrice,
                       mrp,
                       discountPercentage,
@@ -101,6 +105,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                   name: row.name,
                   description: row.description || `${row.name} - Fresh dairy item`,
                   category: row.category || 'Dairy',
+                  brand: row.brand || getProductBrand({ name: row.name }),
                   packSize: row.pack_size || 'Piece',
                   unit: row.unit || 'Piece',
                   mrp,
@@ -152,9 +157,78 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     };
   }, [fetchCatalogData]);
 
-  // Filtered products strictly matching the current search & category selection
+  // Extract available brands dynamically from the active in-stock products
+  const availableBrands = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of allInStockProducts) {
+      const b = getProductBrand(p);
+      if (!b) continue;
+      map.set(b, (map.get(b) || 0) + 1);
+    }
+    const list = Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }));
+    return [{ name: 'All', count: allInStockProducts.length }, ...list];
+  }, [allInStockProducts]);
+
+  // Cascading Category Drill-Down: only show categories containing products from selectedBrand
+  const displayedCategories = useMemo(() => {
+    if (selectedBrand === 'All') return categories;
+
+    const brandLower = selectedBrand.toLowerCase();
+    const allowedSlugs = new Set<string>();
+
+    for (const p of allInStockProducts) {
+      if (getProductBrand(p).toLowerCase() === brandLower) {
+        allowedSlugs.add(getCategorySlugForProduct(p.category, p.name));
+      }
+    }
+
+    return categories
+      .filter((c) => c.slug === 'all' || allowedSlugs.has(c.slug))
+      .map((c) => {
+        if (c.slug === 'all') {
+          const brandTotal = allInStockProducts.filter(
+            (p) => getProductBrand(p).toLowerCase() === brandLower
+          ).length;
+          return { ...c, count: brandTotal };
+        }
+        const brandCatCount = allInStockProducts.filter(
+          (p) =>
+            getProductBrand(p).toLowerCase() === brandLower &&
+            getCategorySlugForProduct(p.category, p.name) === c.slug
+        ).length;
+        return { ...c, count: brandCatCount };
+      });
+  }, [categories, selectedBrand, allInStockProducts]);
+
+  // Handle Brand selection with automatic cascading reset of category
+  const handleBrandChange = useCallback(
+    (brand: string) => {
+      setSelectedBrand(brand);
+      if (selectedCategory !== 'all' && brand !== 'All') {
+        const brandLower = brand.toLowerCase();
+        const hasProductsInCategory = allInStockProducts.some(
+          (p) =>
+            getProductBrand(p).toLowerCase() === brandLower &&
+            getCategorySlugForProduct(p.category, p.name) === selectedCategory
+        );
+        if (!hasProductsInCategory) {
+          setSelectedCategory('all');
+        }
+      }
+    },
+    [selectedCategory, allInStockProducts]
+  );
+
+  // Filtered products strictly matching the current search, brand & category selection
   const filteredProducts = useMemo(() => {
     let list = allInStockProducts.filter((p) => p.inStock && p.stockQuantity > 0);
+
+    if (selectedBrand !== 'All') {
+      const brandLower = selectedBrand.toLowerCase();
+      list = list.filter((p) => getProductBrand(p).toLowerCase() === brandLower);
+    }
 
     if (selectedCategory !== 'all') {
       list = list.filter(
@@ -168,12 +242,13 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         (p) =>
           p.name.toLowerCase().includes(q) ||
           (p.marathiName && p.marathiName.toLowerCase().includes(q)) ||
-          p.category.toLowerCase().includes(q)
+          p.category.toLowerCase().includes(q) ||
+          (p.brand && p.brand.toLowerCase().includes(q))
       );
     }
 
     return list;
-  }, [allInStockProducts, selectedCategory, searchQuery]);
+  }, [allInStockProducts, selectedBrand, selectedCategory, searchQuery]);
 
   // Group products category-wise for Blinkit storefront layout with real photos
   const categoryGroups = useMemo(() => {
@@ -187,9 +262,16 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     }));
 
     const groupMap = new Map(groups.map((g) => [g.slug, g]));
+    const brandLower = selectedBrand.toLowerCase();
 
     allInStockProducts
-      .filter((p) => p.inStock && p.stockQuantity > 0)
+      .filter((p) => {
+        if (!p.inStock || p.stockQuantity <= 0) return false;
+        if (selectedBrand !== 'All') {
+          return getProductBrand(p).toLowerCase() === brandLower;
+        }
+        return true;
+      })
       .forEach((p) => {
         const slug = getCategorySlugForProduct(p.category, p.name);
         const target = groupMap.get(slug) || groupMap.get('bakery-essentials');
@@ -202,20 +284,29 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
     });
 
     return groups.filter((g) => g.items.length > 0);
-  }, [allInStockProducts]);
+  }, [allInStockProducts, selectedBrand]);
 
   const activeCategoryObj = useMemo(() => {
     return (
+      displayedCategories.find((c) => c.slug === selectedCategory) ||
       categories.find((c) => c.slug === selectedCategory) ||
       BLINKIT_CATEGORIES.find((c) => c.slug === selectedCategory)
     );
-  }, [categories, selectedCategory]);
+  }, [displayedCategories, categories, selectedCategory]);
 
   return (
     <div className="min-h-screen pb-32 bg-[#F7F9FA]">
-      {/* Category Horizontal Filter Bar (Blinkit Real Photos Carousel) */}
+      {/* Brand Horizontal Carousel */}
+      <BrandBar
+        brands={availableBrands}
+        selectedBrand={selectedBrand}
+        onSelectBrand={handleBrandChange}
+        filteredCount={filteredProducts.length}
+      />
+
+      {/* Category Horizontal Filter Bar (Cascading: only shows categories containing selected brand) */}
       <CategoryPills
-        categories={categories}
+        categories={displayedCategories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
@@ -224,7 +315,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         <div className="flex gap-4 sm:gap-6 items-start">
           {/* Desktop Left Sticky Category Rail (Blinkit Style with Real Photos) */}
           <BlinkitCategorySidebar
-            categories={categories}
+            categories={displayedCategories}
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
@@ -259,8 +350,39 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             )}
 
+            {/* Active Brand Filter Notice */}
+            {selectedBrand !== 'All' && (
+              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-slate-500 font-medium">Selected Brand:</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-black text-xs shadow-2xs">
+                    <span>{selectedBrand}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleBrandChange('All')}
+                      className="w-4 h-4 rounded-full bg-emerald-200/60 hover:bg-emerald-300 text-emerald-900 flex items-center justify-center cursor-pointer transition-colors"
+                      title="Clear brand"
+                    >
+                      <X className="w-2.5 h-2.5 stroke-[3]" />
+                    </button>
+                  </span>
+                  <span className="text-xs text-slate-500 hidden sm:inline">
+                    • {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} available
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleBrandChange('All')}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
+                >
+                  Show All Brands
+                </button>
+              </div>
+            )}
+
             {/* Compact Promo Banner (Max ~120px height, keeps products above fold) */}
-            {!searchQuery && selectedCategory === 'all' && (
+            {!searchQuery && selectedCategory === 'all' && selectedBrand === 'All' && (
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-800 via-emerald-700 to-green-800 text-white p-3.5 sm:p-5 shadow-xs">
                 <div className="relative z-10 max-w-xl">
                   <h1 className="text-base sm:text-xl font-extrabold tracking-tight leading-tight">
@@ -386,25 +508,38 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 </div>
                 <h3 className="font-black text-base text-slate-900">No items available right now</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                  All items in this section are currently out of stock or being prepared fresh at the dairy. Please check other categories or return to All Items.
+                  {selectedBrand !== 'All'
+                    ? `No items found for brand "${selectedBrand}" in this selection.`
+                    : 'All items in this section are currently out of stock or being prepared fresh at the dairy. Please check other categories or return to All Items.'}
                 </p>
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  {selectedBrand !== 'All' && (
+                    <button
+                      type="button"
+                      onClick={() => handleBrandChange('All')}
+                      className="bg-[#0C831F] text-white text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] cursor-pointer"
+                    >
+                      Clear Brand Filter
+                    </button>
+                  )}
+                  {selectedCategory !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('all')}
+                      className="bg-gray-100 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] hover:bg-gray-200 cursor-pointer"
+                    >
+                      Reset Category
+                    </button>
+                  )}
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => onClearSearch?.()}
-                      className="bg-[#0C831F] text-white text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] cursor-pointer"
+                      className="bg-gray-100 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] hover:bg-gray-200 cursor-pointer"
                     >
                       Clear Search
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className="bg-gray-100 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] hover:bg-gray-200 cursor-pointer"
-                  >
-                    Reset Category
-                  </button>
                 </div>
               </div>
             ) : selectedCategory === 'all' && !searchQuery ? (

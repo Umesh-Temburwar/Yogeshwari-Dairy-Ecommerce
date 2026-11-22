@@ -112,10 +112,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           {product.name}
         </h4>
 
-        {/* Pack Size / Unit below in slate-500 */}
-        <p className="text-xs text-slate-500 font-medium mt-0.5">
-          {product.packSize || product.unit || 'Standard'}
-        </p>
+        {/* Pack Size / Unit & Brand */}
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5 truncate">
+          <span>{product.packSize || product.unit || 'Standard'}</span>
+          {product.brand && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100/80 truncate">
+                {product.brand}
+              </span>
+            </>
+          )}
+        </div>
 
         {/* Tiny single-line Expiry (only when perishable or within 30 days) */}
         {shouldShowExpiry && product.expiryDate && (
