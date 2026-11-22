@@ -15,29 +15,72 @@ export interface BrandRecord {
 
 export const KNOWN_BRANDS: string[] = [
   'Yogeshwari',
-  'Amul',
+  'Parle',
+  'Ram Bandhu',
   "Haldiram's",
-  'Britannia',
-  'Cadbury',
+  'Temptin',
   'Gramilk',
+  'Britannia',
+  'Amul',
+  'Suhana',
+  'Chitale',
+  'Chitale Foods',
+  'Cadbury',
+  'Cadbuary',
+  "Karia's",
+  'Patanjali',
+  'Campa',
+  'BRU',
+  'Maggi',
+  'Govind',
+  'Nutritious',
+  'Nutritius',
+  'Sprite',
+  'Mayora',
+  'Unibic',
   'Gowardhan',
   'Mother Dairy',
   'Nestle',
-  'Parle',
   'Tata',
-  'Suhana',
-  'Ram Bandhu',
-  'Temptin',
   'Sunfeast',
   'Dabur',
-  'Patanjali',
 ];
+
+/**
+ * Built-in official local brand logos (Zero external latency, crisp SVG & PNGs)
+ */
+export const DEFAULT_BRAND_LOGOS: Record<string, string> = {
+  Yogeshwari: '/YDO_logo.png',
+  Parle: '/brands/parle.png',
+  'Ram Bandhu': '/brands/ram-bandhu.png',
+  "Haldiram's": '/brands/haldirams.png',
+  Temptin: '/brands/temptin.svg',
+  Gramilk: '/brands/gramilk.svg',
+  Britannia: '/brands/britannia.png',
+  Amul: '/brands/amul.png',
+  Suhana: '/brands/suhana.png',
+  Chitale: '/brands/chitale.png',
+  'Chitale Foods': '/brands/chitale.png',
+  Cadbury: '/brands/cadbury.png',
+  Cadbuary: '/brands/cadbury.png',
+  "Karia's": '/brands/karias.svg',
+  Patanjali: '/brands/patanjali.png',
+  Campa: '/brands/campa.png',
+  BRU: '/brands/bru.svg',
+  Maggi: '/brands/maggi.png',
+  Govind: '/brands/govind.png',
+  Nutritious: '/brands/nutritious.svg',
+  Nutritius: '/brands/nutritious.svg',
+  Sprite: '/brands/sprite.png',
+  Mayora: '/brands/mayora.svg',
+  Unibic: '/brands/unibic.png',
+};
 
 /**
  * In-memory cache for dynamic brand logos fetched from Supabase brands table
  */
 let brandLogosCache: Record<string, string> = {
-  Yogeshwari: '/YDO_logo.png',
+  ...DEFAULT_BRAND_LOGOS,
 };
 
 let isRealtimeSubscribed = false;
@@ -49,7 +92,7 @@ export function normalizeBrandName(brand?: string | null): string {
   if (!brand || !brand.trim()) return '';
   const trimmed = brand.trim();
   if (/^haldiram/i.test(trimmed)) return "Haldiram's";
-  if (/^cadbury/i.test(trimmed)) return 'Cadbury';
+  if (/^cadbur/i.test(trimmed)) return 'Cadbury';
   if (/^britannia/i.test(trimmed)) return 'Britannia';
   if (/^amul/i.test(trimmed)) return 'Amul';
   if (/^gramilk/i.test(trimmed)) return 'Gramilk';
@@ -62,6 +105,18 @@ export function normalizeBrandName(brand?: string | null): string {
   if (/^suhana/i.test(trimmed)) return 'Suhana';
   if (/^ram\s*bandhu/i.test(trimmed)) return 'Ram Bandhu';
   if (/^temptin/i.test(trimmed)) return 'Temptin';
+  if (/^chitale\s*foods/i.test(trimmed)) return 'Chitale Foods';
+  if (/^chitale/i.test(trimmed)) return 'Chitale';
+  if (/^karia/i.test(trimmed)) return "Karia's";
+  if (/^campa/i.test(trimmed)) return 'Campa';
+  if (/^patanjali/i.test(trimmed)) return 'Patanjali';
+  if (/^bru/i.test(trimmed)) return 'BRU';
+  if (/^maggi/i.test(trimmed)) return 'Maggi';
+  if (/^govind/i.test(trimmed)) return 'Govind';
+  if (/^nutriti/i.test(trimmed)) return 'Nutritious';
+  if (/^sprite/i.test(trimmed)) return 'Sprite';
+  if (/^mayora/i.test(trimmed)) return 'Mayora';
+  if (/^unibic/i.test(trimmed)) return 'Unibic';
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
@@ -116,7 +171,7 @@ function getStableColorPalette(brandName: string) {
 
 /**
  * Visual badge/avatar styling for each brand
- * Returns logoUrl if uploaded or configured, otherwise returns a colored initial tile
+ * Returns official logoUrl if available, otherwise returns a colored initial tile
  */
 export function getBrandVisual(brandName: string): BrandVisual {
   const norm = normalizeBrandName(brandName);
@@ -130,8 +185,13 @@ export function getBrandVisual(brandName: string): BrandVisual {
     };
   }
 
-  // Check in-memory logo cache from Supabase
-  const cachedLogo = brandLogosCache[norm] || brandLogosCache[brandName];
+  // 1. Check in-memory logo cache (Supabase updates or DEFAULT_BRAND_LOGOS)
+  const cachedLogo =
+    brandLogosCache[norm] ||
+    brandLogosCache[brandName] ||
+    DEFAULT_BRAND_LOGOS[norm] ||
+    DEFAULT_BRAND_LOGOS[brandName];
+
   if (cachedLogo) {
     return {
       logoUrl: cachedLogo,
@@ -141,7 +201,7 @@ export function getBrandVisual(brandName: string): BrandVisual {
     };
   }
 
-  // Specific fallbacks
+  // 2. Specific fallbacks
   if (normLower.includes('yogeshwari')) {
     return {
       logoUrl: '/YDO_logo.png',
@@ -192,8 +252,14 @@ export async function initBrandLogos(): Promise<Record<string, string>> {
             if (row && row.name) {
               const norm = normalizeBrandName(row.name);
               if (payload.eventType === 'DELETE' || !row.is_active || !row.logo_url) {
-                delete brandLogosCache[norm];
-                delete brandLogosCache[row.name];
+                // Reset to default local logo if exists, else delete
+                if (DEFAULT_BRAND_LOGOS[norm]) {
+                  brandLogosCache[norm] = DEFAULT_BRAND_LOGOS[norm];
+                  brandLogosCache[row.name] = DEFAULT_BRAND_LOGOS[norm];
+                } else {
+                  delete brandLogosCache[norm];
+                  delete brandLogosCache[row.name];
+                }
               } else {
                 brandLogosCache[norm] = row.logo_url;
                 brandLogosCache[row.name] = row.logo_url;

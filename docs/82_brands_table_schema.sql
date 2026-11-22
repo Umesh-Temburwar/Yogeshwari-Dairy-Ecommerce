@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Migration: 82_brands_table_schema.sql
--- Description: Create or update brands table with logo support, real-time sync, and RLS
+-- Description: Create or update brands table with official logos for all inventory brands
 -- ============================================================================
 
 -- 1. Ensure public.brands table exists
@@ -72,24 +72,36 @@ BEGIN
   END IF;
 END $$;
 
--- 6. Seed top dairy & grocery brands (Yogeshwari uses local logo /YDO_logo.png)
+-- 6. Seed official logos for ALL shop inventory brands
 INSERT INTO public.brands (name, logo_url, display_order, is_active)
 VALUES
   ('Yogeshwari', '/YDO_logo.png', 1, true),
-  ('Amul', NULL, 2, true),
-  ('Haldiram''s', NULL, 3, true),
-  ('Britannia', NULL, 4, true),
-  ('Cadbury', NULL, 5, true),
-  ('Gramilk', NULL, 6, true),
-  ('Gowardhan', NULL, 7, true),
-  ('Parle', NULL, 8, true),
-  ('Tata', NULL, 9, true),
-  ('Mother Dairy', NULL, 10, true),
-  ('Nestle', NULL, 11, true),
-  ('Suhana', NULL, 12, true),
-  ('Ram Bandhu', NULL, 13, true),
-  ('Temptin', NULL, 14, true)
+  ('Parle', '/brands/parle.png', 2, true),
+  ('Ram Bandhu', '/brands/ram-bandhu.png', 3, true),
+  ('Haldiram''s', '/brands/haldirams.png', 4, true),
+  ('Amul', '/brands/amul.png', 5, true),
+  ('Britannia', '/brands/britannia.png', 6, true),
+  ('Cadbury', '/brands/cadbury.png', 7, true),
+  ('Cadbuary', '/brands/cadbury.png', 8, true),
+  ('Gramilk', '/brands/gramilk.svg', 9, true),
+  ('Temptin', '/brands/temptin.svg', 10, true),
+  ('Suhana', '/brands/suhana.png', 11, true),
+  ('Chitale', '/brands/chitale.png', 12, true),
+  ('Chitale Foods', '/brands/chitale.png', 13, true),
+  ('Karia''s', '/brands/karias.svg', 14, true),
+  ('Patanjali', '/brands/patanjali.png', 15, true),
+  ('Campa', '/brands/campa.png', 16, true),
+  ('BRU', '/brands/bru.svg', 17, true),
+  ('Maggi', '/brands/maggi.png', 18, true),
+  ('Govind', '/brands/govind.png', 19, true),
+  ('Nutritious', '/brands/nutritious.svg', 20, true),
+  ('Nutritius', '/brands/nutritious.svg', 21, true),
+  ('Sprite', '/brands/sprite.png', 22, true),
+  ('Mayora', '/brands/mayora.svg', 23, true),
+  ('Unibic', '/brands/unibic.png', 24, true)
 ON CONFLICT (name) DO UPDATE 
 SET 
+  logo_url = EXCLUDED.logo_url,
+  display_order = EXCLUDED.display_order,
   is_active = true,
   updated_at = NOW();
