@@ -24,17 +24,25 @@ function mapCategorySlug(slug?: string): string[] | null {
   if (!slug || slug === 'all') return null;
   switch (slug) {
     case 'milk':
-      return ['Milk'];
+      return ['Milk', 'Dairy & Milk Products'];
     case 'paneer-khoya':
+    case 'paneer-butter':
       return ['Paneer & Butter', 'Paneer', 'Khoya'];
     case 'dahi-chaas-lassi':
+    case 'curd-chaas':
       return ['Curd & Chaas', 'Curd', 'Chaas', 'Lassi'];
     case 'ghee-butter':
-      return ['Ghee', 'Paneer & Butter'];
+    case 'ghee':
+      return ['Ghee'];
     case 'sweets-shrikhand':
       return ['Sweets/Mithai', 'Sweets', 'Mithai'];
     case 'bakery-essentials':
-      return ['Bakery & Extras', 'Bakery'];
+      return ['Bakery & Extras', 'Bakery', 'Biscuits'];
+    case 'beverages':
+      return ['Beverages', 'Cold Drinks'];
+    case 'groceries-fmcg':
+    case 'groceries':
+      return ['Groceries & FMCG', 'Grocery', 'Masala'];
     default:
       return [slug];
   }
@@ -192,9 +200,50 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
     // 2. Direct Supabase Query Fallback
     try {
       const page = params?.page || 1;
-      const limit = params?.limit || 40;
+      const limit = params?.limit || 100;
       const from = (page - 1) * limit;
       const to = from + limit - 1;
+
+      // Special Optimization for All Items (Blinkit Category-Wise Grid):
+      // Fetch full dairy inventory (Milk, Paneer, Curd, Ghee) PLUS top in-stock products
+      if ((!params?.category || params.category === 'all') && (!params?.search || !params.search.trim())) {
+        const [dairyRes, generalRes] = await Promise.all([
+          supabase
+            .from('products')
+            .select(
+              'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
+            )
+            .eq('is_active', true)
+            .gt('selling_price', 0)
+            .in('category', ['Milk', 'Curd & Chaas', 'Paneer & Butter', 'Ghee', 'Dairy & Milk Products'])
+            .order('stock_quantity', { ascending: false }),
+          supabase
+            .from('products')
+            .select(
+              'id, name, category, pack_size, unit, selling_price, stock_quantity, image_url, description, is_active'
+            )
+            .eq('is_active', true)
+            .gt('selling_price', 0)
+            .order('stock_quantity', { ascending: false })
+            .limit(250),
+        ]);
+
+        const combinedMap = new Map();
+        dairyRes.data?.forEach((p) => combinedMap.set(p.id, p));
+        generalRes.data?.forEach((p) => combinedMap.set(p.id, p));
+        const combinedData = Array.from(combinedMap.values());
+
+        if (combinedData.length > 0) {
+          const sanitizedProducts = combinedData.map(sanitizeDbProduct);
+          return {
+            success: true,
+            data: sanitizedProducts,
+            total: sanitizedProducts.length,
+            page: 1,
+            totalPages: 1,
+          };
+        }
+      }
 
       let query = supabase
         .from('products')
@@ -296,20 +345,35 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
       if (!error && data && data.length > 0) {
         const defaultIconMap: Record<string, string> = {
           'Milk': '🥛',
-          'Paneer & Butter': '🧀',
           'Curd & Chaas': '🥣',
+          'Paneer & Butter': '🧀',
           'Ghee': '🧈',
           'Sweets/Mithai': '🍯',
-          'Bakery & Extras': '🍞',
+          'Bakery & Extras': '🍪',
+          'Beverages': '🥤',
+          'Groceries & FMCG': '🥫',
+        };
+
+        const marathiMap: Record<string, string> = {
+          'Milk': 'ताजे दूध आणि मलई',
+          'Curd & Chaas': 'दही, ताक आणि लस्सी',
+          'Paneer & Butter': 'पनीर आणि बटर',
+          'Ghee': 'शुद्ध देशी तूप',
+          'Sweets/Mithai': 'मिठाई आणि श्रीखंड',
+          'Bakery & Extras': 'बिस्किट्स आणि बेकरी',
+          'Beverages': 'पेये आणि कोल्ड्रिंक्स',
+          'Groceries & FMCG': 'मसाले आणि किराणा',
         };
 
         const slugMap: Record<string, string> = {
           'Milk': 'milk',
-          'Paneer & Butter': 'paneer-khoya',
           'Curd & Chaas': 'dahi-chaas-lassi',
+          'Paneer & Butter': 'paneer-khoya',
           'Ghee': 'ghee-butter',
           'Sweets/Mithai': 'sweets-shrikhand',
           'Bakery & Extras': 'bakery-essentials',
+          'Beverages': 'beverages',
+          'Groceries & FMCG': 'groceries-fmcg',
         };
 
         const mapped: Category[] = [
@@ -319,14 +383,15 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
             marathiName: 'सर्व उत्पादने',
             slug: 'all',
             count: 1436,
-            icon: '🥛',
+            icon: '🔥',
             description: 'All fresh dairy, sweets & daily essentials',
           },
           ...data.map((cat) => ({
             id: cat.id,
             name: cat.name,
+            marathiName: marathiMap[cat.name] || 'ताजे दुग्धजन्य पदार्थ',
             slug: slugMap[cat.name] || cat.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-            count: cat.name === 'Bakery & Extras' ? 1097 : cat.name === 'Sweets/Mithai' ? 70 : 30,
+            count: cat.name === 'Bakery & Extras' ? 827 : cat.name === 'Sweets/Mithai' ? 37 : cat.name === 'Paneer & Butter' ? 30 : cat.name === 'Curd & Chaas' ? 19 : cat.name === 'Ghee' ? 12 : 10,
             icon: defaultIconMap[cat.name] || '🧀',
             description: cat.description || '',
           })),
