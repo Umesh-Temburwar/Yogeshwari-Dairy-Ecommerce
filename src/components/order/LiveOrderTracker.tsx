@@ -14,6 +14,7 @@ import { formatPrice } from '@/utils/formatters';
 import { getStoreCallHref, openWhatsAppStoreInquiry } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 
 interface LiveOrderTrackerProps {
   order: Order;
@@ -56,6 +57,7 @@ const STATUS_STEPS: Array<{ key: OrderStatus; title: string; subtitle: string; i
 export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrderUpdated }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const deliveryEta = useStoreStatusStore((s) => s.deliveryEta);
 
   const currentStepIndex = STATUS_STEPS.findIndex((s) => s.key === order.orderStatus);
   const isCancelled = order.orderStatus === 'cancelled';
@@ -111,7 +113,7 @@ export const LiveOrderTracker: React.FC<LiveOrderTrackerProps> = ({ order, onOrd
                 ? 'Order Cancelled'
                 : order.orderStatus === 'delivered'
                   ? 'Order Delivered!'
-                  : 'Arriving in 20-40 Mins ⚡'}
+                  : `Arriving in ${deliveryEta || '15-25 Mins'} ⚡`}
             </h2>
           </div>
           <div className="text-right">

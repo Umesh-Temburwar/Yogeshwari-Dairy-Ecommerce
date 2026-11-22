@@ -6,6 +6,7 @@ import { formatPrice } from '@/utils/formatters';
 import { openWhatsAppOrderConfirmation } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { useNavigate } from 'react-router-dom';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 
 interface OrderSuccessModalProps {
   order: Order | null;
@@ -14,6 +15,7 @@ interface OrderSuccessModalProps {
 
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onClose }) => {
   const navigate = useNavigate();
+  const deliveryEta = useStoreStatusStore((s) => s.deliveryEta);
 
   useEffect(() => {
     if (order) {
@@ -69,7 +71,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
         {/* Honest ETA pill */}
         <div className="inline-flex items-center gap-1.5 bg-brand-yellow-light border border-brand-yellow/40 text-amber-900 px-3 py-1 rounded-full text-xs font-extrabold mt-3 mb-4">
           <Clock className="w-3.5 h-3.5 text-amber-700" />
-          <span>⚡ Estimated Delivery: Within 20-40 Mins</span>
+          <span>⚡ Estimated Delivery: Within {deliveryEta || '15-25 Mins'}</span>
         </div>
 
         {/* Summary Card */}

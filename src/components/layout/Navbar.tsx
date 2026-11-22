@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { getTotalItemsCount, openCartDrawer } = useCartStore();
   const { getSelectedAddress } = useCustomerStore();
-  const { isStoreOpen } = useStoreStatusStore();
+  const { isStoreOpen, deliveryEta } = useStoreStatusStore();
   const selectedAddress = getSelectedAddress();
   const [isListening, setIsListening] = useState(false);
 
@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Delivery Promise & Area */}
           <div className="flex items-center gap-1.5 truncate text-slate-700">
             <span className="text-amber-500 font-bold">⚡</span>
-            <span className="font-bold text-slate-900 shrink-0">{DELIVERY_ETA_TEXT}</span>
+            <span className="font-bold text-slate-900 shrink-0">{deliveryEta || DELIVERY_ETA_TEXT}</span>
             <span className="text-slate-300">•</span>
             <div className="truncate flex items-center gap-1">
               <span className="text-slate-500 truncate">

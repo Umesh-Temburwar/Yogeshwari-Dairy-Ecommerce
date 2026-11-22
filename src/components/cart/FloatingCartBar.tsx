@@ -1,16 +1,18 @@
 import React from 'react';
 import { ShoppingBag, ArrowRight, MessageCircle } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { openWhatsAppStoreInquiry } from '@/utils/whatsapp';
 
 export const FloatingCartBar: React.FC = () => {
   const { getTotalItemsCount, getSubtotal, openCartDrawer, isCartDrawerOpen } = useCartStore();
+  const { isStoreOpen } = useStoreStatusStore();
 
   const totalCount = getTotalItemsCount();
   const subtotal = getSubtotal();
-  const hasCartItems = totalCount > 0 && !isCartDrawerOpen;
+  const hasCartItems = isStoreOpen && totalCount > 0 && !isCartDrawerOpen;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none pb-safe">

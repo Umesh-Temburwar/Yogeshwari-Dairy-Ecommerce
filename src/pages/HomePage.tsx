@@ -19,7 +19,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }) => {
-  const { isStoreOpen } = useStoreStatusStore();
+  const { isStoreOpen, deliveryEta } = useStoreStatusStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [allInStockProducts, setAllInStockProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -244,7 +244,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                       <span className="text-yellow-200 text-xs font-semibold">| दुकान सध्या बंद आहे</span>
                     </div>
                     <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
-                      Yogeshwari Dairy store is currently closed for the night. Online deliveries will resume tomorrow fresh at <strong>6:00 AM</strong>. You can browse products & build your cart anytime!
+                      Yogeshwari Dairy store is currently closed. Online ordering and adding items to cart are paused right now. Deliveries will resume fresh tomorrow at <strong>6:00 AM</strong>.
                     </p>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     <span className="text-white/30">•</span>
                     <div className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                      <span>{DELIVERY_ETA_TEXT}</span>
+                      <span>{deliveryEta || DELIVERY_ETA_TEXT}</span>
                     </div>
                     <span className="text-white/30">•</span>
                     <div className="flex items-center gap-1">

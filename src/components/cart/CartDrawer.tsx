@@ -49,6 +49,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     getTotal,
     getTotalItemsCount,
   } = useCartStore();
+  const deliveryEta = useStoreStatusStore((s) => s.deliveryEta);
 
   const {
     customerName,
@@ -249,7 +250,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </span>
               </h2>
               <p className="text-xs text-brand-text-muted">
-                ⚡ Fast Local Delivery ({DELIVERY_ETA_TEXT})
+                ⚡ Fast Local Delivery ({deliveryEta || DELIVERY_ETA_TEXT})
               </p>
             </div>
             <button
@@ -702,48 +703,47 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               )}
 
-              <button
-                disabled={isSubmitting || !isStoreOpen}
-                onClick={handleCheckout}
-                className={`w-full min-h-[52px] py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between shadow-sm transition-all active:scale-98 ${
-                  !isStoreOpen
-                    ? 'bg-slate-500 text-white cursor-not-allowed opacity-90'
-                    : 'bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white cursor-pointer'
-                }`}
-              >
-                <div className="text-left">
-                  <div className="text-[11px] text-white/80 uppercase font-semibold">
-                    Total: {formatPrice(total)}
-                  </div>
-                  <div className="text-xs font-medium text-white/90">
-                    {!isStoreOpen
-                      ? 'Orders Resume at 6:00 AM'
-                      : selectedPaymentMethod === 'cod'
-                      ? 'Cash on Delivery'
-                      : 'Scan QR at Doorstep'}
-                  </div>
+              {!isStoreOpen ? (
+                <div className="w-full min-h-[50px] p-3.5 rounded-2xl bg-slate-100 border border-slate-300 text-center flex flex-col items-center justify-center gap-1 shadow-xs">
+                  <span className="text-xs font-black text-rose-700 flex items-center gap-1.5">
+                    <span>🚫 Dukan Band Hai • Ordering is Paused</span>
+                  </span>
+                  <span className="text-[11px] text-slate-600 font-medium">
+                    Online deliveries will resume tomorrow fresh at 6:00 AM
+                  </span>
                 </div>
-
-                <div
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-black ${
-                    !isStoreOpen ? 'bg-white/20 text-white' : 'bg-white text-[#0C831F]'
-                  }`}
+              ) : (
+                <button
+                  disabled={isSubmitting}
+                  onClick={handleCheckout}
+                  className="w-full min-h-[52px] py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between shadow-sm transition-all active:scale-98 bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white cursor-pointer"
                 >
-                  {!isStoreOpen ? (
-                    <span>🚫 Store Closed</span>
-                  ) : isSubmitting ? (
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3.5 h-3.5 border-2 border-[#0C831F] border-t-transparent rounded-full animate-spin" />
-                      <span>Placing Order...</span>
-                    </span>
-                  ) : (
-                    <>
-                      <span>Place Order</span>
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                    </>
-                  )}
-                </div>
-              </button>
+                  <div className="text-left">
+                    <div className="text-[11px] text-white/80 uppercase font-semibold">
+                      Total: {formatPrice(total)}
+                    </div>
+                    <div className="text-xs font-medium text-white/90">
+                      {selectedPaymentMethod === 'cod'
+                        ? 'Cash on Delivery'
+                        : 'Scan QR at Doorstep'}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-black bg-white text-[#0C831F]">
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-3.5 h-3.5 border-2 border-[#0C831F] border-t-transparent rounded-full animate-spin" />
+                        <span>Placing Order...</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span>Place Order</span>
+                        <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                      </>
+                    )}
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>

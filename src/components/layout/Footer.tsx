@@ -2,8 +2,10 @@ import React from 'react';
 import { PhoneCall, MessageCircle, MapPin, Clock, ShieldCheck, ChevronDown } from 'lucide-react';
 import { getStoreCallHref, openWhatsAppStoreInquiry } from '@/utils/whatsapp';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 
 export const Footer: React.FC = () => {
+  const deliveryEta = useStoreStatusStore((s) => s.deliveryEta);
   return (
     <footer className="bg-white border-t border-slate-200 pt-6 pb-24 sm:pb-16 text-xs text-slate-600">
       <div className="max-w-2xl mx-auto px-4 space-y-4">
@@ -22,7 +24,7 @@ export const Footer: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed max-w-lg">
-            Ambajogai&apos;s trusted dairy. Pure milk, ghee, paneer &amp; sweets delivered in {DELIVERY_ETA_TEXT}.
+            Ambajogai&apos;s trusted dairy. Pure milk, ghee, paneer &amp; sweets delivered in {deliveryEta || DELIVERY_ETA_TEXT}.
           </p>
         </div>
 

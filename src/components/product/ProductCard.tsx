@@ -2,6 +2,7 @@ import React from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -12,17 +13,26 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
   const { getItemQuantity, addItem, updateQuantity } = useCartStore();
+  const { isStoreOpen } = useStoreStatusStore();
   const quantity = getItemQuantity(product.id);
   const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isStoreOpen) {
+      triggerHaptic('warning');
+      return;
+    }
     triggerHaptic('medium');
     addItem(product);
   };
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isStoreOpen) {
+      triggerHaptic('warning');
+      return;
+    }
     triggerHaptic('light');
     if (!isMaxStock) {
       updateQuantity(product.id, quantity + 1);
@@ -139,6 +149,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           {!product.inStock ? (
             <span className="text-[10px] font-bold text-slate-400 uppercase px-2 py-1 bg-slate-100 rounded-lg">
               Out of stock
+            </span>
+          ) : !isStoreOpen ? (
+            <span
+              className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 uppercase px-2 py-1.5 rounded-xl block text-center select-none"
+              title="Store is currently closed"
+            >
+              Closed
             </span>
           ) : quantity === 0 ? (
             <button

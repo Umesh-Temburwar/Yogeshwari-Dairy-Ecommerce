@@ -5,6 +5,7 @@ import { useCartStore } from '@/store/cartStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
+import { useStoreStatusStore } from '@/store/storeStatusStore';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -13,6 +14,7 @@ interface ProductDetailModalProps {
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
   const { getItemQuantity, addItem, updateQuantity } = useCartStore();
+  const { isStoreOpen, deliveryEta } = useStoreStatusStore();
 
   if (!product) return null;
 
@@ -195,7 +197,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                 <li>Direct daily farm procurement with zero middle-men tampering</li>
                 <li>Laboratory tested for zero starch, detergent, or water adulteration</li>
                 <li>Hygienically packaged in food-grade safe packaging</li>
-                <li>⚡ Delivered in insulated bags within {DELIVERY_ETA_TEXT}</li>
+                <li>⚡ Delivered in insulated bags within {deliveryEta || DELIVERY_ETA_TEXT}</li>
               </ul>
             </div>
           </div>
@@ -215,9 +217,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               <span className="text-xs font-bold text-red-500 uppercase px-4 py-2.5 bg-red-50 rounded-xl min-h-[44px] flex items-center">
                 Currently Out of Stock
               </span>
+            ) : !isStoreOpen ? (
+              <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl min-h-[44px] flex items-center gap-1.5 cursor-not-allowed select-none">
+                <span>🔴 Dukan Band Hai (Opens 6:00 AM)</span>
+              </span>
             ) : quantity === 0 ? (
               <button
                 onClick={() => {
+                  if (!isStoreOpen) return;
                   addItem(product);
                 }}
                 className="min-h-[44px] bg-[#0C831F] hover:bg-[#086617] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center gap-2"
