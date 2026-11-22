@@ -75,10 +75,13 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Address Form State
+  // Address Form State (Strictly empty defaults for new users, no dummy pre-fills)
+  const isDummyName = (n?: string) => !n || n.toLowerCase().includes('ramesh') || n.toLowerCase() === 'customer';
+  const isDummyPhone = (p?: string) => !p || p.includes('9876543210') || p.includes('9370869896');
+
   const [label, setLabel] = useState<'Home' | 'Shop' | 'Work' | 'Other'>('Home');
-  const [recipientName, setRecipientName] = useState(customerName || 'Customer');
-  const [recipientPhone, setRecipientPhone] = useState(customerPhone || '');
+  const [recipientName, setRecipientName] = useState(isDummyName(customerName) ? '' : customerName);
+  const [recipientPhone, setRecipientPhone] = useState(isDummyPhone(customerPhone) ? '' : customerPhone);
   const [houseNo, setHouseNo] = useState('');
   const [building, setBuilding] = useState('');
   const [street, setStreet] = useState('');
@@ -797,7 +800,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   required
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder="Enter full name"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>
@@ -811,7 +814,7 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                   maxLength={10}
                   value={recipientPhone}
                   onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="e.g. 9876543210"
+                  placeholder="Enter 10-digit mobile number"
                   className="w-full text-xs p-2.5 rounded-xl border border-brand-slate-border focus:ring-1 focus:ring-[#0C831F] focus:outline-none min-h-[42px]"
                 />
               </div>

@@ -69,10 +69,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Form states for customer info verification
-  const [nameInput, setNameInput] = useState(customerName || 'Ramesh Kumar');
-  const [phoneInput, setPhoneInput] = useState(customerPhone || '9876543210');
+  // Form states for customer info verification (strictly empty for new users, no dummy defaults)
+  const isDummyName = (n?: string) => !n || n.toLowerCase().includes('ramesh');
+  const isDummyPhone = (p?: string) => !p || p.includes('9876543210') || p.includes('9370869896');
+
+  const [nameInput, setNameInput] = useState(isDummyName(customerName) ? '' : customerName);
+  const [phoneInput, setPhoneInput] = useState(isDummyPhone(customerPhone) ? '' : customerPhone);
   const [validationErrors, setValidationErrors] = useState<{ name?: string; phone?: string; address?: string }>({});
+
+  // Sync state if customer profile updates legitimately
+  React.useEffect(() => {
+    if (!isDummyName(customerName)) {
+      setNameInput(customerName);
+    }
+    if (!isDummyPhone(customerPhone)) {
+      setPhoneInput(customerPhone);
+    }
+  }, [customerName, customerPhone]);
 
   if (!isCartDrawerOpen) return null;
 
@@ -416,7 +429,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           setNameInput(e.target.value);
                           if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: undefined }));
                         }}
-                        placeholder="Full Name"
+                        placeholder="Enter your full name"
                         className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-brand-slate-border bg-white focus:outline-none focus:ring-1 focus:ring-[#0C831F]"
                       />
                     </div>
@@ -440,7 +453,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           setPhoneInput(e.target.value.replace(/\D/g, ''));
                           if (validationErrors.phone) setValidationErrors((prev) => ({ ...prev, phone: undefined }));
                         }}
-                        placeholder="10-Digit Mobile Number"
+                        placeholder="Enter 10-digit mobile number"
                         className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-brand-slate-border bg-white focus:outline-none focus:ring-1 focus:ring-[#0C831F]"
                       />
                     </div>

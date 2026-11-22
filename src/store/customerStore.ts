@@ -159,7 +159,7 @@ export const useCustomerStore = create<CustomerStore>()(
       },
     }),
     {
-      name: 'yd_customer_storage_v2',
+      name: 'yd_customer_storage_v3',
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         // Clean out old dummy addresses if previously stored
@@ -169,13 +169,13 @@ export const useCustomerStore = create<CustomerStore>()(
             state.selectedAddressId = state.savedAddresses[0]?.id || '';
           }
         }
-        if (state.customerName === 'Ramesh Kumar') {
+        if (state.customerName && (state.customerName.toLowerCase().includes('ramesh') || state.customerName.toLowerCase() === 'customer')) {
           state.customerName = '';
         }
-        if (state.customerPhone === '9876543210' || state.customerPhone === '9370869896') {
+        if (state.customerPhone && (state.customerPhone.includes('9876543210') || state.customerPhone.includes('9370869896'))) {
           state.customerPhone = '';
         }
-        if (state.customerProfile && state.customerProfile.name === 'Ramesh Kumar') {
+        if (state.customerProfile && state.customerProfile.name && state.customerProfile.name.toLowerCase().includes('ramesh')) {
           state.customerProfile = {
             id: '',
             name: '',
@@ -188,10 +188,11 @@ export const useCustomerStore = create<CustomerStore>()(
   )
 );
 
-// Clean up old legacy dummy storage key
+// Clean up old legacy dummy storage keys completely
 if (typeof window !== 'undefined') {
   try {
     window.localStorage.removeItem('yd_customer_storage_v1');
+    window.localStorage.removeItem('yd_customer_storage_v2');
   } catch {
     // ignore
   }
