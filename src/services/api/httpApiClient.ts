@@ -565,6 +565,13 @@ export class HttpEcommerceApiClient implements IEcommerceApiClient {
           };
         } else if (rpcErr) {
           console.warn('Atomic RPC fn_create_ecommerce_order_atomic notice:', rpcErr.message);
+          const rawMsg = rpcErr.message || '';
+          if (rawMsg.includes('INSUFFICIENT_STOCK') || rawMsg.includes('INSUFFICIENT_BATCH_STOCK')) {
+            const clean = rawMsg.replace(/^.*INSUFFICIENT_[A-Z_]*:\s*/, '');
+            throw new Error(`Stock unavailable: ${clean}`);
+          } else if (rawMsg.includes('not available for online purchase')) {
+            throw new Error(rawMsg);
+          }
         }
       } catch (rpcCallErr) {
         console.warn('Atomic RPC call exception:', rpcCallErr);

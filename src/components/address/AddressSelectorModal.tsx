@@ -172,23 +172,41 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
     triggerHaptic('medium');
     try {
       const { coords } = await getUserLocation();
-      setSelectedCoords(coords);
       setDeviceCoords(coords);
       triggerHaptic('success');
 
-      // Reverse geocode to autofill address parts
-      const details = await reverseGeocode(coords.lat, coords.lng);
-      if (details.houseNumber) setHouseNo(details.houseNumber);
-      if (details.building) setBuilding(details.building);
-      if (details.street) setStreet(details.street);
-      if (details.area) setArea(details.area);
-      if (details.pincode) setPincode(details.pincode);
-      if (details.city) setCity(details.city);
+      // Check if device GPS is inside Ambajogai delivery envelope
+      const sCheck = checkDeliveryServiceability(coords);
 
-      const summary = [details.street, details.area, details.city, details.pincode]
-        .filter(Boolean)
-        .join(', ');
-      setLiveAddressSummary(summary || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
+      if (!sCheck.isServiceable) {
+        // Device is located in another city (e.g. testing from Nagpur/Pune)
+        setGpsError(
+          `Live GPS detected (${sCheck.distanceKm} km away). Yogeshwari Dairy currently delivers within 25 km of Ambajogai. Map centered on Ambajogai Mandi Bazar for your order.`
+        );
+        setSelectedCoords(AMBAJOGAI_CENTER);
+        setStreet('Mandi Bazar, Mangalwar Peth Road');
+        setArea('Mandi Bazar');
+        setLandmark('Near Yogeshwari Dairy');
+        setCity('Ambajogai');
+        setState('Maharashtra');
+        setPincode('431517');
+        setLiveAddressSummary('Yogeshwari Dairy Products, Mandi Bazar, Ambajogai - 431517');
+      } else {
+        setSelectedCoords(coords);
+        // Reverse geocode to autofill address parts
+        const details = await reverseGeocode(coords.lat, coords.lng);
+        if (details.houseNumber) setHouseNo(details.houseNumber);
+        if (details.building) setBuilding(details.building);
+        if (details.street) setStreet(details.street);
+        if (details.area) setArea(details.area);
+        if (details.pincode) setPincode(details.pincode);
+        if (details.city) setCity(details.city);
+
+        const summary = [details.street, details.area, details.city, details.pincode]
+          .filter(Boolean)
+          .join(', ');
+        setLiveAddressSummary(summary || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
+      }
     } catch (err: any) {
       setGpsError(err.message || 'Location permission denied. Please select on map or enter manually.');
       triggerHaptic('warning');

@@ -53,6 +53,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     customerPhone,
     setCustomerProfile,
     getSelectedAddress,
+    savedAddresses,
+    setSelectedAddressId,
     selectedPaymentMethod,
     setSelectedPaymentMethod,
     deliveryNotes,
@@ -109,6 +111,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
+      const firstError = Object.values(errors)[0];
+      setErrorMessage(firstError || 'Please complete all required delivery details.');
       triggerHaptic('warning');
       return;
     }
@@ -619,13 +623,39 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           {/* Sticky Checkout Bar */}
           {items.length > 0 && (
             <div className="p-4 bg-white border-t border-brand-slate-border shadow-float shrink-0">
+              {/* Prominent Visible Error Banner in Checkout Bar */}
+              {errorMessage && (
+                <div className="mb-2.5 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs animate-shake">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span className="truncate">{errorMessage}</span>
+                  </div>
+                  {errorMessage.includes('km') || errorMessage.includes('Outside Delivery Area') || errorMessage.includes('not available') ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ambajogaiAddr = savedAddresses.find((a) => a.id === 'addr_home') || savedAddresses[0];
+                        if (ambajogaiAddr) {
+                          setSelectedAddressId(ambajogaiAddr.id);
+                        }
+                        setErrorMessage(null);
+                        triggerHaptic('success');
+                      }}
+                      className="px-2.5 py-1 rounded-xl bg-[#0C831F] hover:bg-[#086617] text-white text-[11px] font-black shrink-0 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                    >
+                      Deliver in Ambajogai 📍
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
               <button
                 disabled={isSubmitting || !isStoreOpen}
                 onClick={handleCheckout}
                 className={`w-full min-h-[52px] py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between shadow-sm transition-all active:scale-98 ${
                   !isStoreOpen
                     ? 'bg-slate-500 text-white cursor-not-allowed opacity-90'
-                    : 'bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white'
+                    : 'bg-[#0C831F] hover:bg-[#086617] disabled:opacity-60 text-white cursor-pointer'
                 }`}
               >
                 <div className="text-left">
