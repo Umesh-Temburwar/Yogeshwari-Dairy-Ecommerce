@@ -20,6 +20,7 @@ import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
 import { Order } from '@/types/ecommerce';
 import { checkDeliveryServiceability } from '@/utils/geoService';
+import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import {
   validateCustomerName,
   validateIndianMobile,
@@ -235,7 +236,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </span>
               </h2>
               <p className="text-xs text-brand-text-muted">
-                ⚡ Fast Local Delivery (Est. 20-40 Mins)
+                ⚡ Fast Local Delivery ({DELIVERY_ETA_TEXT})
               </p>
             </div>
             <button

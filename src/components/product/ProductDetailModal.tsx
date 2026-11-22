@@ -4,6 +4,7 @@ import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
+import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -194,7 +195,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                 <li>Direct daily farm procurement with zero middle-men tampering</li>
                 <li>Laboratory tested for zero starch, detergent, or water adulteration</li>
                 <li>Hygienically packaged in food-grade safe packaging</li>
-                <li>⚡ Delivered in insulated bags within 20-40 minutes</li>
+                <li>⚡ Delivered in insulated bags within {DELIVERY_ETA_TEXT}</li>
               </ul>
             </div>
           </div>

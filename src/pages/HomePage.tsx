@@ -5,11 +5,12 @@ import { CategoryPills } from '@/components/layout/CategoryPills';
 import { BlinkitCategorySidebar } from '@/components/layout/BlinkitCategorySidebar';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
 import { Category, Product } from '@/types/ecommerce';
-import { ecommerceApi, isUsingMockApi } from '@/services/api';
+import { ecommerceApi } from '@/services/api';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
+import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { supabase } from '@/services/supabase/client';
 
 interface HomePageProps {
@@ -258,74 +259,38 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             )}
 
-            {/* Live Inventory Connected Status */}
-            {isUsingMockApi ? (
-              <div className="bg-amber-50 border border-amber-200/80 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs text-amber-900 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">ℹ️</span>
-                  <div>
-                    <span className="font-extrabold">Demo Store: </span>
-                    <span className="text-amber-800">
-                      Showing local dairy product catalog. Physical inventory managed via shop counter.
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] bg-amber-200/80 font-bold px-2 py-0.5 rounded-full shrink-0">
-                  Mock Adapter
-                </span>
-              </div>
-            ) : (
-              <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl px-3.5 py-2 flex items-center justify-between text-xs text-emerald-900 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🟢</span>
-                  <div>
-                    <span className="font-extrabold">Live Shop Inventory Connected: </span>
-                    <span className="text-emerald-800">
-                      Real-time synced directly with Yogeshwari Dairy counter POS & Supabase.
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  Live Sync
-                </span>
-              </div>
-            )}
-
-            {/* Hero Quick Banner with honest delivery text */}
+            {/* Compact Promo Banner (Max ~120px height, keeps products above fold) */}
             {!searchQuery && selectedCategory === 'all' && (
-              <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0C831F] via-[#09721B] to-[#044810] text-white p-5 sm:p-7 shadow-subtle">
+              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-800 via-emerald-700 to-green-800 text-white p-3.5 sm:p-5 shadow-xs">
                 <div className="relative z-10 max-w-xl">
-                  <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black mb-2 shadow-xs">
-                    <span>⚡ FAST LOCAL DELIVERY (EST. 20-40 MINS)</span>
-                  </div>
-                  <h1 className="text-xl sm:text-3xl font-black tracking-tight leading-tight">
+                  <h1 className="text-base sm:text-xl font-extrabold tracking-tight leading-tight">
                     Fresh Farm Milk & Pure Dairy at Your Doorstep
                   </h1>
-                  <p className="text-xs sm:text-sm text-white/85 font-medium mt-1.5 leading-relaxed">
-                    100% Unadulterated Cow & Buffalo Milk, Soft Malai Paneer, and Desi Bilona Ghee.
-                    Delivery across Ambajogai • Open Daily: 6:00 AM – 10:00 PM.
+                  <p className="text-[11px] sm:text-xs text-white/90 font-normal mt-0.5 leading-snug">
+                    100% pure cow & buffalo milk, malai paneer & bilona ghee delivered fresh.
                   </p>
 
-                  {/* Guarantees checklist */}
-                  <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/15 text-[11px] font-bold">
-                    <div className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-yellow-300 shrink-0" />
-                      <span>Lab Tested Pure</span>
+                  {/* Single Trust Row of 3 Icon Chips */}
+                  <div className="flex items-center gap-3 sm:gap-4 mt-2.5 pt-2 border-t border-white/15 text-[10.5px] sm:text-xs font-semibold text-white/95 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span>Lab Tested</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-yellow-300 shrink-0" />
-                      <span>20-40 Mins Est.</span>
+                    <span className="text-white/30">•</span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span>{DELIVERY_ETA_TEXT}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Truck className="w-4 h-4 text-yellow-300 shrink-0" />
-                      <span>Free &gt; ₹300</span>
+                    <span className="text-white/30">•</span>
+                    <div className="flex items-center gap-1">
+                      <Truck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span>Free delivery above ₹300</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Decorative background circle */}
-                <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                {/* Subtle decorative radial light */}
+                <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none" />
               </div>
             )}
 
@@ -453,38 +418,35 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     id={`category-section-${group.slug}`}
                     className="scroll-mt-36 space-y-3"
                   >
-                    {/* Category Section Header with Real Photo Thumbnail */}
-                    <div className="flex items-center justify-between pb-2 border-b border-gray-200/80">
-                      <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="w-11 h-11 rounded-2xl overflow-hidden border border-emerald-200/80 shrink-0 shadow-xs relative bg-emerald-50">
+                    {/* Category Section Header */}
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
                           {group.imageUrl ? (
                             <img
                               src={group.imageUrl}
                               alt={group.name}
                               loading="lazy"
+                              width={40}
+                              height={40}
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl">
-                              {group.icon}
-                            </div>
+                            <span className="text-lg">{group.icon}</span>
                           )}
-                          <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-[9px] shadow-xs">
-                            {group.icon}
-                          </div>
                         </div>
 
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                            <h3 className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight">
                               {group.name}
                             </h3>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-[#0C831F]">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
                               {group.items.length} items
                             </span>
                           </div>
                           {group.marathiName && (
-                            <p className="text-[11px] text-slate-500 font-medium">
+                            <p className="text-[11px] text-slate-500 font-normal">
                               {group.marathiName}
                             </p>
                           )}
@@ -498,15 +460,16 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                           setSelectedCategory(group.slug);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-xs font-black text-[#0C831F] hover:text-emerald-700 flex items-center gap-0.5 hover:underline px-2.5 py-1.5 rounded-xl bg-emerald-50/80 transition-colors cursor-pointer"
+                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                        aria-label={`See all items in ${group.name}`}
                       >
                         <span>See all</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    {/* Blinkit 2-column on mobile, 3-to-5 on larger screens */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
+                    {/* 2 columns on mobile, gap-3 */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                       {group.items.slice(0, 10).map((product) => (
                         <ProductCard
                           key={product.id}
