@@ -20,6 +20,8 @@ export const EMPTY_ADDRESS: DeliveryAddress = {
 
 const isDummyAddress = (addr: DeliveryAddress): boolean => {
   return Boolean(
+    !addr ||
+    !addr.id ||
     addr.id === 'addr_home' ||
     addr.id === 'addr_shop' ||
     addr.id === 'addr_work' ||
@@ -27,7 +29,11 @@ const isDummyAddress = (addr: DeliveryAddress): boolean => {
     addr.phone === '9876543210' ||
     addr.city === 'Nagpur' ||
     (addr.street && addr.street.includes('Ramdas Peth')) ||
-    (addr.street && addr.street.includes('Dharampeth'))
+    (addr.street && addr.street.includes('Dharampeth')) ||
+    (addr.street && addr.street.includes('Sai Complex')) ||
+    (addr.street && addr.street.includes('IT Park')) ||
+    (addr.landmark && addr.landmark.includes('Hanuman Mandir')) ||
+    (addr.landmark && addr.landmark.includes('VNIT'))
   );
 };
 
@@ -159,7 +165,7 @@ export const useCustomerStore = create<CustomerStore>()(
       },
     }),
     {
-      name: 'yd_customer_storage_v3',
+      name: 'yd_customer_storage_v4',
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         // Clean out old dummy addresses if previously stored
@@ -188,11 +194,24 @@ export const useCustomerStore = create<CustomerStore>()(
   )
 );
 
-// Clean up old legacy dummy storage keys completely
+// Clean up all legacy dummy storage keys completely from browser
 if (typeof window !== 'undefined') {
   try {
-    window.localStorage.removeItem('yd_customer_storage_v1');
-    window.localStorage.removeItem('yd_customer_storage_v2');
+    ['yd_customer_storage', 'yd_customer_storage_v1', 'yd_customer_storage_v2', 'yd_customer_storage_v3'].forEach((k) => {
+      window.localStorage.removeItem(k);
+    });
+    const current = window.localStorage.getItem('yd_customer_storage_v4');
+    if (current && (
+      current.includes('Nagpur') ||
+      current.includes('9876543210') ||
+      current.includes('Ramdas Peth') ||
+      current.includes('Dharampeth') ||
+      current.includes('Sai Complex') ||
+      current.includes('IT Park') ||
+      current.includes('Ramesh Kumar')
+    )) {
+      window.localStorage.removeItem('yd_customer_storage_v4');
+    }
   } catch {
     // ignore
   }

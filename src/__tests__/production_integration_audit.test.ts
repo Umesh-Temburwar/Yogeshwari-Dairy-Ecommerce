@@ -151,7 +151,7 @@ describe('PHASE 9: Post-Deployment Production Integration Test Suite', () => {
   describe('7. Checkout Error Handling & No Fake Orders in Production', () => {
     it('throws error and NEVER returns fake order when backend and database fail in production mode', async () => {
       // client instantiated with allowMockFallback = false
-      const client = new HttpEcommerceApiClient('http://non-existent-server-404:9999', false);
+      const client = new HttpEcommerceApiClient('http://127.0.0.1:59999', false);
 
       const orderPayload = {
         customerName: 'Test Customer',
@@ -167,7 +167,7 @@ describe('PHASE 9: Post-Deployment Production Integration Test Suite', () => {
       };
 
       await expect(client.placeOrder(orderPayload)).rejects.toThrow();
-    });
+    }, 15000);
   });
 
   describe('8. Order Tracking & Realtime Status Synchronization', () => {

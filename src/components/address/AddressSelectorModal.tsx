@@ -158,12 +158,8 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
   // Delete an address
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (savedAddresses.length <= 1) {
-      alert('You must have at least one saved delivery address.');
-      return;
-    }
     triggerHaptic('warning');
-    if (window.confirm('Delete this saved delivery address?')) {
+    if (window.confirm('Delete this delivery address?')) {
       deleteAddress(id);
     }
   };
@@ -518,16 +514,14 @@ export const AddressSelectorModal: React.FC<AddressSelectorModalProps> = ({ isOp
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    {savedAddresses.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleDelete(addr.id, e)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="Delete address"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(addr.id, e)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="Delete address"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                     <div
                       className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 ${
                         isSelected
