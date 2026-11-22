@@ -37,6 +37,21 @@ export interface Category {
   imageUrl?: string;
 }
 
+export type BannerLinkType = 'CATEGORY' | 'BRAND' | 'EXTERNAL';
+
+export interface PromotionalBanner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkType: BannerLinkType;
+  linkTarget: string;
+  isActive: boolean;
+  displayOrder: number;
+  badgeText?: string;
+  bgColor?: string;
+}
+
 export interface CartItem {
   productId: string;
   product: Product;

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ShieldCheck, Truck, Clock, X, ChevronRight, ArrowLeft } from 'lucide-react';
+import { X, ChevronRight, ArrowLeft } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard';
 import { CategoryPills } from '@/components/layout/CategoryPills';
 import { BlinkitCategorySidebar } from '@/components/layout/BlinkitCategorySidebar';
 import { BrandBar } from '@/components/layout/BrandBar';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
+import { HeroPromoCarousel } from '@/components/home/HeroPromoCarousel';
 import { Category, Product } from '@/types/ecommerce';
 import { ecommerceApi } from '@/services/api';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
 import { triggerHaptic } from '@/utils/haptics';
 import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
-import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { getProductBrand } from '@/utils/brands';
 import { supabase } from '@/services/supabase/client';
 
@@ -21,7 +21,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }) => {
-  const { isStoreOpen, deliveryEta } = useStoreStatusStore();
+  const { isStoreOpen } = useStoreStatusStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [allInStockProducts, setAllInStockProducts] = useState<Product[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
@@ -381,39 +381,18 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             )}
 
-            {/* Compact Promo Banner (Max ~120px height, keeps products above fold) */}
+            {/* Auto-Sliding Promotional Hero Banner Carousel (Blinkit/Zepto Style) */}
             {!searchQuery && selectedCategory === 'all' && selectedBrand === 'All' && (
-              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-800 via-emerald-700 to-green-800 text-white p-3.5 sm:p-5 shadow-xs">
-                <div className="relative z-10 max-w-xl">
-                  <h1 className="text-base sm:text-xl font-extrabold tracking-tight leading-tight">
-                    Fresh Farm Milk & Pure Dairy at Your Doorstep
-                  </h1>
-                  <p className="text-[11px] sm:text-xs text-white/90 font-normal mt-0.5 leading-snug">
-                    100% pure cow & buffalo milk, malai paneer & bilona ghee delivered fresh.
-                  </p>
-
-                  {/* Single Trust Row of 3 Icon Chips */}
-                  <div className="flex items-center gap-3 sm:gap-4 mt-2.5 pt-2 border-t border-white/15 text-[10.5px] sm:text-xs font-semibold text-white/95 flex-wrap">
-                    <div className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                      <span>Lab Tested</span>
-                    </div>
-                    <span className="text-white/30">•</span>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                      <span>{deliveryEta || DELIVERY_ETA_TEXT}</span>
-                    </div>
-                    <span className="text-white/30">•</span>
-                    <div className="flex items-center gap-1">
-                      <Truck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                      <span>Free delivery above ₹300</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Subtle decorative radial light */}
-                <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none" />
-              </div>
+              <HeroPromoCarousel
+                onSelectCategory={(slug) => {
+                  setSelectedCategory(slug);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onSelectBrand={(brand) => {
+                  handleBrandChange(brand);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             )}
 
             {/* Search Header or Single Category Filter Bar */}
@@ -546,7 +525,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               /* ============================================================== */
               /* BLINKIT CATEGORY-WISE PRODUCT SECTIONS WITH REAL PHOTOS       */
               /* ============================================================== */
-              <div className="space-y-8 pt-2">
+              <div id="products-section" className="space-y-8 pt-2">
                 {categoryGroups.map((group) => (
                   <section
                     key={group.slug}
@@ -618,7 +597,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               </div>
             ) : (
               /* Filtered / Searched Flat Grid */
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 pt-2">
+              <div id="products-section" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 pt-2">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
