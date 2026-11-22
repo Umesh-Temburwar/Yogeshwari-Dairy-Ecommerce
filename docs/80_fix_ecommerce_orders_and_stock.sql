@@ -3,7 +3,7 @@
 -- Execute this script once in Supabase SQL Editor.
 -- ==============================================================================
 
--- 1. Enable Anon Role to Place Orders directly if needed (RLS Insert Policies)
+-- 1. Enable RLS Insert Policies for Ecommerce Orders
 ALTER TABLE IF EXISTS public.ecommerce_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.ecommerce_order_items ENABLE ROW LEVEL SECURITY;
 
@@ -27,7 +27,7 @@ CREATE POLICY "ecommerce_order_items_select"
     ON public.ecommerce_order_items FOR SELECT
     USING (true);
 
--- 2. Seed active unexpired batches for in-stock shop products (Parle-G, Patanjali, Maggi, etc.)
+-- 2. Seed active unexpired batches for Parle-G, biscuits & shop products
 INSERT INTO public.batches (
     product_id, batch_no, mfg_date, expiry_date, qty_received, qty_remaining, purchase_price, selling_price, status
 )
@@ -50,28 +50,32 @@ WHERE p.stock_quantity > 0
         AND b.expiry_date >= CURRENT_DATE
   );
 
--- 3. Replace Atomic Order Creation Function with resilient shop stock allocation
+-- 3. Drop all previous overloaded function versions cleanly
+DROP FUNCTION IF EXISTS public.fn_create_ecommerce_order_atomic CASCADE;
+
+-- 4. Recreate Atomic Order Function with Matching Signature and Resilient Shop Stock
 CREATE OR REPLACE FUNCTION public.fn_create_ecommerce_order_atomic(
-    p_cart_session_id VARCHAR,
     p_order_id UUID,
-    p_order_no VARCHAR,
+    p_order_no TEXT,
     p_idempotency_key UUID,
     p_customer_id UUID,
-    p_customer_name VARCHAR,
-    p_customer_phone VARCHAR,
-    p_customer_email VARCHAR,
+    p_customer_name TEXT,
+    p_customer_phone TEXT,
+    p_customer_email TEXT,
     p_delivery_address JSONB,
-    p_payment_method VARCHAR,
-    p_payment_reference VARCHAR,
+    p_payment_method TEXT,
+    p_payment_reference TEXT,
     p_subtotal NUMERIC,
     p_delivery_fee NUMERIC,
     p_discount_amount NUMERIC,
     p_total_amount NUMERIC,
-    p_items JSONB
+    p_items JSONB,
+    p_cart_session_id TEXT DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_existing_order RECORD;
@@ -93,7 +97,7 @@ DECLARE
     v_addr_type TEXT;
     v_instructions TEXT;
 BEGIN
-    -- 1. Idempotency Check: Prevent duplicate charge/order on re-transmission
+    -- Idempotency Check: Prevent duplicate charge/order on re-transmission
     SELECT id, order_no, order_status, total_amount
     INTO v_existing_order
     FROM public.ecommerce_orders
@@ -109,22 +113,18 @@ BEGIN
             'order_no', v_existing_order.order_no,
             'order_status', v_existing_order.order_status,
             'total_amount', v_existing_order.total_amount,
-            'message', 'Order already placed previously with this idempotency key.'
+            'message', 'Order already placed previously.'
         );
     END IF;
 
     -- Extract delivery map details from JSON
     BEGIN
         v_lat := (p_delivery_address->>'latitude')::numeric;
-    EXCEPTION WHEN OTHERS THEN
-        v_lat := NULL;
-    END;
+    EXCEPTION WHEN OTHERS THEN v_lat := NULL; END;
 
     BEGIN
         v_lng := (p_delivery_address->>'longitude')::numeric;
-    EXCEPTION WHEN OTHERS THEN
-        v_lng := NULL;
-    END;
+    EXCEPTION WHEN OTHERS THEN v_lng := NULL; END;
 
     v_landmark := COALESCE(p_delivery_address->>'landmark', '');
     v_addr_type := COALESCE(p_delivery_address->>'label', p_delivery_address->>'address_type', 'HOME');
@@ -136,7 +136,7 @@ BEGIN
                    CASE WHEN p_delivery_address->>'city' IS NOT NULL THEN ', ' || (p_delivery_address->>'city') ELSE '' END ||
                    CASE WHEN p_delivery_address->>'pincode' IS NOT NULL THEN ' - ' || (p_delivery_address->>'pincode') ELSE '' END;
 
-    -- 2. Concurrency Control: Validate catalog active status and stock across all items
+    -- Concurrency & Stock Validation
     FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(
         product_id UUID,
         product_name TEXT,
@@ -189,7 +189,7 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- 3. Insert Master E-Commerce Order (with Map & Navigation fields)
+    -- Insert Master E-Commerce Order (with Map & Navigation fields)
     INSERT INTO public.ecommerce_orders (
         id, order_no, customer_id, customer_name, customer_phone,
         customer_email, delivery_address, order_status, payment_method,
@@ -208,7 +208,7 @@ BEGIN
         NOW(), NOW()
     );
 
-    -- 4. Insert Items, Apply FEFO lot allocations with automatic shop-stock fallback
+    -- Insert Items and FEFO Allocation
     FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(
         product_id UUID,
         product_name TEXT,
@@ -244,10 +244,7 @@ BEGIN
             ORDER BY expiry_date ASC, created_at ASC
             FOR UPDATE
         LOOP
-            IF v_qty_needed <= 0 THEN
-                EXIT;
-            END IF;
-
+            IF v_qty_needed <= 0 THEN EXIT; END IF;
             v_take_qty := LEAST(v_batch.qty_remaining, v_qty_needed);
             v_qty_needed := v_qty_needed - v_take_qty;
 
@@ -279,11 +276,9 @@ BEGIN
                 v_order_item_id, p_order_id, v_item.product_id, v_auto_batch_id, 'LOT-SHOP-' || TO_CHAR(NOW(), 'YYYYMMDD'),
                 CURRENT_DATE + INTERVAL '180 days', v_qty_needed
             );
-
             v_qty_needed := 0;
         END IF;
 
-        -- Decrement physical aggregate product stock
         UPDATE public.products
         SET stock_quantity = GREATEST(0, ROUND((stock_quantity - v_item.quantity)::numeric, 2)),
             updated_at = NOW()
@@ -301,5 +296,7 @@ BEGIN
 END;
 $$;
 
--- Grant execution to anon and authenticated roles
-GRANT EXECUTE ON FUNCTION public.fn_create_ecommerce_order_atomic TO anon, authenticated, service_role;
+-- Grant execution to anon, authenticated, and service_role
+GRANT EXECUTE ON FUNCTION public.fn_create_ecommerce_order_atomic(
+    UUID, TEXT, UUID, UUID, TEXT, TEXT, TEXT, JSONB, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, JSONB, TEXT
+) TO anon, authenticated, service_role;
