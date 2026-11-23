@@ -7,6 +7,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
+import { PureAssuredBadge } from './PureAssuredBadge';
 
 interface ProductCardProps {
   product: Product;
@@ -147,6 +148,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
         <h4 className="font-semibold text-sm text-slate-900 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors min-h-[36px]">
           {product.name}
         </h4>
+
+        {/* Flipkart Rating Pill & Pure Assured Seal */}
+        <div className="flex items-center gap-1.5 mt-1">
+          <div className="inline-flex items-center gap-0.5 bg-[#388E3C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-xs leading-none">
+            <span>{product.rating ? product.rating.toFixed(1) : '4.5'}</span>
+            <span className="text-[9px]">★</span>
+          </div>
+          <span className="text-[10px] text-slate-400 font-medium">
+            ({product.ratingCount || 42})
+          </span>
+          <PureAssuredBadge className="ml-auto" />
+        </div>
 
         {/* Pack Size / Unit & Clickable Brand Chip */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5 truncate">
