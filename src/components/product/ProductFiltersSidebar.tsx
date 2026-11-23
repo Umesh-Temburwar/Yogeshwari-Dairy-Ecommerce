@@ -264,6 +264,44 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
           </div>
         )}
       </div>
+
+      {/* 5. AVAILABILITY & SPEED SECTION */}
+      <div className="p-3.5 space-y-2.5">
+        <label className="flex items-center gap-2.5 cursor-pointer text-slate-800 font-semibold">
+          <input
+            type="checkbox"
+            checked={facets.inStockOnly}
+            onChange={() => {
+              triggerHaptic('light');
+              onUpdateFacets((prev) => ({
+                ...prev,
+                inStockOnly: !prev.inStockOnly,
+              }));
+            }}
+            className="w-4 h-4 rounded-xs border-slate-300 text-[#2874F0] focus:ring-blue-500"
+          />
+          <span>Exclude Out of Stock</span>
+        </label>
+
+        <label className="flex items-center gap-2.5 cursor-pointer text-slate-800 font-semibold">
+          <input
+            type="checkbox"
+            checked={facets.fastDeliveryOnly}
+            onChange={() => {
+              triggerHaptic('light');
+              onUpdateFacets((prev) => ({
+                ...prev,
+                fastDeliveryOnly: !prev.fastDeliveryOnly,
+              }));
+            }}
+            className="w-4 h-4 rounded-xs border-slate-300 text-[#2874F0] focus:ring-blue-500"
+          />
+          <div className="flex items-center gap-1">
+            <span className="text-[#FF9F00] font-bold">⚡</span>
+            <span>Fast 15-min Delivery Only</span>
+          </div>
+        </label>
+      </div>
     </aside>
   );
 };
