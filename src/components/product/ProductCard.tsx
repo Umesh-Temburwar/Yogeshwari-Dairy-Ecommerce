@@ -241,18 +241,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
             <button
               type="button"
               onClick={handleAdd}
-              className="h-9 min-h-[36px] min-w-[64px] bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-600 font-bold text-xs px-3 rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center gap-0.5 cursor-pointer focus:outline-hidden"
+              className="h-8 min-h-[32px] min-w-[64px] bg-white hover:bg-blue-50 text-[#2874F0] border border-[#2874F0] font-bold text-xs px-3 rounded-xs shadow-2xs transition-all active:scale-95 flex items-center justify-center gap-0.5 cursor-pointer focus:outline-hidden"
               aria-label={`Add ${product.name} to cart`}
             >
               <span>ADD</span>
               <span className="text-sm font-bold leading-none">+</span>
             </button>
           ) : (
-            <div className="flex items-center bg-emerald-700 text-white rounded-xl shadow-xs overflow-hidden h-9 min-h-[36px]">
+            <div className="flex items-center bg-[#2874F0] text-white rounded-xs shadow-2xs overflow-hidden h-8 min-h-[32px]">
               <button
                 type="button"
                 onClick={handleDecrement}
-                className="w-8 h-9 flex items-center justify-center hover:bg-black/20 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
+                className="w-7 h-8 flex items-center justify-center hover:bg-black/15 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
                 aria-label={`Decrease quantity of ${product.name}`}
                 title="Decrease"
               >
@@ -265,7 +265,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 type="button"
                 disabled={isMaxStock}
                 onClick={handleIncrement}
-                className="w-8 h-9 flex items-center justify-center disabled:opacity-40 hover:bg-black/20 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
+                className="w-7 h-8 flex items-center justify-center disabled:opacity-40 hover:bg-black/15 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
                 aria-label={`Increase quantity of ${product.name}`}
                 title={isMaxStock ? 'Max stock reached' : 'Increase'}
               >
