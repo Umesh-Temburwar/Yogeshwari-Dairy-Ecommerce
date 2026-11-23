@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, Star, RotateCcw, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { FilterFacets } from '@/types/flipkart';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -20,16 +20,13 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
   totalFilteredCount,
   className = '',
 }) => {
-  // Collapsible accordion sections
   const [openSections, setOpenSections] = useState({
     price: true,
-    brand: true,
     ratings: true,
     discount: true,
+    brand: true,
     availability: true,
   });
-
-  const [brandSearch, setBrandSearch] = useState('');
 
   const toggleSection = (key: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -69,14 +66,14 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
         Showing <strong className="text-slate-900 font-bold">{totalFilteredCount}</strong> products
       </div>
 
-      {/* 1. PRICE FILTER SECTION */}
+      {/* 1. PRICE SECTION */}
       <div className="border-b border-slate-200">
         <button
           type="button"
           onClick={() => toggleSection('price')}
           className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 text-left font-bold text-slate-800 uppercase tracking-wider text-[11px]"
         >
-          <span>Price</span>
+          <span>Price Range</span>
           {openSections.price ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
 
@@ -110,6 +107,51 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
                 );
               })}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. CUSTOMER RATINGS SECTION */}
+      <div className="border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => toggleSection('ratings')}
+          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 text-left font-bold text-slate-800 uppercase tracking-wider text-[11px]"
+        >
+          <span>Customer Ratings</span>
+          {openSections.ratings ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {openSections.ratings && (
+          <div className="px-3.5 pb-3.5 space-y-2">
+            {[4, 3].map((star) => {
+              const isChecked = facets.minRating === star;
+              return (
+                <label
+                  key={star}
+                  className="flex items-center gap-2.5 cursor-pointer text-slate-700 hover:text-slate-900"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      triggerHaptic('light');
+                      onUpdateFacets((prev) => ({
+                        ...prev,
+                        minRating: isChecked ? null : star,
+                      }));
+                    }}
+                    className="w-4 h-4 rounded-xs border-slate-300 text-[#2874F0] focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <span className="flex items-center gap-0.5 bg-[#388E3C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-xs">
+                      {star}★
+                    </span>
+                    <span>&amp; above</span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         )}
       </div>
