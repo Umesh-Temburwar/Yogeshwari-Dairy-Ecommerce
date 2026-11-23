@@ -28,6 +28,8 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
     availability: true,
   });
 
+  const [brandSearch, setBrandSearch] = useState('');
+
   const toggleSection = (key: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };

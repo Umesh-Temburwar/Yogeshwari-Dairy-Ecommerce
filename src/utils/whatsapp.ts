@@ -46,6 +46,14 @@ export function openWhatsAppStoreInquiry() {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
+export function shareProductOnWhatsApp(productName: string, price: number) {
+  const text = encodeURIComponent(
+    `Check out *${productName}* for ₹${price} on Yogeshwari Dairy Online Store! Fresh delivery in 15 mins: https://yogeshwari-dairy-ecommerce.vercel.app`
+  );
+  const url = `https://wa.me/?text=${text}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 export function getStoreCallHref(): string {
   return `tel:${STORE_PHONE}`;
 }

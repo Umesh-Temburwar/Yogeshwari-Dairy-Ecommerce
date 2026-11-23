@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Package, Heart, Coins, MapPin, Headphones, ChevronDown } from 'lucide-react';
+import { User, Package, Heart, MapPin, Headphones, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCustomerStore } from '@/store/customerStore';
 import { triggerHaptic } from '@/utils/haptics';

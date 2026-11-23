@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Check, ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { formatPrice } from '@/utils/formatters';
 import { useCartStore } from '@/store/cartStore';
@@ -22,6 +22,7 @@ export const FrequentlyBoughtTogether: React.FC<FrequentlyBoughtTogetherProps> =
     category: 'Bakery',
     brand: 'Yogeshwari',
     packSize: '250 g',
+    unit: 'Piece',
     price: 45,
     mrp: 50,
     discountPercentage: 10,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { Search, TrendingUp, ArrowRight } from 'lucide-react';
 import { triggerHaptic } from '@/utils/haptics';
 
 interface SearchAutoSuggestProps {

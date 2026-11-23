@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 import {
   X,
-  Star,
-  ShieldCheck,
-  Calendar,
   Share2,
   Heart,
   Truck,
   Tag,
-  CheckCircle2,
-  ChevronRight,
 } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
-import { formatPrice, formatDisplayDate } from '@/utils/formatters';
+import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
@@ -31,7 +26,7 @@ interface ProductDetailModalProps {
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
-  const { getItemQuantity, addItem, updateQuantity, openCartDrawer } = useCartStore();
+  const { getItemQuantity, addItem, openCartDrawer } = useCartStore();
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const { isStoreOpen, deliveryEta } = useStoreStatusStore();
 
@@ -41,7 +36,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
   const quantity = getItemQuantity(product.id);
   const isWishlisted = isInWishlist(product.id);
-  const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
 
   // Alternate image gallery angles
   const galleryImages = [

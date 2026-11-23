@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, ChevronRight, ArrowLeft, RefreshCw, Sparkles, Filter } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductListRow } from '@/components/product/ProductListRow';
 import { FlipkartMegaNav } from '@/components/layout/FlipkartMegaNav';
@@ -25,8 +25,7 @@ import { FilterFacets, SortOption } from '@/types/flipkart';
 import { ecommerceApi } from '@/services/api';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { getStoreCallHref } from '@/utils/whatsapp';
-import { triggerHaptic } from '@/utils/haptics';
-import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
+import { getCategorySlugForProduct } from '@/constants/categories';
 import { getProductBrand, initBrandLogos } from '@/utils/brands';
 import { supabase } from '@/services/supabase/client';
 
@@ -300,7 +299,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
           setSelectedCategory(slug);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        onSelectSubcategory={(sub) => {
+        onSelectSubcategory={(_sub) => {
           if (onClearSearch) onClearSearch();
           // Scroll directly down to catalog
           const catElem = document.getElementById('catalog-view');

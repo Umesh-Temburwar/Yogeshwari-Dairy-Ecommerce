@@ -39,7 +39,6 @@ export default {
           },
         },
         brand: {
-        brand: {
           green: {
             DEFAULT: '#0C831F',
             dark: '#086617',

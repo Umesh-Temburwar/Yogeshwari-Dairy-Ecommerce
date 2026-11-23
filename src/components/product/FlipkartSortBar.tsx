@@ -16,7 +16,6 @@ export const FlipkartSortBar: React.FC<FlipkartSortBarProps> = ({
   onSelectSort,
   viewMode,
   onToggleViewMode,
-  totalCount,
 }) => {
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'relevance', label: 'Relevance' },

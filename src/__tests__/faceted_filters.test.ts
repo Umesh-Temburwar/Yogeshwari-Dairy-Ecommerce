@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Product } from '../types/ecommerce';
-import { FilterFacets, SortOption } from '../types/flipkart';
 
 const mockCatalog: Product[] = [
   {
     id: '1',
     name: 'Amul Taaza Milk',
+    description: 'Fresh milk',
     category: 'Dairy',
     brand: 'Amul',
     packSize: '500ml',
+    unit: 'Pouch',
     price: 27,
     mrp: 30,
     discountPercentage: 10,
@@ -21,9 +22,11 @@ const mockCatalog: Product[] = [
   {
     id: '2',
     name: 'Yogeshwari Pure Cow Ghee',
+    description: 'Pure cow ghee',
     category: 'Ghee',
     brand: 'Yogeshwari',
     packSize: '1L',
+    unit: 'Jar',
     price: 650,
     mrp: 750,
     discountPercentage: 13,
@@ -36,9 +39,11 @@ const mockCatalog: Product[] = [
   {
     id: '3',
     name: 'Haldiram Aloo Bhujia',
+    description: 'Crisp namkeen',
     category: 'Snacks',
     brand: "Haldiram's",
     packSize: '200g',
+    unit: 'Packet',
     price: 60,
     mrp: 60,
     discountPercentage: 0,
@@ -51,9 +56,11 @@ const mockCatalog: Product[] = [
   {
     id: '4',
     name: 'Parle-G Gold Biscuit',
+    description: 'Glucose biscuit',
     category: 'Bakery',
     brand: 'Parle',
     packSize: '1kg',
+    unit: 'Packet',
     price: 120,
     mrp: 140,
     discountPercentage: 14,

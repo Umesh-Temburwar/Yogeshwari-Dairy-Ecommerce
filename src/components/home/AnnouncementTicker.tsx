@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Flame, ChevronRight } from 'lucide-react';
+import { Flame, ChevronRight } from 'lucide-react';
 import { triggerHaptic } from '@/utils/haptics';
 
 const ANNOUNCEMENTS = [

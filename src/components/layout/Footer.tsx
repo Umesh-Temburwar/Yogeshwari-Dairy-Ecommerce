@@ -2,13 +2,10 @@ import React from 'react';
 import {
   PhoneCall,
   MessageCircle,
-  MapPin,
-  Clock,
   ShieldCheck,
   Store,
   HelpCircle,
   Gift,
-  CreditCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getStoreCallHref, openWhatsAppStoreInquiry } from '@/utils/whatsapp';

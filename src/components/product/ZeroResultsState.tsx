@@ -1,5 +1,5 @@
 import React from 'react';
-import { SearchX, RotateCcw, ArrowRight } from 'lucide-react';
+import { SearchX, RotateCcw } from 'lucide-react';
 import { triggerHaptic } from '@/utils/haptics';
 
 interface ZeroResultsStateProps {

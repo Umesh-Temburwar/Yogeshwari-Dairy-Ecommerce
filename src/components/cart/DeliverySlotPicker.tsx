@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Zap, CheckCircle2 } from 'lucide-react';
+import { Zap, CheckCircle2 } from 'lucide-react';
 import { DeliverySlot } from '@/types/flipkart';
 import { triggerHaptic } from '@/utils/haptics';
 

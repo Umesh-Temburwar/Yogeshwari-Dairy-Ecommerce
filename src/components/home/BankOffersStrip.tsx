@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Sparkles, ShieldCheck } from 'lucide-react';
+import { Tag, ShieldCheck } from 'lucide-react';
 import { BankOffer } from '@/types/flipkart';
 
 export const BANK_OFFERS: BankOffer[] = [

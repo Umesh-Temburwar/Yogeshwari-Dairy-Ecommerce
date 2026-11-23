@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, ThumbsUp } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { ProductReview } from '@/types/flipkart';
 
 interface ProductReviewsListProps {

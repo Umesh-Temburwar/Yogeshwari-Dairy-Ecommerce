@@ -7,9 +7,7 @@ interface PureAssuredBadgeProps {
 
 export const PureAssuredBadge: React.FC<PureAssuredBadgeProps> = ({
   className = '',
-  size = 'sm',
 }) => {
-  const isSm = size === 'sm';
 
   return (
     <span
