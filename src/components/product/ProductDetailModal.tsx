@@ -19,6 +19,7 @@ import { triggerHaptic } from '@/utils/haptics';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { PureAssuredBadge } from './PureAssuredBadge';
+import { ProductSpecificationsTable } from './ProductSpecificationsTable';
 import { shareProductOnWhatsApp } from '@/utils/whatsapp';
 
 interface ProductDetailModalProps {
@@ -264,6 +265,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               <li>Rich in natural calcium, protein and vitamins</li>
               <li>Free from artificial preservatives or adulterants</li>
             </ul>
+          </div>
+
+          {/* Flipkart Specifications Table */}
+          <div className="pt-2">
+            <ProductSpecificationsTable product={product} />
           </div>
         </div>
       </div>
