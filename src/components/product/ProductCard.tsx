@@ -185,6 +185,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
             Best before {formatDisplayDate(product.expiryDate)}
           </p>
         )}
+
+        {/* Flipkart Fast Delivery Guarantee */}
+        <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium mt-1">
+          <span className="text-[#FF9F00] font-bold">⚡</span>
+          <span>Free delivery in 15 mins</span>
+        </div>
       </div>
 
       {/* Bottom Row: Price & ADD Button / Stepper */}
