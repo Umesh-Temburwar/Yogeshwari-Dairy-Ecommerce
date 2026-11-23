@@ -7,6 +7,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        fk: {
+          blue: {
+            DEFAULT: '#2874F0',
+            dark: '#1A5DC8',
+            light: '#E8F0FE',
+            subtle: '#F0F5FF',
+          },
+          yellow: {
+            DEFAULT: '#FFE11B',
+            accent: '#FF9F00',
+            dark: '#E58F00',
+            light: '#FFF9E6',
+          },
+          orange: {
+            DEFAULT: '#FB641B',
+            dark: '#E05510',
+            light: '#FFF2EC',
+          },
+          green: {
+            DEFAULT: '#388E3C',
+            dark: '#2E7D32',
+            light: '#E8F5E9',
+          },
+          bg: '#F1F3F6',
+          border: '#E0E0E0',
+          text: {
+            primary: '#212121',
+            secondary: '#878787',
+            muted: '#9E9E9E',
+          },
+        },
+        brand: {
         brand: {
           green: {
             DEFAULT: '#0C831F',
