@@ -190,14 +190,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
       {/* Bottom Row: Price & ADD Button / Stepper */}
       <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
         <div>
-          <div className="flex items-baseline gap-1">
-            <span className="font-bold text-base text-slate-900 leading-none">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="font-extrabold text-base text-slate-900 leading-none">
               {formatPrice(product.price)}
             </span>
             {product.mrp > product.price && (
-              <span className="text-xs text-slate-400 line-through font-normal">
-                {formatPrice(product.mrp)}
-              </span>
+              <>
+                <span className="text-xs text-slate-400 line-through font-normal">
+                  {formatPrice(product.mrp)}
+                </span>
+                <span className="text-[11px] font-bold text-[#388E3C] leading-none">
+                  {product.discountPercentage || Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
+                </span>
+              </>
             )}
           </div>
           {product.inStock && product.stockQuantity > 0 && product.stockQuantity <= 5 && (
