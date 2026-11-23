@@ -9,9 +9,32 @@
   }
 
   body {
-    background-color: #F4F6F8;
-    color: #1C1C1C;
+    background-color: #F1F3F6;
+    color: #212121;
     overscroll-behavior-y: none;
+  }
+}
+
+/* Flipkart Component Utilities */
+@layer components {
+  .fk-card {
+    @apply bg-white border border-[#E0E0E0] rounded-xs shadow-[0_1px_2px_0_rgba(0,0,0,0.06)] hover:shadow-[0_3px_12px_0_rgba(0,0,0,0.12)] transition-shadow duration-200;
+  }
+  
+  .fk-btn-primary {
+    @apply bg-[#2874F0] hover:bg-[#1A5DC8] text-white font-semibold rounded-xs shadow-xs transition-colors duration-150 flex items-center justify-center;
+  }
+
+  .fk-btn-buy {
+    @apply bg-[#FB641B] hover:bg-[#E05510] text-white font-bold rounded-xs shadow-xs transition-colors duration-150 flex items-center justify-center;
+  }
+
+  .fk-rating-pill {
+    @apply inline-flex items-center gap-0.5 bg-[#388E3C] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-xs leading-none shadow-2xs;
+  }
+
+  .fk-price-discount {
+    @apply text-[#388E3C] font-semibold text-xs;
   }
 }
 
