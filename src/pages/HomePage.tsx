@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, ChevronRight, ArrowLeft, RefreshCw, Sparkles, Filter } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard';
+import { ProductListRow } from '@/components/product/ProductListRow';
 import { FlipkartMegaNav } from '@/components/layout/FlipkartMegaNav';
 import { MobileCategoryChips } from '@/components/layout/MobileCategoryChips';
 import { AnnouncementTicker } from '@/components/home/AnnouncementTicker';
@@ -515,21 +516,27 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     ))}
                   </div>
                 ) : filteredProducts.length > 0 ? (
-                  <div
-                    className={
-                      viewMode === 'grid'
-                        ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5'
-                        : 'space-y-3'
-                    }
-                  >
-                    {filteredProducts.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        onOpenDetails={(p) => setActiveModalProduct(p)}
-                      />
-                    ))}
-                  </div>
+                  viewMode === 'grid' ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                      {filteredProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onOpenDetails={(p) => setActiveModalProduct(p)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {filteredProducts.map((product) => (
+                        <ProductListRow
+                          key={product.id}
+                          product={product}
+                          onOpenDetails={(p) => setActiveModalProduct(p)}
+                        />
+                      ))}
+                    </div>
+                  )
                 ) : (
                   /* Zero Results State with Reset Suggestions */
                   <ZeroResultsState
