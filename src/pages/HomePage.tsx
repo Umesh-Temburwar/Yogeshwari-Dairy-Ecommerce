@@ -15,6 +15,7 @@ import { ShopByBrandStrip } from '@/components/brand/ShopByBrandStrip';
 import { ProductFiltersSidebar } from '@/components/product/ProductFiltersSidebar';
 import { FlipkartSortBar } from '@/components/product/FlipkartSortBar';
 import { ActiveFilterChips } from '@/components/product/ActiveFilterChips';
+import { ZeroResultsState } from '@/components/product/ZeroResultsState';
 import { MobileFilterDrawer } from '@/components/product/MobileFilterDrawer';
 import { ProductDetailModal } from '@/components/product/ProductDetailModal';
 import { Category, Product } from '@/types/ecommerce';
@@ -513,26 +514,19 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                   </div>
                 ) : (
                   /* Zero Results State with Reset Suggestions */
-                  <div className="text-center py-16 px-4 space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-blue-50 text-[#2874F0] flex items-center justify-center mx-auto text-2xl font-black">
-                      🔍
-                    </div>
-                    <div>
-                      <h3 className="text-base font-extrabold text-slate-900">
-                        No products match your active filters
-                      </h3>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
-                        Try adjusting your price range, clearing brand checkboxes, or relaxing your discount criteria.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={resetFacets}
-                      className="px-5 py-2.5 bg-[#2874F0] hover:bg-[#1A5DC8] text-white text-xs font-bold rounded-xs cursor-pointer transition-colors shadow-xs"
-                    >
-                      Clear Filters &amp; View All
-                    </button>
-                  </div>
+                  <ZeroResultsState
+                    searchQuery={searchQuery}
+                    hasActiveFilters={
+                      facets.selectedBrands.length > 0 ||
+                      facets.minRating !== null ||
+                      facets.minDiscount !== null ||
+                      facets.priceRange[0] > 0 ||
+                      facets.priceRange[1] < 2000 ||
+                      selectedBrand !== 'All'
+                    }
+                    onResetFilters={resetFacets}
+                    onClearSearch={onClearSearch}
+                  />
                 )}
               </div>
             </div>
