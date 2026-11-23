@@ -21,6 +21,7 @@ import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { PureAssuredBadge } from './PureAssuredBadge';
 import { ProductSpecificationsTable } from './ProductSpecificationsTable';
 import { ProductRatingsBreakdown } from './ProductRatingsBreakdown';
+import { ProductReviewsList } from './ProductReviewsList';
 import { shareProductOnWhatsApp } from '@/utils/whatsapp';
 
 interface ProductDetailModalProps {
@@ -279,6 +280,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               rating={product.rating || 4.7}
               ratingCount={product.ratingCount || 142}
             />
+          </div>
+
+          {/* Customer Reviews List */}
+          <div className="pt-2">
+            <ProductReviewsList productName={product.name} />
           </div>
         </div>
       </div>
