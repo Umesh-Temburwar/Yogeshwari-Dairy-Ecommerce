@@ -686,47 +686,61 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             )}
 
-            {/* Bill Details */}
-            {items.length > 0 && (
-              <div className="bg-brand-slate-bg rounded-2xl p-3 border border-brand-slate-border space-y-2">
-                <div className="text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1">
-                  Bill Summary
-                </div>
+            {/* Flipkart Price Details Card */}
+            {items.length > 0 && (() => {
+              const totalMrp = items.reduce(
+                (sum, item) => sum + (item.product.mrp || item.product.price) * item.quantity,
+                0
+              );
+              const totalSavings = Math.max(0, totalMrp - subtotal);
 
-                <div className="flex justify-between text-xs text-brand-text-secondary">
-                  <span>Item Total</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
+              return (
+                <div className="bg-white rounded-xs p-3.5 border border-[#E0E0E0] shadow-2xs space-y-2.5">
+                  <div className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-100">
+                    Price Details
+                  </div>
 
-                <div className="flex justify-between text-xs text-brand-text-secondary">
-                  <span className="flex items-center gap-1">
-                    <span>Delivery Fee</span>
-                    {deliveryFee === 0 && (
-                      <span className="text-[10px] bg-green-100 text-green-800 font-bold px-1 rounded">
-                        FREE
-                      </span>
-                    )}
-                  </span>
-                  <span>
-                    {deliveryFee === 0 ? (
-                      <span className="text-green-700 font-bold">FREE</span>
-                    ) : (
-                      formatPrice(deliveryFee)
-                    )}
-                  </span>
-                </div>
+                  <div className="flex justify-between text-xs text-slate-700">
+                    <span>Price ({totalItemsCount} items)</span>
+                    <span>{formatPrice(totalMrp)}</span>
+                  </div>
 
-                <div className="flex justify-between text-xs text-brand-text-secondary">
-                  <span>Packaging & Handling</span>
-                  <span className="text-green-700 font-semibold">FREE (Insulated Cool Pack)</span>
-                </div>
+                  {totalSavings > 0 && (
+                    <div className="flex justify-between text-xs text-[#388E3C] font-semibold">
+                      <span>Discount</span>
+                      <span>− {formatPrice(totalSavings)}</span>
+                    </div>
+                  )}
 
-                <div className="pt-2 border-t border-brand-slate-border flex justify-between text-sm font-black text-brand-text-primary">
-                  <span>To Pay</span>
-                  <span className="text-base text-[#0C831F]">{formatPrice(total)}</span>
+                  <div className="flex justify-between text-xs text-slate-700">
+                    <span>Delivery Charges</span>
+                    <span>
+                      {deliveryFee === 0 ? (
+                        <span className="text-[#388E3C] font-bold">FREE</span>
+                      ) : (
+                        formatPrice(deliveryFee)
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-xs text-slate-700">
+                    <span>Packaging &amp; Handling</span>
+                    <span className="text-[#388E3C] font-semibold">FREE</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-dashed border-slate-200 flex justify-between text-sm font-black text-slate-900">
+                    <span>Total Amount</span>
+                    <span className="text-base text-slate-900">{formatPrice(total)}</span>
+                  </div>
+
+                  {totalSavings > 0 && (
+                    <div className="bg-green-50/80 border border-green-200/80 rounded-xs p-2 text-center text-xs font-bold text-[#388E3C]">
+                      ✨ You will save {formatPrice(totalSavings)} on this order
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Sticky Checkout Bar */}
