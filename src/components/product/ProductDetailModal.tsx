@@ -20,6 +20,7 @@ import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { PureAssuredBadge } from './PureAssuredBadge';
 import { ProductSpecificationsTable } from './ProductSpecificationsTable';
+import { ProductRatingsBreakdown } from './ProductRatingsBreakdown';
 import { shareProductOnWhatsApp } from '@/utils/whatsapp';
 
 interface ProductDetailModalProps {
@@ -270,6 +271,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
           {/* Flipkart Specifications Table */}
           <div className="pt-2">
             <ProductSpecificationsTable product={product} />
+          </div>
+
+          {/* Customer Ratings Breakdown */}
+          <div className="pt-2">
+            <ProductRatingsBreakdown
+              rating={product.rating || 4.7}
+              ratingCount={product.ratingCount || 142}
+            />
           </div>
         </div>
       </div>
