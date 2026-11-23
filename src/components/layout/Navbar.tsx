@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 import { FlipkartPincodeWidget } from './FlipkartPincodeWidget';
 import { SuperCoinsBadge } from './SuperCoinsBadge';
 import { ProfileDropdown } from './ProfileDropdown';
+import { SearchAutoSuggest } from './SearchAutoSuggest';
 
 interface NavbarProps {
   searchQuery: string;
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { getWishlistCount } = useWishlistStore();
   const { isStoreOpen } = useStoreStatusStore();
   const [isListening, setIsListening] = useState(false);
+  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
 
   const itemCount = getTotalItemsCount();
   const wishlistCount = getWishlistCount();
@@ -86,6 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <input
               type="text"
               value={searchQuery}
+              onFocus={() => setIsSuggestOpen(true)}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search for Milk, Paneer, Ghee, Sweets and more"
               className="w-full h-9 bg-white text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm pl-4 pr-20 rounded-xs shadow-inner focus:outline-hidden"
@@ -121,6 +124,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Search className="w-4 h-4" />
               </button>
             </div>
+
+            <SearchAutoSuggest
+              isOpen={isSuggestOpen}
+              searchQuery={searchQuery}
+              onSelectQuery={(q) => onSearchChange(q)}
+              onClose={() => setIsSuggestOpen(false)}
+            />
           </div>
 
           {/* Right Action Icons: SuperCoins, Wishlist, Orders, Cart */}
