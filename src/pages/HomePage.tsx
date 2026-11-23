@@ -14,6 +14,7 @@ import { FlipkartPromoGrid } from '@/components/home/FlipkartPromoGrid';
 import { ShopByBrandStrip } from '@/components/brand/ShopByBrandStrip';
 import { ProductFiltersSidebar } from '@/components/product/ProductFiltersSidebar';
 import { FlipkartSortBar } from '@/components/product/FlipkartSortBar';
+import { CatalogBreadcrumbs } from '@/components/product/CatalogBreadcrumbs';
 import { ActiveFilterChips } from '@/components/product/ActiveFilterChips';
 import { ZeroResultsState } from '@/components/product/ZeroResultsState';
 import { MobileFilterDrawer } from '@/components/product/MobileFilterDrawer';
@@ -470,6 +471,23 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
             {/* Right Column: Sort Bar + Active Filter Chips + Product Grid */}
             <div className="flex-1 min-w-0 bg-white border border-[#E0E0E0] rounded-xs shadow-xs overflow-hidden">
+              {/* Breadcrumb Navigation & Count */}
+              <div className="px-4 pt-2.5 pb-1 border-b border-slate-100 bg-slate-50/50">
+                <CatalogBreadcrumbs
+                  categoryName={
+                    selectedCategory !== 'all'
+                      ? categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory
+                      : 'All Categories'
+                  }
+                  brandName={selectedBrand}
+                  totalCount={filteredProducts.length}
+                  onResetCategory={() => {
+                    setSelectedCategory('all');
+                    setSelectedBrand('All');
+                  }}
+                />
+              </div>
+
               {/* Flipkart Sort Bar */}
               <FlipkartSortBar
                 currentSort={sortOption}
