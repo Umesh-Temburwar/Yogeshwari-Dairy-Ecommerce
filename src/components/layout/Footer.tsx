@@ -192,6 +192,50 @@ export const Footer: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Flipkart Bottom Trust & Payment Methods Strip */}
+        <div className="pt-6 border-t border-slate-700/80 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center sm:justify-start">
+            <a
+              href="http://localhost:5173"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-white transition-colors"
+            >
+              <Store className="w-3.5 h-3.5 text-[#FFE500]" />
+              <span>Staff / POS Portal</span>
+            </a>
+            <span className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors">
+              <Gift className="w-3.5 h-3.5 text-[#FFE500]" />
+              <span>Dairy Gift Cards</span>
+            </span>
+            <span className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors">
+              <HelpCircle className="w-3.5 h-3.5 text-[#FFE500]" />
+              <span>Help Center</span>
+            </span>
+            <span>© 2026 Yogeshwari Dairy Products. All rights reserved.</span>
+          </div>
+
+          {/* Payment Method Badges */}
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <span className="text-[10px] text-slate-500 font-bold uppercase">Payment Partners:</span>
+            <span className="px-2 py-0.5 rounded-xs bg-white text-slate-900 font-black text-[10px] shadow-2xs">
+              UPI
+            </span>
+            <span className="px-2 py-0.5 rounded-xs bg-white text-[#2874F0] font-black text-[10px] shadow-2xs">
+              GPay / PhonePe
+            </span>
+            <span className="px-2 py-0.5 rounded-xs bg-white text-blue-800 font-black text-[10px] shadow-2xs">
+              RuPay
+            </span>
+            <span className="px-2 py-0.5 rounded-xs bg-white text-slate-900 font-black text-[10px] shadow-2xs">
+              Visa / MC
+            </span>
+            <span className="px-2 py-0.5 rounded-xs bg-emerald-600 text-white font-black text-[10px] shadow-2xs">
+              COD
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );
