@@ -22,6 +22,7 @@ import { PureAssuredBadge } from './PureAssuredBadge';
 import { ProductSpecificationsTable } from './ProductSpecificationsTable';
 import { ProductRatingsBreakdown } from './ProductRatingsBreakdown';
 import { ProductReviewsList } from './ProductReviewsList';
+import { FrequentlyBoughtTogether } from './FrequentlyBoughtTogether';
 import { shareProductOnWhatsApp } from '@/utils/whatsapp';
 
 interface ProductDetailModalProps {
@@ -280,6 +281,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               rating={product.rating || 4.7}
               ratingCount={product.ratingCount || 142}
             />
+          </div>
+
+          {/* Frequently Bought Together Bundle */}
+          <div className="pt-2">
+            <FrequentlyBoughtTogether currentProduct={product} />
           </div>
 
           {/* Customer Reviews List */}
