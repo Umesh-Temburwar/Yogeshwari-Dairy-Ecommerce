@@ -162,15 +162,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
         </div>
 
         {/* Pack Size / Unit & Clickable Brand Chip */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5 truncate">
-          <span>{product.packSize || product.unit || 'Standard'}</span>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-1 truncate">
+          <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-xs text-[10px] font-bold">
+            {product.packSize || product.unit || 'Standard'}
+          </span>
           {product.brand && (
             <>
               <span className="text-slate-300">•</span>
               <button
                 type="button"
                 onClick={handleBrandClick}
-                className="text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-900 px-1.5 py-0.2 rounded border border-emerald-100/80 truncate cursor-pointer transition-colors"
+                className="text-[10px] font-bold text-[#2874F0] bg-blue-50 hover:bg-blue-100 hover:text-[#1A5DC8] px-1.5 py-0.5 rounded-xs border border-blue-100 truncate cursor-pointer transition-colors"
                 title={`View all ${product.brand} products`}
               >
                 {product.brand}
