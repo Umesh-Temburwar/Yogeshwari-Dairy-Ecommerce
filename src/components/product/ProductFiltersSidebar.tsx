@@ -197,6 +197,73 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
           </div>
         )}
       </div>
+
+      {/* 4. BRAND MULTI-SELECT SECTION */}
+      <div className="border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => toggleSection('brand')}
+          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 text-left font-bold text-slate-800 uppercase tracking-wider text-[11px]"
+        >
+          <span>Brand</span>
+          {openSections.brand ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {openSections.brand && (
+          <div className="px-3.5 pb-3.5 space-y-2.5">
+            {/* Brand Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+                placeholder="Search Brand"
+                className="w-full h-8 pl-7 pr-2 bg-slate-50 border border-slate-200 rounded-xs text-xs text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-[#2874F0]"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2.5 pointer-events-none" />
+            </div>
+
+            {/* Scrollable Brands Checkbox List */}
+            <div className="max-h-48 overflow-y-auto no-scrollbar space-y-1.5 pr-1">
+              {availableBrands
+                .filter((b) => b.name !== 'All' && (!brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase())))
+                .map((b) => {
+                  const isChecked = facets.selectedBrands.includes(b.name);
+                  return (
+                    <label
+                      key={b.name}
+                      className="flex items-center justify-between gap-2 cursor-pointer text-slate-700 hover:text-slate-900 py-0.5"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            triggerHaptic('light');
+                            onUpdateFacets((prev) => {
+                              const exists = prev.selectedBrands.includes(b.name);
+                              return {
+                                ...prev,
+                                selectedBrands: exists
+                                  ? prev.selectedBrands.filter((n) => n !== b.name)
+                                  : [...prev.selectedBrands, b.name],
+                              };
+                            });
+                          }}
+                          className="w-4 h-4 rounded-xs border-slate-300 text-[#2874F0] focus:ring-blue-500 shrink-0"
+                        />
+                        <span className="font-medium text-xs truncate">{b.name}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                        ({b.count})
+                      </span>
+                    </label>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+      </div>
     </aside>
   );
 };
