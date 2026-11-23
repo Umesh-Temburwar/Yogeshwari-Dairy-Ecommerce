@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   Heart,
   History,
+  Store,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -140,6 +141,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Profile Dropdown */}
             <ProfileDropdown onOpenAddressModal={onOpenAddressModal} />
+
+            {/* Dairy Staff / POS Quick Access (Flipkart 'Become a Seller' counterpart) */}
+            <a
+              href="http://localhost:5173"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xs hover:bg-white/10 text-white font-semibold text-xs transition-colors"
+              title="Open Staff POS & Inventory Dashboard"
+            >
+              <Store className="w-4 h-4 text-[#FFE500]" />
+              <span>Staff POS</span>
+            </a>
 
             {/* Wishlist Link */}
             <Link
