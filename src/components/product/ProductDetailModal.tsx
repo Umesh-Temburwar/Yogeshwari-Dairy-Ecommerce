@@ -64,17 +64,31 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
       {/* Flipkart Split Modal Window */}
       <div className="relative w-full max-w-4xl bg-white rounded-xs shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col md:flex-row animate-scale-in border border-[#E0E0E0]">
         {/* Close Button */}
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            onClose();
-          }}
-          className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              shareProductOnWhatsApp(product.name, product.price);
+            }}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 flex items-center justify-center cursor-pointer transition-colors"
+            title="Share on WhatsApp"
+            aria-label="Share on WhatsApp"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              onClose();
+            }}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+            title="Close"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* LEFT COLUMN: Gallery & Buy Actions (Flipkart Product Page Style) */}
         <div className="w-full md:w-5/12 bg-white p-4 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-between">
