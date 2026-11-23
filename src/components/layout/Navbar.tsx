@@ -14,6 +14,7 @@ import { triggerHaptic } from '@/utils/haptics';
 import { Link } from 'react-router-dom';
 import { FlipkartPincodeWidget } from './FlipkartPincodeWidget';
 import { SuperCoinsBadge } from './SuperCoinsBadge';
+import { ProfileDropdown } from './ProfileDropdown';
 
 interface NavbarProps {
   searchQuery: string;
@@ -126,6 +127,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             {/* SuperCoins Loyalty Badge */}
             <SuperCoinsBadge />
+
+            {/* Profile Dropdown */}
+            <ProfileDropdown onOpenAddressModal={onOpenAddressModal} />
 
             {/* Wishlist Link */}
             <Link
