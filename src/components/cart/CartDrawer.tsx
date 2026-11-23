@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
+import { useSaveForLaterStore } from '@/store/saveForLaterStore';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
@@ -66,6 +67,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   } = useCustomerStore();
 
   const { isStoreOpen } = useStoreStatusStore();
+  const { items: savedItems, saveForLater, moveToCart, removeFromSaved } = useSaveForLaterStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -376,6 +378,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             Max available: {item.product.stockQuantity}
                           </span>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('light');
+                            saveForLater(item.product);
+                            updateQuantity(item.productId, 0);
+                          }}
+                          className="text-[10px] font-bold text-[#2874F0] hover:underline mt-1 cursor-pointer block"
+                        >
+                          Save for later
+                        </button>
                       </div>
 
                       {/* Quantity Selector with min 44px touch targets */}
@@ -406,6 +419,48 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Flipkart 'Saved for Later' Section */}
+            {savedItems.length > 0 && (
+              <div className="bg-white border border-[#E0E0E0] rounded-xs p-3 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                  <span>Saved for Later ({savedItems.length})</span>
+                </div>
+                <div className="space-y-2 divide-y divide-slate-100">
+                  {savedItems.map((p) => (
+                    <div key={p.id} className="pt-2 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 truncate">
+                        <img src={p.imageUrl} alt={p.name} className="w-10 h-10 object-contain shrink-0" />
+                        <div className="truncate">
+                          <span className="font-bold text-slate-900 truncate block">{p.name}</span>
+                          <span className="font-extrabold text-[#2874F0]">{formatPrice(p.price)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('medium');
+                            moveToCart(p.id);
+                            useCartStore.getState().addItem(p);
+                          }}
+                          className="px-2.5 py-1 bg-[#2874F0] text-white font-bold text-[11px] rounded-xs hover:bg-[#1A5DC8] cursor-pointer"
+                        >
+                          Move to Cart
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeFromSaved(p.id)}
+                          className="text-slate-400 hover:text-rose-600"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
