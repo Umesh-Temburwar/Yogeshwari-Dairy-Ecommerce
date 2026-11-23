@@ -1,8 +1,9 @@
 import React from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
@@ -15,9 +16,17 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
   const navigate = useNavigate();
   const { getItemQuantity, addItem, updateQuantity } = useCartStore();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
   const { isStoreOpen } = useStoreStatusStore();
   const quantity = getItemQuantity(product.id);
+  const isWishlisted = isInWishlist(product.id);
   const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    toggleWishlist(product);
+  };
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,6 +90,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
     >
       {/* Product Image Area with ONE subtle badge max */}
       <div className="relative w-full aspect-square bg-slate-50/80 rounded-xl overflow-hidden mb-2 p-3 flex items-center justify-center">
+        {/* Wishlist Heart Toggle Button (Flipkart Style) */}
+        <button
+          type="button"
+          onClick={handleToggleWishlist}
+          className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 active:scale-90 transition-all cursor-pointer focus:outline-hidden"
+          title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        >
+          <Heart
+            className={`w-4 h-4 transition-colors ${
+              isWishlisted
+                ? 'fill-[#E53935] text-[#E53935]'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          />
+        </button>
+
         {/* ONE small badge max at top-left inside image corner */}
         {product.inStock && (
           product.discountPercentage && product.discountPercentage > 0 ? (
