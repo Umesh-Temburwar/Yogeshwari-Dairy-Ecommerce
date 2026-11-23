@@ -155,6 +155,48 @@ export const ProductFiltersSidebar: React.FC<ProductFiltersSidebarProps> = ({
           </div>
         )}
       </div>
+
+      {/* 3. DISCOUNT SECTION */}
+      <div className="border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => toggleSection('discount')}
+          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 text-left font-bold text-slate-800 uppercase tracking-wider text-[11px]"
+        >
+          <span>Discount</span>
+          {openSections.discount ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {openSections.discount && (
+          <div className="px-3.5 pb-3.5 space-y-2">
+            {[30, 20, 10].map((disc) => {
+              const isChecked = facets.minDiscount === disc;
+              return (
+                <label
+                  key={disc}
+                  className="flex items-center gap-2.5 cursor-pointer text-slate-700 hover:text-slate-900"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      triggerHaptic('light');
+                      onUpdateFacets((prev) => ({
+                        ...prev,
+                        minDiscount: isChecked ? null : disc,
+                      }));
+                    }}
+                    className="w-4 h-4 rounded-xs border-slate-300 text-[#2874F0] focus:ring-blue-500"
+                  />
+                  <span className="font-medium text-slate-800">
+                    {disc}% or more
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </aside>
   );
 };
