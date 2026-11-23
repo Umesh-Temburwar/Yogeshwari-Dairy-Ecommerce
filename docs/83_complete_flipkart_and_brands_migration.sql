@@ -8,26 +8,29 @@
 -- PART 1: PROMOTIONAL BANNERS TABLE & REALTIME PUBLICATION
 -- ==============================================================================
 
+-- 1. Ensure public.promotional_banners table exists
 CREATE TABLE IF NOT EXISTS public.promotional_banners (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
-  subtitle TEXT,
-  image_url TEXT NOT NULL,
-  link_type TEXT NOT NULL DEFAULT 'CATEGORY' CHECK (link_type IN ('CATEGORY', 'BRAND', 'EXTERNAL')),
-  link_target TEXT NOT NULL,
-  badge_text TEXT,
-  bg_color TEXT,
-  display_order INT NOT NULL DEFAULT 1,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  image_url TEXT NOT NULL
 );
 
--- Index for instant banner querying in order
+-- 2. Safely add missing columns if the table already existed previously
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS subtitle TEXT;
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS badge_text TEXT;
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS bg_color TEXT;
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS link_type TEXT NOT NULL DEFAULT 'CATEGORY';
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS link_target TEXT NOT NULL DEFAULT 'all';
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS display_order INT NOT NULL DEFAULT 1;
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.promotional_banners ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+-- 3. Index for instant banner querying in order
 CREATE INDEX IF NOT EXISTS idx_promotional_banners_active_order 
 ON public.promotional_banners (is_active, display_order);
 
--- Enable Row Level Security (RLS)
+-- 4. Enable Row Level Security (RLS)
 ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to active banners
@@ -45,7 +48,7 @@ FOR ALL
 USING (true)
 WITH CHECK (true);
 
--- Enable Supabase Realtime for promotional_banners
+-- 5. Enable Supabase Realtime for promotional_banners
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -56,7 +59,7 @@ BEGIN
   END IF;
 END $$;
 
--- Seed default Flipkart-style promotional banners
+-- 6. Seed default Flipkart-style promotional banners
 INSERT INTO public.promotional_banners (title, subtitle, image_url, link_type, link_target, badge_text, display_order, is_active)
 VALUES
   (
@@ -214,26 +217,29 @@ SET
 -- PART 3: STORAGE BUCKET FOR BRAND LOGOS (OPTIONAL OWNER UPLOADS)
 -- ==============================================================================
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('brand-logos', 'brand-logos', true)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  INSERT INTO storage.buckets (id, name, public)
+  VALUES ('brand-logos', 'brand-logos', true)
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
--- Public read access on storage objects
-DROP POLICY IF EXISTS "Public read access for brand logos" ON storage.objects;
-CREATE POLICY "Public read access for brand logos"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'brand-logos');
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "Public read access for brand logos" ON storage.objects;
+  CREATE POLICY "Public read access for brand logos"
+  ON storage.objects FOR SELECT USING (bucket_id = 'brand-logos');
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
--- Allow staff uploads to brand-logos bucket
-DROP POLICY IF EXISTS "Staff upload access for brand logos" ON storage.objects;
-CREATE POLICY "Staff upload access for brand logos"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'brand-logos');
-
-DROP POLICY IF EXISTS "Staff update access for brand logos" ON storage.objects;
-CREATE POLICY "Staff update access for brand logos"
-ON storage.objects FOR UPDATE
-USING (bucket_id = 'brand-logos');
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "Staff upload access for brand logos" ON storage.objects;
+  CREATE POLICY "Staff upload access for brand logos"
+  ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'brand-logos');
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 
 -- ==============================================================================
