@@ -16,6 +16,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { useSaveForLaterStore } from '@/store/saveForLaterStore';
 import { useStoreStatusStore } from '@/store/storeStatusStore';
+import { DeliverySlotPicker } from './DeliverySlotPicker';
 import { formatPrice } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { ecommerceApi } from '@/services/api';
@@ -69,6 +70,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const { isStoreOpen } = useStoreStatusStore();
   const { items: savedItems, saveForLater, moveToCart, removeFromSaved } = useSaveForLaterStore();
 
+  const [selectedSlotId, setSelectedSlotId] = useState('express');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -616,6 +618,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   )}
                 </div>
               )
+            )}
+
+            {/* Delivery Time Slot Picker */}
+            {items.length > 0 && (
+              <DeliverySlotPicker
+                selectedSlotId={selectedSlotId}
+                onSelectSlot={setSelectedSlotId}
+              />
             )}
 
             {/* Delivery Instructions */}
