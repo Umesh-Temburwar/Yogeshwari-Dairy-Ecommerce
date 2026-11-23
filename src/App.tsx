@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { BackToTopButton } from '@/components/layout/BackToTopButton';
 import { FloatingCartBar } from '@/components/cart/FloatingCartBar';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { AddressSelectorModal } from '@/components/address/AddressSelectorModal';
@@ -64,6 +65,9 @@ export const App: React.FC = () => {
 
         {/* Responsive Footer */}
         <Footer />
+
+        {/* Floating Back to Top Button */}
+        <BackToTopButton />
 
         {/* Bottom Floating Cart Bar */}
         <FloatingCartBar />
