@@ -11,6 +11,7 @@ import {
   User,
   Phone,
   MapPin,
+  Edit2,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCustomerStore } from '@/store/customerStore';
@@ -471,7 +472,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="bg-[#F4F6F8] rounded-2xl p-3.5 border border-brand-slate-border space-y-2.5">
                 <div className="text-xs font-bold text-brand-text-primary flex items-center justify-between">
                   <span>Customer Contact Details</span>
-                  <span className="text-[10px] text-brand-text-muted font-normal">Required for delivery</span>
+                  <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>Auto-syncs with address</span>
+                  </span>
                 </div>
 
                 <div className="space-y-2">
@@ -486,6 +490,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         onChange={(e) => {
                           setNameInput(e.target.value);
                           if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: undefined }));
+                        }}
+                        onBlur={() => {
+                          if (nameInput.trim() || phoneInput.trim()) {
+                            setCustomerProfile(nameInput.trim(), phoneInput.trim());
+                          }
                         }}
                         placeholder="Enter your full name"
                         className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-brand-slate-border bg-white focus:outline-none focus:ring-1 focus:ring-[#0C831F]"
@@ -508,8 +517,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         maxLength={10}
                         value={phoneInput}
                         onChange={(e) => {
-                          setPhoneInput(e.target.value.replace(/\D/g, ''));
+                          const cleaned = e.target.value.replace(/\D/g, '');
+                          setPhoneInput(cleaned);
                           if (validationErrors.phone) setValidationErrors((prev) => ({ ...prev, phone: undefined }));
+                        }}
+                        onBlur={() => {
+                          if (nameInput.trim() || phoneInput.trim()) {
+                            setCustomerProfile(nameInput.trim(), phoneInput.trim());
+                          }
                         }}
                         placeholder="Enter 10-digit mobile number"
                         className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-brand-slate-border bg-white focus:outline-none focus:ring-1 focus:ring-[#0C831F]"
@@ -529,7 +544,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {items.length > 0 && (
               selectedAddress && selectedAddress.street ? (
                 <div className="bg-[#F4F6F8] rounded-2xl p-3 border border-brand-slate-border">
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5 text-xs font-extrabold text-brand-text-primary">
                       <span className="text-sm">
                         {selectedAddress.label === 'Home'
@@ -548,10 +563,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         triggerHaptic('light');
                         onOpenAddressModal();
                       }}
-                      className="text-xs font-bold text-[#0C831F] hover:underline p-1 flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-[#0C831F] hover:bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 bg-white flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      title="Edit address & contact details"
                     >
-                      <span>Change Pin</span>
+                      <Edit2 className="w-3 h-3 text-[#0C831F]" />
+                      <span>Edit / Change</span>
                     </button>
+                  </div>
+
+                  {/* Recipient Contact Pill in Address Card */}
+                  <div className="bg-white rounded-xl px-2.5 py-1.5 mb-2 border border-slate-200/80 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <User className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span className="font-bold text-slate-800 truncate">
+                        {selectedAddress.name || customerName || nameInput || 'Recipient Name'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-600 font-mono text-[11px] shrink-0">
+                      <Phone className="w-3 h-3 text-slate-400" />
+                      <span>{selectedAddress.phone || customerPhone || phoneInput || 'Phone Number'}</span>
+                    </div>
                   </div>
 
                   {selectedAddress.latitude && selectedAddress.longitude ? (
@@ -566,7 +597,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   ) : (
                     <div className="text-[10px] text-amber-700 font-medium mb-1.5 flex items-center gap-1">
-                      <span>⚠️ Approximate address &bull; Click "Change Pin" to set exact map location</span>
+                      <span>⚠️ Approximate address &bull; Click "Edit / Change" to pin exact location</span>
                     </div>
                   )}
 

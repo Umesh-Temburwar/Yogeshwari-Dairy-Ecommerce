@@ -84,16 +84,31 @@ export const useCustomerStore = create<CustomerStore>()(
 
       setCustomerProfile: (name, phone) => {
         const cleanedPhone = phone.trim();
-        set((state) => ({
-          customerName: name.trim(),
-          customerPhone: cleanedPhone,
-          customerProfile: {
-            ...state.customerProfile,
-            name: name.trim(),
-            phone: cleanedPhone,
-            role: 'customer',
-          },
-        }));
+        const cleanedName = name.trim();
+        set((state) => {
+          // Keep active address in sync with customer contact details
+          const updatedAddresses = state.savedAddresses.map((addr) => {
+            if (addr.id === state.selectedAddressId || state.savedAddresses.length === 1) {
+              return {
+                ...addr,
+                name: cleanedName || addr.name,
+                phone: cleanedPhone || addr.phone,
+              };
+            }
+            return addr;
+          });
+          return {
+            customerName: cleanedName,
+            customerPhone: cleanedPhone,
+            customerProfile: {
+              ...state.customerProfile,
+              name: cleanedName,
+              phone: cleanedPhone,
+              role: 'customer',
+            },
+            savedAddresses: updatedAddresses,
+          };
+        });
       },
 
       setSelectedAddressId: (id) => set({ selectedAddressId: id }),
@@ -110,18 +125,45 @@ export const useCustomerStore = create<CustomerStore>()(
 
       addAddress: (newAddr) => {
         const id = `addr_${Date.now()}`;
-        set((state) => ({
-          savedAddresses: [...state.savedAddresses, { ...newAddr, id }],
-          selectedAddressId: id,
-        }));
+        set((state) => {
+          const finalName = (newAddr.name && newAddr.name.trim()) || state.customerName;
+          const finalPhone = (newAddr.phone && newAddr.phone.trim()) || state.customerPhone;
+          return {
+            customerName: finalName || state.customerName,
+            customerPhone: finalPhone || state.customerPhone,
+            customerProfile: {
+              ...state.customerProfile,
+              name: finalName || state.customerProfile.name,
+              phone: finalPhone || state.customerProfile.phone,
+            },
+            savedAddresses: [
+              ...state.savedAddresses,
+              { ...newAddr, name: finalName, phone: finalPhone, id },
+            ],
+            selectedAddressId: id,
+          };
+        });
       },
 
       updateAddress: (id, updated) => {
-        set((state) => ({
-          savedAddresses: state.savedAddresses.map((addr) =>
+        set((state) => {
+          const updatedAddresses = state.savedAddresses.map((addr) =>
             addr.id === id ? { ...addr, ...updated } : addr
-          ),
-        }));
+          );
+          const isSelected = state.selectedAddressId === id || state.savedAddresses.length === 1;
+          const newName = isSelected && updated.name ? updated.name : state.customerName;
+          const newPhone = isSelected && updated.phone ? updated.phone : state.customerPhone;
+          return {
+            savedAddresses: updatedAddresses,
+            customerName: newName,
+            customerPhone: newPhone,
+            customerProfile: {
+              ...state.customerProfile,
+              name: newName,
+              phone: newPhone,
+            },
+          };
+        });
       },
 
       deleteAddress: (id) => {
@@ -161,7 +203,12 @@ export const useCustomerStore = create<CustomerStore>()(
           return EMPTY_ADDRESS;
         }
         const found = cleanAddresses.find((a) => a.id === state.selectedAddressId);
-        return found || cleanAddresses[0] || EMPTY_ADDRESS;
+        const active = found || cleanAddresses[0] || EMPTY_ADDRESS;
+        return {
+          ...active,
+          name: active.name || state.customerName || '',
+          phone: active.phone || state.customerPhone || '',
+        };
       },
     }),
     {

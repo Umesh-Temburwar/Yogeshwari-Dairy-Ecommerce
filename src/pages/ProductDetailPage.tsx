@@ -34,7 +34,6 @@ export const ProductDetailPage: React.FC = () => {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +47,6 @@ export const ProductDetailPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setIsLoading(true);
     setError(null);
-    setActiveImageIndex(0);
 
     ecommerceApi
       .getProductById(productId)
@@ -112,12 +110,6 @@ export const ProductDetailPage: React.FC = () => {
   const quantity = getItemQuantity(product.id);
   const isWishlisted = isInWishlist(product.id);
   const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
-
-  const galleryImages = [
-    product.imageUrl,
-    'https://images.unsplash.com/photo-1528732263440-4dd1a18a4cc2?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
-  ];
 
   const handleBuyNow = () => {
     if (!isStoreOpen) return;
@@ -225,7 +217,7 @@ export const ProductDetailPage: React.FC = () => {
               {/* Main Image Stage */}
               <div className="relative w-full aspect-square bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden flex items-center justify-center p-6 shadow-2xs group">
                 <img
-                  src={galleryImages[activeImageIndex] || product.imageUrl}
+                  src={product.imageUrl}
                   alt={product.name}
                   className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                 />
@@ -251,24 +243,6 @@ export const ProductDetailPage: React.FC = () => {
                     </span>
                   </div>
                 )}
-              </div>
-
-              {/* Thumbnails Row */}
-              <div className="flex items-center gap-2.5 justify-center">
-                {galleryImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`w-14 h-14 rounded-2xl border-2 p-1 bg-white cursor-pointer transition-all ${
-                      activeImageIndex === idx
-                        ? 'border-emerald-600 ring-2 ring-emerald-600/30 scale-105'
-                        : 'border-slate-200 hover:border-slate-400'
-                    }`}
-                  >
-                    <img src={img} alt={`thumb-${idx}`} className="w-full h-full object-contain" />
-                  </button>
-                ))}
               </div>
 
               {/* Desktop Action Buttons */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   X,
   Share2,
@@ -31,19 +31,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const { isStoreOpen, deliveryEta } = useStoreStatusStore();
 
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-
   if (!product) return null;
 
   const quantity = getItemQuantity(product.id);
   const isWishlisted = isInWishlist(product.id);
-
-  // Alternate image gallery angles
-  const galleryImages = [
-    product.imageUrl,
-    'https://images.unsplash.com/photo-1528732263440-4dd1a18a4cc2?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
-  ];
 
   const handleBuyNow = () => {
     if (!isStoreOpen) return;
@@ -97,7 +88,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               {/* Main Image */}
               <div className="relative w-full aspect-square bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-4">
                 <img
-                  src={galleryImages[activeImageIndex] || product.imageUrl}
+                  src={product.imageUrl}
                   alt={product.name}
                   className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
                 />
@@ -124,24 +115,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     {product.discountPercentage}% OFF
                   </div>
                 )}
-              </div>
-
-              {/* Thumbnail selector */}
-              <div className="flex items-center gap-2 mt-3 justify-center">
-                {galleryImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`w-12 h-12 rounded-xl border p-1 bg-white cursor-pointer transition-all ${
-                      activeImageIndex === idx
-                        ? 'border-emerald-600 ring-2 ring-emerald-600/30'
-                        : 'border-slate-200 hover:border-slate-400'
-                    }`}
-                  >
-                    <img src={img} alt="thumb" className="w-full h-full object-contain" />
-                  </button>
-                ))}
               </div>
             </div>
 
