@@ -33,7 +33,12 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-[#F4F6F8] font-sans antialiased text-[#1C1C1C]">
         {/* Top Sticky Navbar */}
         <Navbar
