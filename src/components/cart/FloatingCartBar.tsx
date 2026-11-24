@@ -19,8 +19,10 @@ export const FloatingCartBar: React.FC = () => {
       {/* Floating WhatsApp Button - Anchored to viewport corner, elevated when cart bar is active */}
       {!isCartDrawerOpen && (
         <div
-          className={`fixed right-4 sm:right-6 z-40 transition-all duration-300 ${
-            hasCartItems ? 'bottom-20 sm:bottom-20' : 'bottom-4 sm:bottom-6'
+          className={`fixed right-3.5 sm:right-6 z-40 transition-all duration-300 ${
+            hasCartItems
+              ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+76px)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom,0px)+16px)]'
           }`}
         >
           <button

@@ -14,10 +14,10 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
   onSelectCategory,
 }) => {
   return (
-    <div className="bg-white border-b border-slate-200/80 sticky top-[108px] z-20 shadow-xs">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4">
-        {/* Horizontal Category Scroller with Snap */}
-        <div className="flex items-start gap-3 sm:gap-4 overflow-x-auto snap-x no-scrollbar scroll-smooth py-2">
+    <div className="bg-white border-b border-slate-200/80 relative z-10 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4">
+        {/* Horizontal Category Scroller with Native Touch Snap */}
+        <div className="flex items-start gap-2.5 sm:gap-4 overflow-x-auto snap-x no-scrollbar scroll-smooth py-2 -mx-1 px-1">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.slug;
             return (
@@ -38,11 +38,11 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
                 className="flex flex-col items-center shrink-0 snap-start group cursor-pointer focus:outline-hidden"
                 aria-label={`Filter by ${cat.name}`}
               >
-                {/* 64px Rounded-2xl Image Tile */}
+                {/* 58px on mobile, 64px on tablet/desktop */}
                 <div
-                  className={`w-16 h-16 rounded-2xl overflow-hidden relative transition-all duration-200 border bg-slate-50 flex items-center justify-center ${
+                  className={`w-[58px] h-[58px] sm:w-16 sm:h-16 rounded-2xl overflow-hidden relative transition-all duration-200 border bg-slate-50 flex items-center justify-center ${
                     isSelected
-                      ? 'border-emerald-600 ring-2 ring-emerald-600 shadow-sm scale-102'
+                      ? 'border-emerald-600 ring-2 ring-emerald-600 shadow-xs scale-102'
                       : 'border-slate-200/90 group-hover:border-emerald-300'
                   }`}
                 >
@@ -56,15 +56,15 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">
+                    <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl">
                       {cat.icon || '🥛'}
                     </div>
                   )}
                 </div>
 
-                {/* Name Below (Max 2 lines, centered, fixed width 72px so no cut with '...') */}
+                {/* Name Below (Max 2 lines, centered, fixed width 68px/72px) */}
                 <span
-                  className={`mt-1.5 w-[72px] text-center text-xs leading-tight line-clamp-2 transition-colors ${
+                  className={`mt-1 sm:mt-1.5 w-[66px] sm:w-[72px] text-center text-[10.5px] sm:text-xs leading-tight line-clamp-2 transition-colors ${
                     isSelected
                       ? 'font-bold text-emerald-700'
                       : 'font-medium text-slate-700 group-hover:text-slate-900'

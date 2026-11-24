@@ -755,7 +755,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Sticky Checkout Bar */}
           {items.length > 0 && (
-            <div className="p-4 bg-white border-t border-brand-slate-border shadow-float shrink-0">
+            <div className="p-3.5 sm:p-4 bg-white border-t border-brand-slate-border shadow-float shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+14px)]">
               {/* Prominent Visible Error Banner in Checkout Bar */}
               {errorMessage && (
                 <div className="mb-2.5 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs animate-shake">

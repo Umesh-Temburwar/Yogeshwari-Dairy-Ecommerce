@@ -396,28 +396,28 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         }}
       />
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 pt-3 space-y-4">
+      <main className="max-w-7xl mx-auto px-2.5 sm:px-4 md:px-6 pt-2.5 sm:pt-3 space-y-3.5 sm:space-y-4">
         {/* Store Closed Banner - Single slim banner at top under header */}
         {!isStoreOpen && (
-          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in border border-red-500/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0 backdrop-blur-xs">
+          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 animate-fade-in border border-red-500/40">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/20 flex items-center justify-center text-lg sm:text-xl shrink-0 backdrop-blur-xs">
                 🌙
               </div>
               <div>
-                <div className="font-extrabold text-sm sm:text-base flex items-center gap-2">
+                <div className="font-extrabold text-xs sm:text-base flex items-center gap-1.5 sm:gap-2">
                   <span>Store is Currently Closed</span>
                   <span className="text-yellow-200 text-xs font-semibold hidden sm:inline">• Opens 6:00 AM</span>
                 </div>
-                <p className="text-xs text-white/90 mt-0.5 leading-relaxed">
-                  Deliveries and online ordering are currently paused. Order dispatch will resume fresh at <strong>6:00 AM</strong>.
+                <p className="text-[11px] sm:text-xs text-white/90 mt-0.5 leading-relaxed">
+                  Ordering paused. Deliveries resume fresh at <strong>6:00 AM</strong>.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
+            <div className="flex items-center gap-2 shrink-0 pt-0.5 sm:pt-0">
               <a
                 href={getStoreCallHref()}
-                className="w-full sm:w-auto text-center bg-white text-red-700 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-50 transition-colors shadow-2xs"
+                className="w-full sm:w-auto text-center bg-white text-red-700 px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-black hover:bg-red-50 transition-colors shadow-2xs"
               >
                 Call Hotline
               </a>
@@ -460,13 +460,13 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
             {/* Blinkit-Style Product RAILS per category */}
             {isLoading ? (
-              <div className="space-y-5 animate-pulse">
+              <div className="space-y-4 sm:space-y-5 animate-pulse">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 space-y-3">
-                    <div className="w-40 h-5 bg-slate-200 rounded" />
-                    <div className="flex gap-3 overflow-hidden">
+                  <div key={i} className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 space-y-3">
+                    <div className="w-36 h-4 sm:h-5 bg-slate-200 rounded" />
+                    <div className="flex gap-2.5 overflow-hidden">
                       {Array.from({ length: 4 }).map((_, j) => (
-                        <div key={j} className="w-36 h-48 bg-slate-100 rounded-xl shrink-0" />
+                        <div key={j} className="w-32 sm:w-36 h-44 sm:h-48 bg-slate-100 rounded-xl shrink-0" />
                       ))}
                     </div>
                   </div>
@@ -477,17 +477,17 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 <p className="text-slate-600 font-medium text-sm">No items in stock right now.</p>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-3.5 sm:space-y-5">
                 {categoryGroups.map((group) => (
                   <section
                     key={group.slug}
                     id={`category-section-${group.slug}`}
-                    className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 shadow-2xs"
+                    className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-4 shadow-2xs"
                   >
                     {/* Rail Header: Category Name + Marathi + Count + See all > */}
-                    <div className="flex items-center justify-between mb-3 px-1">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 px-1">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                           {group.imageUrl ? (
                             <img
                               src={group.imageUrl}
@@ -495,20 +495,20 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-sm">{group.icon || '🥛'}</span>
+                            <span className="text-xs sm:text-sm">{group.icon || '🥛'}</span>
                           )}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <h3 className="font-extrabold text-xs sm:text-base text-slate-900 tracking-tight truncate">
                               {group.name}
                             </h3>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
-                              {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
+                            <span className="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 shrink-0">
+                              {group.items.length}
                             </span>
                           </div>
                           {group.marathiName && (
-                            <p className="text-[10.5px] text-slate-400 font-medium leading-none mt-0.5">
+                            <p className="text-[10px] sm:text-[10.5px] text-slate-400 font-medium leading-none mt-0.5 hidden xs:block truncate">
                               {group.marathiName}
                             </p>
                           )}
@@ -522,7 +522,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                           setSelectedCategory(group.slug);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 cursor-pointer group"
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 cursor-pointer group shrink-0 ml-2"
                         aria-label={`See all ${group.name}`}
                       >
                         <span>See all</span>
@@ -530,12 +530,12 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                       </button>
                     </div>
 
-                    {/* Horizontally scrollable snap row of compact cards (~144px width) */}
-                    <div className="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-1 px-1">
+                    {/* Horizontally scrollable snap row of compact cards (~140px on mobile) */}
+                    <div className="flex items-stretch gap-2 sm:gap-3 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-0.5 px-0.5">
                       {group.items.map((prod) => (
                         <div
                           key={prod.id}
-                          className="w-[144px] sm:w-[160px] snap-start shrink-0 flex"
+                          className="w-[136px] xs:w-[144px] sm:w-[160px] snap-start shrink-0 flex"
                         >
                           <ProductCard
                             product={prod}
@@ -557,8 +557,8 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         {!isHomeView && (
           <div className="space-y-3">
             {/* Header / Filter Top Bar */}
-            <div className="flex items-center justify-between bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-2xs">
-              <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between bg-white rounded-2xl p-2.5 sm:p-4 border border-slate-200/90 shadow-2xs">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -568,28 +568,27 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     setSelectedBrand('All');
                     resetFacets();
                   }}
-                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                   aria-label="Back to all categories"
                   title="Back to all"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <div>
-                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
+                <div className="min-w-0">
+                  <h2 className="font-extrabold text-xs sm:text-base text-slate-900 leading-tight truncate">
                     {searchQuery
                       ? `Search: "${searchQuery}"`
                       : selectedBrand !== 'All'
                       ? `${selectedBrand} Products`
                       : activeCategoryObj?.name || 'Category'}
                   </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} available
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} available
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Reset filters shortcut */}
+              <div className="flex items-center gap-2 shrink-0 ml-2">
                 {(selectedCategory !== 'all' || selectedBrand !== 'All' || searchQuery) && (
                   <button
                     type="button"
@@ -610,11 +609,11 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
             {/* Active Brand Filter Notice */}
             {selectedBrand !== 'All' && (
-              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-slate-500 font-medium">Filtered Brand:</span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-extrabold text-xs shadow-2xs">
-                    <span>{selectedBrand}</span>
+              <div className="flex items-center justify-between bg-white border border-emerald-200/90 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+                  <span className="text-xs text-slate-500 font-medium">Brand:</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 font-extrabold text-xs shadow-2xs">
+                    <span className="truncate max-w-[120px]">{selectedBrand}</span>
                     <button
                       type="button"
                       onClick={() => handleBrandChange('All')}
@@ -628,7 +627,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 <button
                   type="button"
                   onClick={() => handleBrandChange('All')}
-                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer shrink-0 ml-2"
                 >
                   All Brands
                 </button>
@@ -637,7 +636,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
 
             {/* Blinkit Layout: Left Rail + Right Product Grid */}
             <div className="flex gap-2 sm:gap-4 items-start">
-              {/* Left Vertical Rail (~80px mobile, 240px desktop) */}
+              {/* Left Vertical Rail (~70px on mobile, 240px desktop) */}
               <BlinkitCategorySidebar
                 categories={displayedCategories}
                 selectedCategory={selectedCategory}
@@ -648,7 +647,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
               />
 
               {/* Right Side: Active Chips + Product Grid (2 cols mobile, 3-4 desktop) */}
-              <div className="flex-1 min-w-0 space-y-2.5">
+              <div className="flex-1 min-w-0 space-y-2 sm:space-y-2.5">
                 {/* Active Filter Chips */}
                 <ActiveFilterChips
                   facets={facets}
@@ -657,13 +656,13 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 />
 
                 {/* Quick Sort / Filter Bar (Blinkit Style) */}
-                <div className="flex items-center justify-between bg-white rounded-xl p-2 sm:px-3 border border-slate-200/80 text-xs">
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">Sort:</span>
+                <div className="flex items-center justify-between bg-white rounded-xl p-1.5 sm:p-2 sm:px-3 border border-slate-200/80 text-xs">
+                  <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                    <span className="text-[10.5px] font-semibold text-slate-400 hidden sm:inline">Sort:</span>
                     <button
                       type="button"
                       onClick={() => setSortOption('relevance')}
-                      className={`px-2.5 py-1 rounded-lg font-bold text-xs transition-colors shrink-0 ${
+                      className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold text-[11px] sm:text-xs transition-colors shrink-0 ${
                         sortOption === 'relevance'
                           ? 'bg-emerald-700 text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -674,36 +673,36 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     <button
                       type="button"
                       onClick={() => setSortOption('price_asc')}
-                      className={`px-2.5 py-1 rounded-lg font-bold text-xs transition-colors shrink-0 ${
+                      className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold text-[11px] sm:text-xs transition-colors shrink-0 ${
                         sortOption === 'price_asc'
                           ? 'bg-emerald-700 text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
-                      Price: Low to High
+                      Price: Low
                     </button>
                     <button
                       type="button"
                       onClick={() => setSortOption('price_desc')}
-                      className={`px-2.5 py-1 rounded-lg font-bold text-xs transition-colors shrink-0 ${
+                      className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold text-[11px] sm:text-xs transition-colors shrink-0 ${
                         sortOption === 'price_desc'
                           ? 'bg-emerald-700 text-white shadow-2xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
-                      Price: High to Low
+                      Price: High
                     </button>
                   </div>
 
-                  <span className="text-[11px] font-bold text-slate-500 shrink-0 pl-2">
+                  <span className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 shrink-0 pl-1.5">
                     {filteredProducts.length} items
                   </span>
                 </div>
 
                 {isLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 animate-pulse">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 animate-pulse">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl h-56 border border-slate-100" />
+                      <div key={i} className="bg-white rounded-2xl h-48 sm:h-56 border border-slate-100" />
                     ))}
                   </div>
                 ) : filteredProducts.length === 0 ? (
@@ -721,7 +720,7 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                     onClearSearch={onClearSearch}
                   />
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                     {filteredProducts.map((p) => (
                       <ProductCard
                         key={p.id}
@@ -737,16 +736,18 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
         )}
       </main>
 
-      {/* Mobile Floating Filter Drawer */}
-      <MobileFilterDrawer
-        facets={facets}
-        onUpdateFacets={setFacets}
-        onResetFacets={resetFacets}
-        availableBrands={availableBrands}
-        sortOption={sortOption}
-        onSelectSort={setSortOption}
-        totalFilteredCount={filteredProducts.length}
-      />
+      {/* Mobile Floating Filter Drawer (Shown only in drill-down/search view) */}
+      {!isHomeView && (
+        <MobileFilterDrawer
+          facets={facets}
+          onUpdateFacets={setFacets}
+          onResetFacets={resetFacets}
+          availableBrands={availableBrands}
+          sortOption={sortOption}
+          onSelectSort={setSortOption}
+          totalFilteredCount={filteredProducts.length}
+        />
+      )}
 
       {/* Floating Back to Top Button */}
       <BackToTopButton />

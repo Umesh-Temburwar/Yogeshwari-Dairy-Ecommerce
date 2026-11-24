@@ -5,6 +5,7 @@ import {
   Heart,
   Truck,
   Tag,
+  ArrowRight,
 } from 'lucide-react';
 import { Product } from '@/types/ecommerce';
 import { useCartStore } from '@/store/cartStore';
@@ -60,7 +61,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Blinkit Split Modal Window */}
-      <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col md:flex-row animate-scale-in border border-slate-200">
+      <div className="relative w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 max-h-[92vh] flex flex-col animate-scale-in border border-slate-200">
         {/* Close Button & Share */}
         <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
           <button
@@ -69,7 +70,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               triggerHaptic('light');
               shareProductOnWhatsApp(product.name, product.price);
             }}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-full bg-white/90 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 flex items-center justify-center cursor-pointer transition-colors shadow-xs"
             title="Share on WhatsApp"
             aria-label="Share on WhatsApp"
           >
@@ -80,7 +81,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
               triggerHaptic('light');
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white/90 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer shadow-xs"
             title="Close"
             aria-label="Close"
           >
@@ -88,203 +89,258 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
           </button>
         </div>
 
-        {/* LEFT COLUMN: Gallery & Buy Actions */}
-        <div className="w-full md:w-5/12 bg-white p-4 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-between">
-          <div>
-            {/* Main Image */}
-            <div className="relative w-full aspect-square bg-slate-50 border border-slate-100 rounded-xl overflow-hidden flex items-center justify-center p-4">
-              <img
-                src={galleryImages[activeImageIndex] || product.imageUrl}
-                alt={product.name}
-                className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
-              />
-
-              {/* Wishlist Heart */}
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  toggleWishlist(product);
-                }}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-xs flex items-center justify-center cursor-pointer hover:scale-110 active:scale-90 transition-all"
-                title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              >
-                <Heart
-                  className={`w-4 h-4 ${
-                    isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-400'
-                  }`}
+        {/* Scrollable Modal Content (Split layout on desktop) */}
+        <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col md:flex-row">
+          {/* LEFT COLUMN: Gallery & Buy Actions (Desktop) */}
+          <div className="w-full md:w-5/12 bg-white p-4 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-between shrink-0">
+            <div>
+              {/* Main Image */}
+              <div className="relative w-full aspect-square bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-4">
+                <img
+                  src={galleryImages[activeImageIndex] || product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
                 />
-              </button>
 
-              {product.discountPercentage && product.discountPercentage > 0 && (
-                <div className="absolute top-2 left-2 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
-                  {product.discountPercentage}% OFF
-                </div>
-              )}
+                {/* Wishlist Heart */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    toggleWishlist(product);
+                  }}
+                  className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow-xs flex items-center justify-center cursor-pointer hover:scale-110 active:scale-90 transition-all"
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                >
+                  <Heart
+                    className={`w-4 h-4 ${
+                      isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-400'
+                    }`}
+                  />
+                </button>
+
+                {product.discountPercentage && product.discountPercentage > 0 && (
+                  <div className="absolute top-2.5 left-2.5 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
+                    {product.discountPercentage}% OFF
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail selector */}
+              <div className="flex items-center gap-2 mt-3 justify-center">
+                {galleryImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`w-12 h-12 rounded-xl border p-1 bg-white cursor-pointer transition-all ${
+                      activeImageIndex === idx
+                        ? 'border-emerald-600 ring-2 ring-emerald-600/30'
+                        : 'border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    <img src={img} alt="thumb" className="w-full h-full object-contain" />
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Thumbnail selector */}
-            <div className="flex items-center gap-2 mt-3 justify-center">
-              {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`w-12 h-12 rounded-xl border p-1 bg-white cursor-pointer transition-all ${
-                    activeImageIndex === idx
-                      ? 'border-emerald-600 ring-2 ring-emerald-600/30'
-                      : 'border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  <img src={img} alt="thumb" className="w-full h-full object-contain" />
-                </button>
-              ))}
+            {/* Desktop-only action buttons */}
+            <div className="hidden md:grid md:grid-cols-2 gap-2 pt-4 mt-auto">
+              <button
+                type="button"
+                disabled={!isStoreOpen}
+                onClick={() => {
+                  if (!isStoreOpen) return;
+                  triggerHaptic('medium');
+                  addItem(product);
+                }}
+                className="py-3 px-2 bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-600 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 font-extrabold text-xs rounded-xl uppercase shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 leading-none"
+              >
+                <span>{quantity > 0 ? `Added (${quantity})` : 'Add to Cart'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!isStoreOpen}
+                onClick={handleBuyNow}
+                className="py-3 px-2 bg-[#0C831F] hover:bg-[#086617] disabled:bg-slate-200 text-white font-extrabold text-xs rounded-xl uppercase shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 leading-none"
+              >
+                <span>Buy Now</span>
+              </button>
             </div>
           </div>
 
-          {/* Action Buttons: Add to Cart (Emerald) & Buy Now (Yellow) */}
-          <div className="grid grid-cols-2 gap-2 pt-4 mt-auto">
-            <button
-              type="button"
-              disabled={!isStoreOpen}
-              onClick={() => {
-                if (!isStoreOpen) return;
-                triggerHaptic('medium');
-                addItem(product);
-              }}
-              className="py-3 px-2 bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-600 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 font-extrabold text-xs rounded-xl uppercase shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 leading-none"
-            >
-              <span>{quantity > 0 ? `Added (${quantity})` : 'Add to Cart'}</span>
-            </button>
+          {/* RIGHT COLUMN: Details, Specifications, Highlights */}
+          <div className="w-full md:w-7/12 p-4 sm:p-6 space-y-4">
+            {/* Brand & Title */}
+            <div>
+              {product.brand && (
+                <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">
+                  {product.brand}
+                </span>
+              )}
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                {product.name}
+              </h2>
+              {product.marathiName && (
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                  {product.marathiName}
+                </p>
+              )}
+            </div>
 
-            <button
-              type="button"
-              disabled={!isStoreOpen}
-              onClick={handleBuyNow}
-              className="py-3 px-2 bg-[#0C831F] hover:bg-[#086617] disabled:bg-slate-200 text-white font-extrabold text-xs rounded-xl uppercase shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 leading-none"
-            >
-              <span>Buy Now</span>
-            </button>
+            {/* Ratings & Pure Assured */}
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-0.5 bg-[#0C831F] text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                <span>{product.rating ? product.rating.toFixed(1) : '4.6'}</span>
+                <span>★</span>
+              </div>
+              <span className="text-xs text-slate-500 font-medium">
+                {product.ratingCount || 128} Ratings &amp; 32 Reviews
+              </span>
+              <PureAssuredBadge />
+            </div>
+
+            {/* Price & Discount */}
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-slate-900">
+                  {formatPrice(product.price)}
+                </span>
+                {product.mrp > product.price && (
+                  <>
+                    <span className="text-sm text-slate-400 line-through">
+                      {formatPrice(product.mrp)}
+                    </span>
+                    <span className="text-sm font-bold text-emerald-700">
+                      {product.discountPercentage || Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-[11px] text-emerald-700 font-semibold">
+                Special Price • Inclusive of all taxes
+              </p>
+            </div>
+
+            {/* Delivery Promise */}
+            <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                <Truck className="w-4 h-4 text-emerald-700" />
+                <span>Speed Delivery to Ambajogai Mandi Hub</span>
+              </div>
+              <p className="text-slate-600 text-[11px]">
+                Guaranteed delivery in <strong>{deliveryEta || DELIVERY_ETA_TEXT}</strong> with fresh temperature-controlled handling.
+              </p>
+            </div>
+
+            {/* Available Offers */}
+            <div className="space-y-1.5 text-xs">
+              <span className="font-extrabold text-slate-900 uppercase text-[11px] tracking-wide block">
+                Available Offers:
+              </span>
+              <div className="flex items-start gap-2 text-slate-700">
+                <Tag className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Bank Offer:</strong> Flat ₹50 off on first UPI order using code DAIRY50.
+                </span>
+              </div>
+              <div className="flex items-start gap-2 text-slate-700">
+                <Tag className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Fresh Guarantee:</strong> 100% money back if not satisfied with milk freshness.
+                </span>
+              </div>
+            </div>
+
+            {/* Product Highlights */}
+            <div className="space-y-2 text-xs border-t border-slate-100 pt-3">
+              <span className="font-extrabold text-slate-900 uppercase text-[11px] tracking-wide block">
+                Product Highlights:
+              </span>
+              <ul className="space-y-1 text-slate-700 list-disc list-inside">
+                <li>100% Pure &amp; Farm-Fresh direct from dairy farmers</li>
+                <li>Untouched by hand, hygienically packed</li>
+                <li>Rich in natural calcium, protein and vitamins</li>
+                <li>Free from artificial preservatives or adulterants</li>
+              </ul>
+            </div>
+
+            {/* Specifications Table */}
+            <div className="pt-2">
+              <ProductSpecificationsTable product={product} />
+            </div>
+
+            {/* Customer Ratings Breakdown */}
+            <div className="pt-2">
+              <ProductRatingsBreakdown
+                rating={product.rating || 4.7}
+                ratingCount={product.ratingCount || 142}
+              />
+            </div>
+
+            {/* Frequently Bought Together Bundle */}
+            <div className="pt-2">
+              <FrequentlyBoughtTogether currentProduct={product} />
+            </div>
+
+            {/* Customer Reviews List */}
+            <div className="pt-2">
+              <ProductReviewsList productName={product.name} />
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Details, Specifications, Highlights */}
-        <div className="w-full md:w-7/12 p-4 sm:p-6 overflow-y-auto no-scrollbar space-y-4">
-          {/* Brand & Title */}
-          <div>
-            {product.brand && (
-              <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">
-                {product.brand}
-              </span>
-            )}
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-              {product.name}
-            </h2>
-            {product.marathiName && (
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                {product.marathiName}
-              </p>
-            )}
-          </div>
-
-          {/* Ratings & Pure Assured */}
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-0.5 bg-[#0C831F] text-white text-xs font-bold px-2 py-0.5 rounded-md">
-              <span>{product.rating ? product.rating.toFixed(1) : '4.6'}</span>
-              <span>★</span>
-            </div>
-            <span className="text-xs text-slate-500 font-medium">
-              {product.ratingCount || 128} Ratings &amp; 32 Reviews
-            </span>
-            <PureAssuredBadge />
-          </div>
-
-          {/* Price & Discount */}
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900">
+        {/* Mobile Sticky Bottom Action Bar (Thumb-Friendly) */}
+        <div className="md:hidden sticky bottom-0 inset-x-0 bg-white border-t border-slate-200/90 p-3 flex items-center justify-between gap-3 shadow-float z-20 pb-safe">
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-black text-slate-900 leading-none">
                 {formatPrice(product.price)}
               </span>
               {product.mrp > product.price && (
-                <>
-                  <span className="text-sm text-slate-400 line-through">
-                    {formatPrice(product.mrp)}
-                  </span>
-                  <span className="text-sm font-bold text-emerald-700">
-                    {product.discountPercentage || Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
-                  </span>
-                </>
+                <span className="text-xs text-slate-400 line-through">
+                  {formatPrice(product.mrp)}
+                </span>
               )}
             </div>
-            <p className="text-[11px] text-emerald-700 font-semibold">
-              Special Price • Inclusive of all taxes
-            </p>
-          </div>
-
-          {/* Delivery Promise */}
-          <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-950">
-              <Truck className="w-4 h-4 text-emerald-700" />
-              <span>Speed Delivery to Ambajogai Mandi Hub</span>
-            </div>
-            <p className="text-slate-600 text-[11px]">
-              Guaranteed delivery in <strong>{deliveryEta || DELIVERY_ETA_TEXT}</strong> with fresh temperature-controlled handling.
-            </p>
-          </div>
-
-          {/* Available Offers */}
-          <div className="space-y-1.5 text-xs">
-            <span className="font-extrabold text-slate-900 uppercase text-[11px] tracking-wide block">
-              Available Offers:
+            <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
+              Inclusive of all taxes
             </span>
-            <div className="flex items-start gap-2 text-slate-700">
-              <Tag className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
-              <span>
-                <strong>Bank Offer:</strong> Flat ₹50 off on first UPI order using code DAIRY50.
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {!product.inStock ? (
+              <span className="text-xs font-bold text-slate-400 uppercase px-3 py-2 bg-slate-100 rounded-xl">
+                Out of Stock
               </span>
-            </div>
-            <div className="flex items-start gap-2 text-slate-700">
-              <Tag className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
-              <span>
-                <strong>Fresh Guarantee:</strong> 100% money back if not satisfied with milk freshness.
+            ) : !isStoreOpen ? (
+              <span className="text-xs font-bold text-slate-400 px-3 py-2 bg-slate-100 rounded-xl">
+                Closed
               </span>
-            </div>
-          </div>
-
-          {/* Product Highlights */}
-          <div className="space-y-2 text-xs border-t border-slate-100 pt-3">
-            <span className="font-extrabold text-slate-900 uppercase text-[11px] tracking-wide block">
-              Product Highlights:
-            </span>
-            <ul className="space-y-1 text-slate-700 list-disc list-inside">
-              <li>100% Pure &amp; Farm-Fresh direct from dairy farmers</li>
-              <li>Untouched by hand, hygienically packed</li>
-              <li>Rich in natural calcium, protein and vitamins</li>
-              <li>Free from artificial preservatives or adulterants</li>
-            </ul>
-          </div>
-
-          {/* Specifications Table */}
-          <div className="pt-2">
-            <ProductSpecificationsTable product={product} />
-          </div>
-
-          {/* Customer Ratings Breakdown */}
-          <div className="pt-2">
-            <ProductRatingsBreakdown
-              rating={product.rating || 4.7}
-              ratingCount={product.ratingCount || 142}
-            />
-          </div>
-
-          {/* Frequently Bought Together Bundle */}
-          <div className="pt-2">
-            <FrequentlyBoughtTogether currentProduct={product} />
-          </div>
-
-          {/* Customer Reviews List */}
-          <div className="pt-2">
-            <ProductReviewsList productName={product.name} />
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    addItem(product);
+                  }}
+                  className="py-2.5 px-3.5 bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-600 font-extrabold text-xs rounded-xl shadow-xs transition-transform active:scale-95"
+                >
+                  {quantity > 0 ? `ADDED (${quantity})` : 'ADD'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="py-2.5 px-3.5 bg-[#0C831F] hover:bg-[#086617] text-white font-extrabold text-xs rounded-xl shadow-xs transition-transform active:scale-95 flex items-center gap-1"
+                >
+                  <span>BUY NOW</span>
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
