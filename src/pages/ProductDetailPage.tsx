@@ -473,7 +473,10 @@ export const ProductDetailPage: React.FC = () => {
                   key={p.id}
                   className="w-[144px] sm:w-[160px] snap-start shrink-0 flex"
                 >
-                  <ProductCard product={p} />
+                  <ProductCard
+                    product={p}
+                    onOpenDetails={(selected) => navigate(`/product/${selected.id}`)}
+                  />
                 </div>
               ))}
             </div>

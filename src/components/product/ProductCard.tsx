@@ -9,7 +9,7 @@ import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { PureAssuredBadge } from './PureAssuredBadge';
 
-interface ProductCardProps {
+export interface ProductCardProps {
   product: Product;
   onOpenDetails?: (product: Product) => void;
 }
