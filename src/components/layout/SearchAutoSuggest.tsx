@@ -34,16 +34,16 @@ export const SearchAutoSuggest: React.FC<SearchAutoSuggestProps> = ({
   );
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xs shadow-2xl border border-slate-200 z-50 overflow-hidden text-slate-800 text-xs animate-fade-in">
+    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden text-slate-800 text-xs animate-fade-in">
       <div className="p-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-          <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
           Popular Dairy Searches
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="text-[11px] text-blue-600 hover:underline cursor-pointer"
+          className="text-[11px] text-emerald-700 font-bold hover:underline cursor-pointer"
         >
           Close
         </button>
@@ -60,7 +60,7 @@ export const SearchAutoSuggest: React.FC<SearchAutoSuggestProps> = ({
                 onSelectQuery(term);
                 onClose();
               }}
-              className="w-full px-3.5 py-2 hover:bg-blue-50 text-slate-700 flex items-center justify-between text-left transition-colors cursor-pointer"
+              className="w-full px-3.5 py-2.5 hover:bg-emerald-50/70 text-slate-700 flex items-center justify-between text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
                 <Search className="w-3.5 h-3.5 text-slate-400" />
@@ -71,7 +71,7 @@ export const SearchAutoSuggest: React.FC<SearchAutoSuggestProps> = ({
           ))
         ) : (
           <div className="px-3.5 py-3 text-slate-500 text-center">
-            No specific suggestions. Press Enter to search "{searchQuery}"
+            Press Enter to search "{searchQuery}"
           </div>
         )}
       </div>

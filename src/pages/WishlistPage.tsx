@@ -28,7 +28,7 @@ export const WishlistPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F1F3F6] py-4 sm:py-6 px-3 sm:px-6">
+    <div className="min-h-screen bg-[#F7F9FA] py-4 sm:py-6 px-3 sm:px-6">
       <div className="max-w-5xl mx-auto space-y-4">
         {/* Breadcrumb & Header */}
         <div className="flex items-center justify-between">
@@ -36,7 +36,7 @@ export const WishlistPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="p-1 hover:bg-slate-200 rounded text-slate-700 cursor-pointer"
+              className="p-1 hover:bg-slate-200 rounded-xl text-slate-700 cursor-pointer"
               title="Back"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -51,7 +51,7 @@ export const WishlistPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAddAllToCart}
-                className="px-3.5 py-1.5 bg-[#2874F0] hover:bg-[#1A5DC8] text-white font-bold text-xs rounded-xs shadow-xs cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-[#0C831F] hover:bg-[#086617] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
                 <span>Move All to Cart</span>
@@ -59,7 +59,7 @@ export const WishlistPage: React.FC = () => {
               <button
                 type="button"
                 onClick={clearWishlist}
-                className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs rounded-xs cursor-pointer"
+                className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs rounded-xl cursor-pointer transition-colors"
               >
                 Clear All
               </button>
@@ -69,16 +69,16 @@ export const WishlistPage: React.FC = () => {
 
         {/* Wishlist Items List or Empty State */}
         {count > 0 ? (
-          <div className="bg-white border border-[#E0E0E0] rounded-xs divide-y divide-slate-100 shadow-xs">
+          <div className="bg-white border border-slate-100 rounded-2xl divide-y divide-slate-100 shadow-2xs overflow-hidden">
             {items.map((item) => {
               const p = item.product;
               return (
                 <div
                   key={item.productId}
-                  className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors"
+                  className="p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                    <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-xs overflow-hidden p-2 flex items-center justify-center shrink-0">
+                    <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden p-2 flex items-center justify-center shrink-0">
                       <img
                         src={p.imageUrl}
                         alt={p.name}
@@ -89,7 +89,7 @@ export const WishlistPage: React.FC = () => {
                     <div className="space-y-1 min-w-0">
                       <h3 className="font-bold text-sm text-slate-900 truncate">{p.name}</h3>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="bg-[#388E3C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-xs">
+                        <span className="bg-[#0C831F] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-md">
                           {p.rating ? p.rating.toFixed(1) : '4.5'} ★
                         </span>
                         <span className="text-slate-400">({p.ratingCount || 48})</span>
@@ -104,7 +104,7 @@ export const WishlistPage: React.FC = () => {
                             <span className="text-xs text-slate-400 line-through">
                               {formatPrice(p.mrp)}
                             </span>
-                            <span className="text-xs font-bold text-[#388E3C]">
+                            <span className="text-xs font-bold text-emerald-700">
                               {p.discountPercentage || Math.round(((p.mrp - p.price) / p.mrp) * 100)}% off
                             </span>
                           </>
@@ -113,23 +113,23 @@ export const WishlistPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto justify-end">
+                  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                     <button
                       type="button"
                       onClick={() => handleMoveToCart(p)}
-                      className="px-4 py-2 bg-[#FF9F00] hover:bg-[#E58F00] text-white font-bold text-xs rounded-xs shadow-2xs cursor-pointer flex items-center gap-1.5"
+                      className="px-3 py-1.5 bg-[#0C831F] hover:bg-[#086617] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1 transition-all"
                     >
-                      <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Move to Cart</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         triggerHaptic('light');
-                        removeFromWishlist(p.id);
+                        removeFromWishlist(item.productId);
                       }}
-                      className="p-2 text-slate-400 hover:text-rose-600 cursor-pointer rounded hover:bg-slate-100"
-                      title="Remove from Wishlist"
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl cursor-pointer transition-colors"
+                      title="Remove from wishlist"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -139,22 +139,22 @@ export const WishlistPage: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white border border-[#E0E0E0] rounded-xs p-12 text-center space-y-4 shadow-xs">
-            <div className="w-20 h-20 rounded-full bg-blue-50 text-[#2874F0] flex items-center justify-center mx-auto shadow-inner">
-              <Heart className="w-10 h-10 text-[#2874F0]" />
+          <div className="bg-white border border-slate-100 rounded-2xl p-10 text-center space-y-4 shadow-2xs">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 mx-auto flex items-center justify-center">
+              <Heart className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Your Wishlist is Empty!</h2>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Explore our pure dairy products, fresh cow milk, desi ghee, and sweets, and tap the heart icon to save items.
+              <h2 className="text-base font-extrabold text-slate-900">Your wishlist is empty</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Explore our pure fresh dairy products and tap the heart icon to save your favorites!
               </p>
             </div>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#2874F0] hover:bg-[#1A5DC8] text-white text-xs font-bold rounded-xs cursor-pointer shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0C831F] hover:bg-[#086617] text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
             >
-              <span>Continue Shopping</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Explore Fresh Dairy</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         )}

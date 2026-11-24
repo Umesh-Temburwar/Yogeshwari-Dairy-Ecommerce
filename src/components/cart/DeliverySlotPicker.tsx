@@ -44,7 +44,7 @@ export const DeliverySlotPicker: React.FC<DeliverySlotPickerProps> = ({
     <div className="space-y-2 text-xs">
       <div className="flex items-center justify-between text-slate-800 font-bold">
         <span>Preferred Delivery Slot:</span>
-        <span className="text-[10px] text-blue-600 font-semibold">Scheduled Dispatch</span>
+        <span className="text-[10px] text-emerald-700 font-semibold">Scheduled Dispatch</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -58,18 +58,18 @@ export const DeliverySlotPicker: React.FC<DeliverySlotPickerProps> = ({
                 triggerHaptic('light');
                 onSelectSlot(slot.id);
               }}
-              className={`p-2.5 rounded-xs border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                 isSelected
-                  ? 'border-[#2874F0] bg-blue-50/70 shadow-2xs'
+                  ? 'border-[#0C831F] bg-emerald-50 text-emerald-900 shadow-2xs'
                   : 'border-slate-200 bg-white hover:bg-slate-50'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-slate-900 flex items-center gap-1">
-                  {slot.isExpress && <Zap className="w-3 h-3 text-[#FF9F00] fill-[#FF9F00]" />}
+                  {slot.isExpress && <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />}
                   {slot.title}
                 </span>
-                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#2874F0]" />}
+                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#0C831F]" />}
               </div>
               <span className="text-[11px] text-slate-500 font-medium mt-1">
                 {slot.timeRange}

@@ -91,19 +91,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
     >
       {/* Product Image Area with ONE subtle badge max */}
       <div className="relative w-full aspect-square bg-slate-50/80 rounded-xl overflow-hidden mb-2 p-3 flex items-center justify-center">
-        {/* Wishlist Heart Toggle Button (Flipkart Style) */}
+        {/* Wishlist Heart Toggle Button (Blinkit Style) */}
         <button
           type="button"
           onClick={handleToggleWishlist}
-          className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 active:scale-90 transition-all cursor-pointer focus:outline-hidden"
+          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 active:scale-90 transition-all cursor-pointer focus:outline-hidden"
           title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
           aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
           <Heart
-            className={`w-4 h-4 transition-colors ${
+            className={`w-3.5 h-3.5 transition-colors ${
               isWishlisted
-                ? 'fill-[#E53935] text-[#E53935]'
-                : 'text-slate-400 hover:text-slate-600'
+                ? 'fill-rose-500 text-rose-500'
+                : 'text-slate-400 hover:text-rose-500'
             }`}
           />
         </button>
@@ -149,9 +149,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           {product.name}
         </h4>
 
-        {/* Flipkart Rating Pill & Pure Assured Seal */}
+        {/* Blinkit Rating Pill & Pure Assured Seal */}
         <div className="flex items-center gap-1.5 mt-1">
-          <div className="inline-flex items-center gap-0.5 bg-[#388E3C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-xs leading-none">
+          <div className="inline-flex items-center gap-0.5 bg-[#0C831F] text-white text-[10px] font-bold px-1.5 py-0.2 rounded-md leading-none">
             <span>{product.rating ? product.rating.toFixed(1) : '4.5'}</span>
             <span className="text-[9px]">★</span>
           </div>
@@ -163,7 +163,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
 
         {/* Pack Size / Unit & Clickable Brand Chip */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-1 truncate">
-          <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-xs text-[10px] font-bold">
+          <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold">
             {product.packSize || product.unit || 'Standard'}
           </span>
           {product.brand && (
@@ -172,7 +172,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
               <button
                 type="button"
                 onClick={handleBrandClick}
-                className="text-[10px] font-bold text-[#2874F0] bg-blue-50 hover:bg-blue-100 hover:text-[#1A5DC8] px-1.5 py-0.5 rounded-xs border border-blue-100 truncate cursor-pointer transition-colors"
+                className="text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-900 px-1.5 py-0.5 rounded-md border border-emerald-100/80 truncate cursor-pointer transition-colors"
                 title={`View all ${product.brand} products`}
               >
                 {product.brand}
@@ -188,10 +188,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           </p>
         )}
 
-        {/* Flipkart Fast Delivery Guarantee */}
+        {/* Fast Delivery Guarantee */}
         <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium mt-1">
-          <span className="text-[#FF9F00] font-bold">⚡</span>
-          <span>Free delivery in 15 mins</span>
+          <span className="text-amber-500 font-bold">⚡</span>
+          <span>10-15 mins delivery</span>
         </div>
       </div>
 
@@ -207,7 +207,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 <span className="text-xs text-slate-400 line-through font-normal">
                   {formatPrice(product.mrp)}
                 </span>
-                <span className="text-[11px] font-bold text-[#388E3C] leading-none">
+                <span className="text-[11px] font-bold text-emerald-700 leading-none">
                   {product.discountPercentage || Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
                 </span>
               </>
@@ -241,18 +241,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
             <button
               type="button"
               onClick={handleAdd}
-              className="h-8 min-h-[32px] min-w-[64px] bg-white hover:bg-blue-50 text-[#2874F0] border border-[#2874F0] font-bold text-xs px-3 rounded-xs shadow-2xs transition-all active:scale-95 flex items-center justify-center gap-0.5 cursor-pointer focus:outline-hidden"
+              className="h-9 min-h-[36px] min-w-[64px] bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-600 font-bold text-xs px-3 rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center gap-0.5 cursor-pointer focus:outline-hidden"
               aria-label={`Add ${product.name} to cart`}
             >
               <span>ADD</span>
               <span className="text-sm font-bold leading-none">+</span>
             </button>
           ) : (
-            <div className="flex items-center bg-[#2874F0] text-white rounded-xs shadow-2xs overflow-hidden h-8 min-h-[32px]">
+            <div className="flex items-center bg-emerald-700 text-white rounded-xl shadow-xs overflow-hidden h-9 min-h-[36px]">
               <button
                 type="button"
                 onClick={handleDecrement}
-                className="w-7 h-8 flex items-center justify-center hover:bg-black/15 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
+                className="w-7 h-9 flex items-center justify-center hover:bg-black/20 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
                 aria-label={`Decrease quantity of ${product.name}`}
                 title="Decrease"
               >
@@ -265,7 +265,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
                 type="button"
                 disabled={isMaxStock}
                 onClick={handleIncrement}
-                className="w-7 h-8 flex items-center justify-center disabled:opacity-40 hover:bg-black/15 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
+                className="w-7 h-9 flex items-center justify-center disabled:opacity-40 hover:bg-black/20 active:scale-90 transition-transform cursor-pointer focus:outline-hidden"
                 aria-label={`Increase quantity of ${product.name}`}
                 title={isMaxStock ? 'Max stock reached' : 'Increase'}
               >

@@ -35,19 +35,21 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ onOpenAddressM
           triggerHaptic('light');
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xs hover:bg-white/10 text-white font-semibold text-xs transition-colors cursor-pointer focus:outline-hidden"
+        className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-semibold text-xs transition-colors cursor-pointer focus:outline-hidden"
         aria-expanded={isOpen}
         aria-label="User Account Menu"
       >
-        <User className="w-4 h-4" />
+        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+          <User className="w-3.5 h-3.5" />
+        </div>
         <span className="hidden lg:inline">{displayName}</span>
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-xs shadow-xl border border-slate-200 py-1 z-50 text-slate-800 text-xs animate-fade-in">
-          <div className="px-3.5 py-2.5 border-b border-slate-100 bg-slate-50">
-            <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">
+        <div className="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-50 text-slate-800 text-xs animate-fade-in overflow-hidden">
+          <div className="px-3.5 py-2.5 border-b border-slate-100 bg-emerald-50/50">
+            <span className="text-[10px] text-emerald-800 uppercase font-bold tracking-wider block">
               Welcome to Yogeshwari
             </span>
             <span className="font-bold text-slate-900 text-sm truncate block">
@@ -58,18 +60,18 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ onOpenAddressM
           <Link
             to="/orders"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-blue-50 text-slate-700 hover:text-[#2874F0] transition-colors"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 transition-colors"
           >
-            <Package className="w-4 h-4 text-slate-500" />
+            <Package className="w-4 h-4 text-emerald-700" />
             <span className="font-medium">My Orders</span>
           </Link>
 
           <Link
             to="/wishlist"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-blue-50 text-slate-700 hover:text-[#2874F0] transition-colors"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 transition-colors"
           >
-            <Heart className="w-4 h-4 text-slate-500" />
+            <Heart className="w-4 h-4 text-rose-500" />
             <span className="font-medium">Wishlist</span>
           </Link>
 
@@ -79,19 +81,19 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ onOpenAddressM
               setIsOpen(false);
               onOpenAddressModal();
             }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-blue-50 text-slate-700 hover:text-[#2874F0] transition-colors text-left cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 transition-colors text-left cursor-pointer"
           >
-            <MapPin className="w-4 h-4 text-slate-500" />
+            <MapPin className="w-4 h-4 text-emerald-700" />
             <span className="font-medium">Saved Addresses</span>
           </button>
 
           <a
             href="tel:+919370869896"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-blue-50 text-slate-700 hover:text-[#2874F0] transition-colors border-t border-slate-100"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 transition-colors border-t border-slate-100"
           >
-            <Headphones className="w-4 h-4 text-slate-500" />
-            <span className="font-medium">24x7 Support Hotline</span>
+            <Headphones className="w-4 h-4 text-emerald-700" />
+            <span className="font-medium">Store Hotline (+91 93708 69896)</span>
           </a>
         </div>
       )}
