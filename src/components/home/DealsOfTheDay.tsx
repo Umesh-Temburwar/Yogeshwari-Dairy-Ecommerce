@@ -6,7 +6,7 @@ import { triggerHaptic } from '@/utils/haptics';
 
 interface DealsOfTheDayProps {
   products: Product[];
-  onOpenDetails: (product: Product) => void;
+  onOpenDetails?: (product: Product) => void;
   onViewAllDeals?: () => void;
 }
 

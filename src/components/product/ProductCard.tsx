@@ -11,7 +11,7 @@ import { PureAssuredBadge } from './PureAssuredBadge';
 
 interface ProductCardProps {
   product: Product;
-  onOpenDetails: (product: Product) => void;
+  onOpenDetails?: (product: Product) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails }) => {
@@ -22,6 +22,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
   const quantity = getItemQuantity(product.id);
   const isWishlisted = isInWishlist(product.id);
   const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
+
+  const handleCardClick = () => {
+    triggerHaptic('light');
+    if (onOpenDetails) {
+      onOpenDetails(product);
+    }
+    navigate(`/product/${product.id}`);
+  };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
 
   return (
     <div
-      onClick={() => onOpenDetails(product)}
+      onClick={handleCardClick}
       className="group bg-white rounded-2xl border border-slate-100 p-2 sm:p-2.5 flex flex-col justify-between transition-all duration-200 hover:shadow-card cursor-pointer relative overflow-hidden w-full"
     >
       {/* Product Image Area with ONE subtle badge max */}

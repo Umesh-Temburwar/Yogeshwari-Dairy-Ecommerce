@@ -12,6 +12,7 @@ import { BrandsPage } from '@/pages/BrandsPage';
 import { BrandPage } from '@/pages/BrandPage';
 import { OrdersPage } from '@/pages/OrdersPage';
 import { WishlistPage } from '@/pages/WishlistPage';
+import { ProductDetailPage } from '@/pages/ProductDetailPage';
 import { TrackOrderPage } from '@/pages/TrackOrderPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Order } from '@/types/ecommerce';
@@ -62,6 +63,7 @@ export const App: React.FC = () => {
             <Route path="/brands" element={<BrandsPage />} />
             <Route path="/brand/:brandName" element={<BrandPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/product/:productId" element={<ProductDetailPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/track/:orderId" element={<TrackOrderPage />} />
             <Route path="*" element={<NotFoundPage />} />
