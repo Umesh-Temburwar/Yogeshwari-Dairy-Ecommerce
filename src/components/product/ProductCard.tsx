@@ -23,14 +23,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
   const isWishlisted = isInWishlist(product.id);
   const isMaxStock = Boolean(product.stockQuantity) && quantity >= product.stockQuantity;
 
-  const handleCardClick = () => {
-    triggerHaptic('light');
-    if (onOpenDetails) {
-      onOpenDetails(product);
-    }
-    navigate(`/product/${product.id}`);
-  };
-
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
@@ -76,25 +68,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
   // Only show expiry on card if product is perishable or expiry is within 30 days
   const shouldShowExpiry = Boolean(
     product.expiryDate &&
-      (() => {
-        const isPerishable =
-          /milk|paneer|curd|dahi|chaas|lassi/i.test(product.name || '') ||
-          /milk|paneer|curd|dahi|chaas|lassi/i.test(product.category || '');
-        if (isPerishable) return true;
-        try {
-          const expTime = new Date(product.expiryDate).getTime();
-          const nowTime = Date.now();
-          const diffDays = (expTime - nowTime) / (1000 * 60 * 60 * 24);
-          return diffDays >= 0 && diffDays <= 30;
-        } catch {
-          return false;
-        }
-      })()
+    (() => {
+      const isPerishable =
+        /milk|paneer|curd|dahi|chaas|lassi/i.test(product.name || '') ||
+        /milk|paneer|curd|dahi|chaas|lassi/i.test(product.category || '');
+      if (isPerishable) return true;
+      try {
+        const expTime = new Date(product.expiryDate).getTime();
+        const nowTime = Date.now();
+        const diffDays = (expTime - nowTime) / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 30;
+      } catch {
+        return false;
+      }
+    })()
   );
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={() => {
+        triggerHaptic('light');
+        if (onOpenDetails) {
+          onOpenDetails(product);
+        } else {
+          navigate(`/product/${product.id}`);
+        }
+      }}
       className="group bg-white rounded-2xl border border-slate-100 p-2 sm:p-2.5 flex flex-col justify-between transition-all duration-200 hover:shadow-card cursor-pointer relative overflow-hidden w-full"
     >
       {/* Product Image Area with ONE subtle badge max */}
@@ -108,11 +107,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
           <Heart
-            className={`w-3.5 h-3.5 transition-colors ${
-              isWishlisted
-                ? 'fill-rose-500 text-rose-500'
-                : 'text-slate-400 hover:text-rose-500'
-            }`}
+            className={`w-3.5 h-3.5 transition-colors ${isWishlisted
+              ? 'fill-rose-500 text-rose-500'
+              : 'text-slate-400 hover:text-rose-500'
+              }`}
           />
         </button>
 
@@ -135,9 +133,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           loading="lazy"
           width={180}
           height={180}
-          className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ${
-            !product.inStock ? 'grayscale opacity-50' : ''
-          }`}
+          className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 ${!product.inStock ? 'grayscale opacity-50' : ''
+            }`}
         />
 
         {/* Out of Stock Greyscale Overlay */}
