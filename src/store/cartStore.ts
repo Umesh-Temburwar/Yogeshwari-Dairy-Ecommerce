@@ -11,9 +11,11 @@ export const STANDARD_DELIVERY_FEE =
 interface CartStore {
   items: CartItem[];
   isCartDrawerOpen: boolean;
+  tipAmount: number;
   openCartDrawer: () => void;
   closeCartDrawer: () => void;
   toggleCartDrawer: () => void;
+  setTipAmount: (tip: number) => void;
 
   addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
@@ -24,6 +26,8 @@ interface CartStore {
   getSubtotal: () => number;
   getTotalItemsCount: () => number;
   getDeliveryFee: () => number;
+  getHandlingFee: () => number;
+  getTotalSavings: () => number;
   getAmountNeededForFreeDelivery: () => number;
   getTotal: () => number;
 }
@@ -33,10 +37,12 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isCartDrawerOpen: false,
+      tipAmount: 0,
 
       openCartDrawer: () => set({ isCartDrawerOpen: true }),
       closeCartDrawer: () => set({ isCartDrawerOpen: false }),
       toggleCartDrawer: () => set((state) => ({ isCartDrawerOpen: !state.isCartDrawerOpen })),
+      setTipAmount: (tip: number) => set({ tipAmount: Math.max(0, tip) }),
 
       addItem: (product: Product, quantity: number = 1) => {
         triggerHaptic('medium');
@@ -112,6 +118,19 @@ export const useCartStore = create<CartStore>()(
         return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
       },
 
+      getHandlingFee: () => {
+        const subtotal = get().getSubtotal();
+        return subtotal > 0 ? 2 : 0;
+      },
+
+      getTotalSavings: () => {
+        return get().items.reduce((sum, item) => {
+          const mrp = item.product.mrp || item.product.price;
+          const diff = Math.max(0, mrp - item.product.price);
+          return sum + diff * item.quantity;
+        }, 0);
+      },
+
       getAmountNeededForFreeDelivery: () => {
         const subtotal = get().getSubtotal();
         return Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
@@ -120,7 +139,7 @@ export const useCartStore = create<CartStore>()(
       getTotal: () => {
         const subtotal = get().getSubtotal();
         if (subtotal === 0) return 0;
-        return subtotal + get().getDeliveryFee();
+        return subtotal + get().getDeliveryFee() + get().getHandlingFee() + get().tipAmount;
       },
     }),
     {
