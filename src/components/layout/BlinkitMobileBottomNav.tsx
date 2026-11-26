@@ -8,10 +8,8 @@ import { triggerHaptic } from '@/utils/haptics';
 export const BlinkitMobileBottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { getTotalItemsCount, openCartDrawer } = useCartStore();
   const { getWishlistCount } = useWishlistStore();
 
-  const cartCount = getTotalItemsCount();
   const wishlistCount = getWishlistCount();
 
   const navItems = [

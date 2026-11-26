@@ -30,8 +30,6 @@ import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtT
 import { ProductCard } from '@/components/product/ProductCard';
 import { BlinkitDairyNutritionTable } from '@/components/product/BlinkitDairyNutritionTable';
 import { BlinkitShelfLifeAccordion } from '@/components/product/BlinkitShelfLifeAccordion';
-import { BlinkitEtaBadge } from '@/components/product/BlinkitEtaBadge';
-import { BlinkitColdChainBadge } from '@/components/product/BlinkitColdChainBadge';
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();

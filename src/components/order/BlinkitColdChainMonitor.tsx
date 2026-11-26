@@ -1,5 +1,5 @@
 import React from 'react';
-import { Snowflake, ShieldCheck, ThermometerSnowflake } from 'lucide-react';
+import { ShieldCheck, ThermometerSnowflake } from 'lucide-react';
 
 export interface BlinkitColdChainMonitorProps {
   temperature?: string;

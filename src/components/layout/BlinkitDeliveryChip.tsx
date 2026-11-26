@@ -5,7 +5,6 @@ import { triggerHaptic } from '@/utils/haptics';
 export interface BlinkitDeliveryChipProps {
   locationText?: string;
   etaText?: string;
-  isStoreOpen?: boolean;
   onOpenAddressModal: () => void;
   className?: string;
 }
@@ -13,7 +12,6 @@ export interface BlinkitDeliveryChipProps {
 export const BlinkitDeliveryChip: React.FC<BlinkitDeliveryChipProps> = ({
   locationText = 'Ambajogai Mandi Bazar',
   etaText = '10 MINS',
-  isStoreOpen = true,
   onOpenAddressModal,
   className = '',
 }) => {

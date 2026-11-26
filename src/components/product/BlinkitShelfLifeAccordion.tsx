@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, ShieldCheck, Snowflake, Info } from 'lucide-react';
+import { Clock, ShieldCheck, Snowflake } from 'lucide-react';
 
 export interface BlinkitShelfLifeAccordionProps {
   shelfLife?: string;
