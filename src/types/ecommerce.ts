@@ -18,8 +18,13 @@ export interface Product {
   isBestseller?: boolean;
   isFreshToday?: boolean;
   shelfLife?: string;
+  shelfLifeDays?: number;
   fatContent?: string;
   storageInfo?: string;
+  storageTemp?: string;
+  isColdChain?: boolean;
+  isMorningBatch?: boolean;
+  deliveryEtaMins?: number;
   tags?: string[];
   mfgDate?: string;
   expiryDate?: string;
@@ -142,6 +147,8 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   deliveryFee: number;
+  riderTip?: number;
+  coldChainVerified?: boolean;
   total: number;
   notes?: string;
   estimatedDeliveryMinutes: number;
