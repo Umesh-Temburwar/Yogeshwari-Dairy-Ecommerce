@@ -60,6 +60,26 @@ export default {
             secondary: '#666666',
             muted: '#8C8C8C',
           }
+        },
+        blinkit: {
+          green: {
+            DEFAULT: '#0C831F',
+            dark: '#086617',
+            light: '#E7F7ED',
+            hover: '#0A6F1A',
+          },
+          yellow: {
+            DEFAULT: '#F8CB46',
+            accent: '#FFC200',
+            light: '#FFF9E5',
+            badge: '#FEE180',
+          },
+          slate: {
+            bg: '#F4F6F8',
+            surface: '#FFFFFF',
+            border: '#E8E8E8',
+          },
+          dark: '#1C1C1C',
         }
       },
       fontFamily: {
@@ -69,6 +89,9 @@ export default {
         'card': '0 2px 8px rgba(0, 0, 0, 0.04)',
         'float': '0 8px 30px rgba(0, 0, 0, 0.12)',
         'subtle': '0 1px 3px rgba(0,0,0,0.06)',
+        'blinkit-cart': '0 -4px 20px rgba(0, 0, 0, 0.12)',
+        'blinkit-badge': '0 2px 6px rgba(12, 131, 31, 0.18)',
+        'blinkit-float': '0 10px 25px -5px rgba(12, 131, 31, 0.3)',
       },
       animation: {
         'scale-in': 'scaleIn 0.15s ease-out',
