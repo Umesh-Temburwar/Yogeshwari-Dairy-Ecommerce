@@ -158,6 +158,22 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Quick Category Jump Links (Blinkit Quick-Commerce Style) */}
+        <div className="py-3 border-y border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="font-bold text-slate-800">Quick Delivery Categories:</span>
+          <div className="flex flex-wrap items-center gap-2 text-slate-600 font-medium">
+            <span className="hover:text-emerald-700 cursor-pointer">🥛 Farm Milk (Cow &amp; Buffalo)</span>
+            <span>•</span>
+            <span className="hover:text-emerald-700 cursor-pointer">🧀 Malai Paneer &amp; Khoya</span>
+            <span>•</span>
+            <span className="hover:text-emerald-700 cursor-pointer">🧈 Pure Bilona Desi Ghee</span>
+            <span>•</span>
+            <span className="hover:text-emerald-700 cursor-pointer">🥣 Thick Set Dahi &amp; Chaas</span>
+            <span>•</span>
+            <span className="hover:text-emerald-700 cursor-pointer">🍯 Kesar Shrikhand &amp; Sweets</span>
+          </div>
+        </div>
+
         {/* Payment Security & Badges Row */}
         <div className="py-3 px-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-wrap items-center justify-between gap-3 text-[11px]">
           <div className="flex items-center gap-2">
