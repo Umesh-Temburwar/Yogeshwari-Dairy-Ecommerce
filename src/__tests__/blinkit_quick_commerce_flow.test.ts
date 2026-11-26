@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatBlinkitPrice, formatBlinkitSavings, formatBlinkitEta } from '../utils/blinkitFormatters';
+import { formatBlinkitPrice, formatBlinkitEta } from '../utils/blinkitFormatters';
 
 describe('BLINKIT QUICK-COMMERCE FULL END-TO-END FLOW SUITE', () => {
   it('simulates customer adding multiple fresh dairy items to cart and validates pricing', () => {

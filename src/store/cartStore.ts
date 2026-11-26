@@ -119,8 +119,7 @@ export const useCartStore = create<CartStore>()(
       },
 
       getHandlingFee: () => {
-        const subtotal = get().getSubtotal();
-        return subtotal > 0 ? 2 : 0;
+        return 0; // optional handling fee, waived by default
       },
 
       getTotalSavings: () => {
@@ -139,7 +138,7 @@ export const useCartStore = create<CartStore>()(
       getTotal: () => {
         const subtotal = get().getSubtotal();
         if (subtotal === 0) return 0;
-        return subtotal + get().getDeliveryFee() + get().getHandlingFee() + get().tipAmount;
+        return subtotal + get().getDeliveryFee();
       },
     }),
     {
