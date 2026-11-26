@@ -23,6 +23,7 @@ import { supabase } from '@/services/supabase/client';
 import { BlinkitHeroBanner } from '@/components/home/BlinkitHeroBanner';
 import { BlinkitTrustStrip } from '@/components/home/BlinkitTrustStrip';
 import { BlinkitQuickPicksRail } from '@/components/home/BlinkitQuickPicksRail';
+import { BlinkitDairyFAQ } from '@/components/home/BlinkitDairyFAQ';
 
 interface HomePageProps {
   searchQuery: string;
@@ -563,6 +564,9 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
                 ))}
               </div>
             )}
+
+            {/* Quick-Commerce Dairy FAQ */}
+            <BlinkitDairyFAQ />
           </>
         )}
 
