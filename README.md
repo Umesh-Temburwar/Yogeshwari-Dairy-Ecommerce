@@ -1,22 +1,21 @@
 # Yogeshwari Dairy Customer E-Commerce 🥛⚡
 
-Customer-facing quick-commerce web application for **Yogeshwari Dairy Products**, delivering fresh farm cow & buffalo milk, curd, malai paneer, desi bilona ghee, and traditional sweets across Ambajogai in **15-20 minutes**.
-
-Integrates directly with the Yogeshwari Dairy backend and Supabase inventory system.
+Customer-facing quick-commerce web application for **Yogeshwari Dairy Products**, delivering fresh farm cow & buffalo milk, curd, malai paneer, desi bilona ghee, and traditional sweets across Ambajogai in **10-15 minutes**. Styled with authentic **Blinkit quick-commerce** design patterns, emerald green & warm yellow tokens, and 4°C cold-chain preservation guarantee.
 
 ---
 
-## 🚀 Features
+## ⚡ Blinkit Quick-Commerce Features
 
-- **⚡ 15-Mins Quick-Commerce Architecture:** Styled with YogiMart / Zepto / Swiggy Instamart high-converting visual patterns.
-- **🥛 Authentic Vidarbha Dairy Catalogue:** 24+ curated local dairy items (Cow Milk, Buffalo Milk, Malai Paneer, Bilona Ghee, Amrakhand, Shrikhand, Gulab Jamun, Dahi, Masala Chaas).
-- **🛒 Dynamic Cart & Free Delivery Meter:** Live progress toward the ₹300 free delivery threshold.
-- **📍 Multi-Address Book:** Instant switching between `Home`, `Shop`, and `Work` delivery destinations with address creation.
-- **🛵 5-Stage Live Order Tracker:** Step-by-step progress tracking (`Placed` → `Confirmed` → `Packing` → `Out for Delivery` → `Delivered`) with delivery rider details.
-- **📲 WhatsApp One-Tap Order Confirmation:** Instant order receipt generation and messaging directly to the dairy counter staff.
-- **🔌 Offline-First Adapter Architecture:** Toggle between `MockEcommerceApiClient` (default for seamless local dev & preview) and `HttpEcommerceApiClient` (`https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1/ecommerce`).
-- **📳 Haptic Web Feedback:** Native vibration feedback on cart add/remove actions (`navigator.vibrate`).
-- **🎉 Confetti Celebration:** Interactive confetti burst upon successful order placement.
+- **⚡ 10-15 Mins Hyperlocal Delivery:** Dark-store fulfillment model anchored at Ambajogai Mandi Bazar with live countdown timers.
+- **🥛 Cold-Chain Dairy Guarantee:** Chilled at 4°C from milking to doorstep with insulated thermal packs.
+- **🛒 Blinkit Stepper & Quantity Selector:** Instant tactile `ADD` button converting into `[- qty +]` emerald stepper with Web Audio feedback and haptic cues.
+- **🏷️ Micro-Badges & Scarcity Alerts:** `10 MINS`, `4°C Chilled`, `Morning Batch`, and `< 5 left` low-stock indicators.
+- **🔍 Animated Dairy Search Bar:** Rotating search prompts for daily essentials (`cow milk`, `malai paneer`, `bilona ghee`, `shrikhand`) with trending tags and instant product thumbnail preview.
+- **📱 1-Thumb Mobile Bottom Navigation:** Quick access to Home, Categories, Wishlist, Orders, and Account.
+- **🧾 Itemized Bill Breakdown:** Transparent breakdown with Handling Fee (₹2), Delivery Partner Tip selector (₹10/₹20/₹30/₹50), Free Delivery Progress Bar, and total savings pill.
+- **🛵 4-Stage Live Order Tracker:** `Order Confirmed` → `Packed & Chilled` → `Out for Delivery` → `Delivered` with direct Rider Call action.
+- **🌿 Freshness Guarantee & Hassle-Free Returns:** Instant replacement or UPI photo-refund for any damaged dairy pouch.
+- **🔐 MongoDB Atlas Authentication:** Secure Phone OTP and Email/Password authentication with JWT token management and guest fallback.
 
 ---
 
