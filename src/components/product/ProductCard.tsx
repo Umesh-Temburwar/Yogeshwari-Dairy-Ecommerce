@@ -8,6 +8,9 @@ import { useStoreStatusStore } from '@/store/storeStatusStore';
 import { formatPrice, formatDisplayDate } from '@/utils/formatters';
 import { triggerHaptic } from '@/utils/haptics';
 import { PureAssuredBadge } from './PureAssuredBadge';
+import { BlinkitEtaBadge } from './BlinkitEtaBadge';
+import { BlinkitColdChainBadge } from './BlinkitColdChainBadge';
+import { BlinkitDiscountRibbon } from './BlinkitDiscountRibbon';
 
 export interface ProductCardProps {
   product: Product;
@@ -114,12 +117,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           />
         </button>
 
-        {/* ONE small badge max at top-left inside image corner */}
+        {/* Blinkit corner discount ribbon or fresh tag */}
         {product.inStock && (
           product.discountPercentage && product.discountPercentage > 0 ? (
-            <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10 bg-emerald-700/95 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs leading-none">
-              {product.discountPercentage}% OFF
-            </span>
+            <div className="absolute top-0 left-0 z-10">
+              <BlinkitDiscountRibbon discountPercentage={product.discountPercentage} />
+            </div>
           ) : product.isFreshToday ? (
             <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10 bg-emerald-50/95 text-emerald-800 border border-emerald-200 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs leading-none">
               Fresh
@@ -193,10 +196,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetails
           </p>
         )}
 
-        {/* Fast Delivery Guarantee */}
-        <div className="flex items-center gap-1 text-[9.5px] sm:text-[10px] text-slate-500 font-medium mt-0.5 truncate">
-          <span className="text-amber-500 font-bold shrink-0">⚡</span>
-          <span className="truncate">10-15 mins</span>
+        {/* Fast Delivery Guarantee & Cold Chain */}
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <BlinkitEtaBadge mins={product.deliveryEtaMins || 10} />
+          {product.isColdChain && <BlinkitColdChainBadge temperature={product.storageTemp || '4°C'} />}
         </div>
       </div>
 
