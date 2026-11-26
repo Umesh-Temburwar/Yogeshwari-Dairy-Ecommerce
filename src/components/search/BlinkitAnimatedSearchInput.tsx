@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Mic } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { triggerHaptic } from '@/utils/haptics';
 
 export interface BlinkitAnimatedSearchInputProps {
