@@ -28,6 +28,10 @@ import { ProductRatingsBreakdown } from '@/components/product/ProductRatingsBrea
 import { ProductReviewsList } from '@/components/product/ProductReviewsList';
 import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtTogether';
 import { ProductCard } from '@/components/product/ProductCard';
+import { BlinkitDairyNutritionTable } from '@/components/product/BlinkitDairyNutritionTable';
+import { BlinkitShelfLifeAccordion } from '@/components/product/BlinkitShelfLifeAccordion';
+import { BlinkitEtaBadge } from '@/components/product/BlinkitEtaBadge';
+import { BlinkitColdChainBadge } from '@/components/product/BlinkitColdChainBadge';
 
 export const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -423,6 +427,16 @@ export const ProductDetailPage: React.FC = () => {
                     <span>100% replacement or refund if dairy purity is not satisfactory.</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Blinkit Shelf Life & Nutrition Highlights */}
+              <div className="pt-2 space-y-3">
+                <BlinkitShelfLifeAccordion
+                  shelfLife={product.shelfLife}
+                  storageInfo={product.storageInfo}
+                  fatContent={product.fatContent}
+                />
+                <BlinkitDairyNutritionTable />
               </div>
 
               {/* Product Specifications Table */}
