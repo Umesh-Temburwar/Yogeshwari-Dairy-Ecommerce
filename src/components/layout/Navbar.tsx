@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { DELIVERY_ETA_TEXT } from '@/constants/delivery';
 import { ProfileDropdown } from './ProfileDropdown';
 import { SearchAutoSuggest } from './SearchAutoSuggest';
+import { BlinkitTrendingTags } from '../search/BlinkitTrendingTags';
 
 interface NavbarProps {
   searchQuery: string;
@@ -323,6 +324,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             onSelectQuery={(q) => onSearchChange(q)}
             onClose={() => setIsSuggestOpen(false)}
           />
+        </div>
+
+        {/* Blinkit Quick Trending Dairy Chips */}
+        <div className="pt-0.5">
+          <BlinkitTrendingTags onSelectTag={(tag) => onSearchChange(tag)} />
         </div>
       </div>
     </header>
