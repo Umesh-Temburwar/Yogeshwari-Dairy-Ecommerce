@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, LayoutGrid, ShoppingBag, Heart, User } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { triggerHaptic } from '@/utils/haptics';
 
