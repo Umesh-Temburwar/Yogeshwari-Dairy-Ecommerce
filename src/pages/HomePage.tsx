@@ -20,6 +20,9 @@ import { triggerHaptic } from '@/utils/haptics';
 import { BLINKIT_CATEGORIES, getCategorySlugForProduct } from '@/constants/categories';
 import { getProductBrand, initBrandLogos } from '@/utils/brands';
 import { supabase } from '@/services/supabase/client';
+import { BlinkitHeroBanner } from '@/components/home/BlinkitHeroBanner';
+import { BlinkitTrustStrip } from '@/components/home/BlinkitTrustStrip';
+import { BlinkitQuickPicksRail } from '@/components/home/BlinkitQuickPicksRail';
 
 interface HomePageProps {
   searchQuery: string;
@@ -430,6 +433,18 @@ export const HomePage: React.FC<HomePageProps> = ({ searchQuery, onClearSearch }
            ========================================================================= */}
         {isHomeView && (
           <>
+            {/* Blinkit Quick-Commerce 10-Minute Hero Banner */}
+            <BlinkitHeroBanner />
+
+            {/* Blinkit Quick Trust & Cold-Chain Strip */}
+            <BlinkitTrustStrip />
+
+            {/* Daily Morning Essentials Fast Picks */}
+            <BlinkitQuickPicksRail
+              products={allInStockProducts}
+              onOpenDetails={(p) => setActiveModalProduct(p)}
+            />
+
             {/* Auto-Sliding Promotional Hero Banner Carousel (Blinkit Style, <140px on mobile) */}
             <HeroPromoCarousel
               onSelectCategory={(slug) => {
