@@ -40,9 +40,9 @@ export const FloatingCartBar: React.FC = () => {
         </div>
       )}
 
-      {/* Sticky Bottom Cart Bar (Emerald-700, rounded-2xl, animated) */}
+      {/* Sticky Bottom Cart Bar (Blinkit Green, rounded-2xl, animated, elevated above mobile bottom nav) */}
       {hasCartItems && (
-        <div className="fixed inset-x-0 bottom-3 z-40 pointer-events-none pb-safe px-4">
+        <div className="fixed inset-x-0 bottom-14 md:bottom-4 z-40 pointer-events-none pb-safe px-3 sm:px-4">
           <div className="max-w-md mx-auto pointer-events-auto animate-slide-up motion-reduce:animate-none">
             <button
               type="button"
@@ -50,23 +50,28 @@ export const FloatingCartBar: React.FC = () => {
                 triggerHaptic('medium');
                 openCartDrawer();
               }}
-              className="w-full min-h-[48px] bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-2xl shadow-float flex items-center justify-between transition-all active:scale-98 cursor-pointer focus:outline-hidden border border-emerald-600/50"
+              className="w-full min-h-[52px] bg-[#0C831F] hover:bg-[#086617] text-white px-4 py-3 rounded-2xl shadow-float flex items-center justify-between transition-all active:scale-98 cursor-pointer focus:outline-hidden border border-emerald-500/40"
               aria-label={`View cart with ${totalCount} items worth ${formatPrice(subtotal)}`}
             >
-              {/* Left: N items • ₹total */}
+              {/* Left: Cart Icon + N items • ₹total */}
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                   <ShoppingBag className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-bold text-sm text-white tracking-wide">
-                  {totalCount} {totalCount === 1 ? 'item' : 'items'} • {formatPrice(subtotal)}
-                </span>
+                <div className="text-left leading-tight">
+                  <span className="font-extrabold text-sm text-white block">
+                    {totalCount} {totalCount === 1 ? 'item' : 'items'} • {formatPrice(subtotal)}
+                  </span>
+                  <span className="text-[10px] text-emerald-100 font-medium flex items-center gap-1">
+                    <span>⚡ Delivery in 10-15 mins</span>
+                  </span>
+                </div>
               </div>
 
               {/* Right: View Cart → */}
-              <div className="flex items-center gap-1 font-bold text-xs uppercase tracking-wider bg-white/15 px-3 py-1.5 rounded-xl text-white">
+              <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider bg-white/20 hover:bg-white/30 px-3.5 py-2 rounded-xl text-white transition-colors">
                 <span>View Cart</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                <ArrowRight className="w-4 h-4 stroke-[3]" />
               </div>
             </button>
           </div>
